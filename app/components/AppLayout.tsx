@@ -141,13 +141,14 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   </Tooltip>
                 </span>
               </PopoverTrigger>
-              <PopoverContent className="w-auto">
+              <PopoverContent className="w-auto overflow-hidden">
                 <p className="font-semibold text-xl text-center pb-4">
                   Pokédex
                 </p>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-4 transition-all">
                   {units.map((unit) => (
                     <UnitAvatar
+                      key={unit._id}
                       unitNumber={unit.number}
                       unitLvl={unit.lvl}
                       shiny={unit.shiny}
