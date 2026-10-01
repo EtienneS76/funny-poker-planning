@@ -1,9 +1,18 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { AnimateIcon } from "./animate-ui/icons/icon";
 import { LayoutDashboard } from "./animate-ui/icons/layout-dashboard";
 import { Button } from "./animate-ui/components/buttons/button";
-import { Album, Github, Link as LinkIcon } from "lucide-react";
+import {
+  Album,
+  Eye,
+  EyeOff,
+  Github,
+  Link as LinkIcon,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { ThemeSwitch } from "./ThemeSwitch";
+import { useSound } from "~/contexts/SoundContext";
 import { CopyButton } from "./animate-ui/components/buttons/copy";
 import { useRootLoaderData } from "../hooks/useRootLoaderData";
 import {
@@ -16,13 +25,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "./animate-ui/components/radix/popover";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { UnitAvatar } from "./UnitAvatar";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { url, userId } = useRootLoaderData();
   const location = useLocation();
+  const { sizingId } = useParams();
+  const { soundEnabled, toggleSound } = useSound();
+  const selfParticipant = useQuery(
+    api.participants.getBySizingIdAndUserId,
+    sizingId && userId ? { sizingId, userId } : "skip",
+  );
+  const setSpectator = useMutation(api.participants.setSpectator);
 
   const units = useQuery(
     api.units.getAllByUserId,
@@ -44,6 +60,51 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-2 transition-all">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleSound}
+                  className="size-6 sm:size-8 [&_svg]:size-4! sm:[&_svg]:size-6! transition-all [&_svg]:transition-all"
+                >
+                  {soundEnabled ? <Volume2 /> : <VolumeX />}
+                </Button>
+              }
+            />
+            <TooltipPanel>
+              {soundEnabled ? "Couper le son" : "Activer le son"}
+            </TooltipPanel>
+          </Tooltip>
+
+          {location.pathname.startsWith("/sizings/") && selfParticipant && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setSpectator({
+                        participantId: selfParticipant._id,
+                        isSpectator: !selfParticipant.isSpectator,
+                      })
+                    }
+                    className="size-6 sm:size-8 [&_svg]:size-4! sm:[&_svg]:size-6! transition-all [&_svg]:transition-all"
+                  >
+                    {selfParticipant.isSpectator ? <EyeOff /> : <Eye />}
+                  </Button>
+                }
+              />
+              <TooltipPanel>
+                {selfParticipant.isSpectator
+                  ? "Redevenir joueur"
+                  : "Devenir spectateur"}
+              </TooltipPanel>
+            </Tooltip>
+          )}
+
           {location.pathname.startsWith("/sizings/") && (
             <Tooltip>
               <TooltipTrigger
