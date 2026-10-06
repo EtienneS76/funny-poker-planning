@@ -8,12 +8,7 @@
  * @module
  */
 
-import type * as participants from "../participants.js";
-import type * as pokeballs from "../pokeballs.js";
-import type * as presence from "../presence.js";
-import type * as sizings from "../sizings.js";
-import type * as units from "../units.js";
-import type * as users from "../users.js";
+import type * as ping from "../ping.js";
 
 import type {
   ApiFromModules,
@@ -22,12 +17,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  participants: typeof participants;
-  pokeballs: typeof pokeballs;
-  presence: typeof presence;
-  sizings: typeof sizings;
-  units: typeof units;
-  users: typeof users;
+  ping: typeof ping;
 }>;
 
 /**
@@ -56,6 +46,4 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {
-  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
-};
+export declare const components: {};
