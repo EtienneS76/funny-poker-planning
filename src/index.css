@@ -48,3 +48,25 @@ p {
   color: #b42318;
   overflow-wrap: anywhere;
 }
+
+.auth-status {
+  color: inherit;
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 100%;
+}
+
+.account-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.account-username {
+  overflow-wrap: anywhere;
+  text-align: center;
+}

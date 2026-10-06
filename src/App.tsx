@@ -1,26 +1,23 @@
-import { ConvexProvider, ConvexReactClient } from 'convex/react'
+import { ConvexReactClient } from 'convex/react'
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import { authClient } from './features/auth/auth-client'
 import Home from './Home'
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null
 
 export default function App() {
-  if (!convex) {
+  if (!convex || !import.meta.env.VITE_CONVEX_SITE_URL) {
     return (
       <main>
-        <button
-          disabled
-          title='Configurer VITE_CONVEX_URL avec yarn dev:convex'
-        >
-          Ping
-        </button>
+        <p role='alert'>Configurer VITE_CONVEX_URL et VITE_CONVEX_SITE_URL.</p>
       </main>
     )
   }
 
   return (
-    <ConvexProvider client={convex}>
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
       <Home />
-    </ConvexProvider>
+    </ConvexBetterAuthProvider>
   )
 }
