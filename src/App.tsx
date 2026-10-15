@@ -24,11 +24,11 @@ export default function App() {
       <ConvexBetterAuthProvider client={convex} authClient={authClient}>
         <AccountProvider>
           <Routes>
-          <Route path='/' element={<Home />} />
-          <Route
-            path='/refinement/:refinementSlug'
-            element={<RefinementRoom />}
-          />
+            <Route path='/' element={<Home />} />
+            <Route
+              path='/refinement/:refinementSlug'
+              element={<RefinementRoom />}
+            />
           </Routes>
         </AccountProvider>
       </ConvexBetterAuthProvider>

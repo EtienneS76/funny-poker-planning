@@ -1,11 +1,16 @@
-import { useState, type CSSProperties } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { useAccount } from '../auth/useAccount'
 import { sizings } from './options'
 import { RefinementRoomDebug } from './RefinementRoomDebug'
 import { RefinementRoomControls } from './RefinementRoomControls'
 import { RefinementIssue } from './RefinementIssue'
+import {
+  ConsensusCelebration,
+  RefinementRoomReactions,
+} from './RefinementRoomReactions'
 import '../../styles/planning-poker.css'
 import '../../styles/refinement-room.css'
+import '../../styles/refinement-reactions.css'
 
 type Seat = {
   id: string
@@ -44,6 +49,10 @@ export function RefinementRoom() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null)
   const [players, setPlayers] = useState(mockPlayers)
   const [revealed, setRevealed] = useState(false)
+  const [reactionTarget, setReactionTarget] = useState<string | null>(null)
+  const [reactionRound, setReactionRound] = useState(0)
+  const [dodging, setDodging] = useState<Record<string, number>>({})
+  const reactionTrigger = useRef<HTMLButtonElement | null>(null)
 
   // Fibonacci par défaut, en attendant que le sizing soit stocké sur le refinement
   const cards = sizings[0].cards
@@ -69,10 +78,18 @@ export function RefinementRoom() {
   const average = votes.length
     ? votes.reduce((sum, vote) => sum + vote, 0) / votes.length
     : null
+  const consensus =
+    revealed &&
+    votedCount === seats.length &&
+    votedCount >= 2 &&
+    new Set(votes).size === 1
 
   function resetRound() {
     setRevealed(false)
     setSelectedCard(null)
+    setReactionTarget(null)
+    setDodging({})
+    setReactionRound((previous) => previous + 1)
     setPlayers((previous) =>
       previous.map((player) => ({ ...player, vote: null })),
     )
@@ -91,6 +108,24 @@ export function RefinementRoom() {
     )
   }
 
+  function simulateConsensus() {
+    const vote = selectedCard ?? cards[Math.floor(cards.length / 2)]
+    setSelectedCard(vote)
+    setPlayers(previous => previous.map(player => ({ ...player, vote })))
+  }
+
+  function closeReactionMenu() {
+    setReactionTarget(null)
+    reactionTrigger.current?.focus({ preventScroll: true })
+  }
+
+  function dodgeSeat(seatId: string, active: boolean) {
+    setDodging((previous) => ({
+      ...previous,
+      [seatId]: Math.max(0, (previous[seatId] ?? 0) + (active ? 1 : -1)),
+    }))
+  }
+
   return (
     <div className='multivers multivers--room'>
       <main className='pp-room'>
@@ -101,11 +136,12 @@ export function RefinementRoom() {
             onReveal={revealCards}
             onReset={resetRound}
             onSimulate={simulateVotes}
+            onSimulateConsensus={simulateConsensus}
           />
         </div>
         <RefinementIssue url={tempGithubUrl} />
         <section
-          className={`pp-table-area${revealed ? ' pp-table-area--revealed' : ''}`}
+          className={`pp-table-area${revealed ? ' pp-table-area--revealed' : ''}${consensus ? ' pp-table-area--consensus' : ''}`}
           aria-label='Table de vote'
         >
           <div className='pp-table'>
@@ -162,7 +198,30 @@ export function RefinementRoom() {
                 style={seatStyle(index, seats.length)}
               >
                 <span className='seat-portrait'>
-                  <span className='seat-avatar'>
+                  <button
+                    className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
+                    type='button'
+                    disabled={seat.isMe}
+                    aria-label={
+                      seat.isMe
+                        ? `Ton profil : ${seat.name}`
+                        : `Réagir à ${seat.name}`
+                    }
+                    aria-expanded={
+                      seat.isMe ? undefined : reactionTarget === seat.id
+                    }
+                    aria-controls={
+                      seat.isMe || reactionTarget !== seat.id
+                        ? undefined
+                        : 'room-reaction-menu'
+                    }
+                    onClick={(event) => {
+                      reactionTrigger.current = event.currentTarget
+                      setReactionTarget((previous) =>
+                        previous === seat.id ? null : seat.id,
+                      )
+                    }}
+                  >
                     <span aria-hidden='true'>
                       {seat.name.slice(0, 1).toUpperCase()}
                     </span>
@@ -177,7 +236,7 @@ export function RefinementRoom() {
                         }}
                       />
                     )}
-                  </span>
+                  </button>
                   <span
                     className={`seat-card${seat.vote !== null ? ' seat-card--voted' : ''}`}
                     role='img'
@@ -190,6 +249,17 @@ export function RefinementRoom() {
               </li>
             ))}
           </ul>
+          <RefinementRoomReactions
+            key={reactionRound}
+            seats={seats.map((seat, index) => ({
+              ...seat,
+              position: seatStyle(index, seats.length),
+            }))}
+            targetId={reactionTarget}
+            onClose={closeReactionMenu}
+            onDodge={dodgeSeat}
+          />
+          {consensus && <ConsensusCelebration revealDelay={650 + (seats.length - 1) * 70 + 150} />}
         </section>
 
         <RefinementRoomControls

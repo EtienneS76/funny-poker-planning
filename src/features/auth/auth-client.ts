@@ -7,7 +7,8 @@ import {
 function getAuthFlowEndpoint(url: string | URL) {
   const path = new URL(String(url), window.location.origin).pathname
 
-  if (path.endsWith('/cross-domain/one-time-token/verify')) return 'callback verification'
+  if (path.endsWith('/cross-domain/one-time-token/verify'))
+    return 'callback verification'
   if (path.endsWith('/get-session')) return 'session lookup'
   if (path.endsWith('/convex/token')) return 'Convex token'
   return null
@@ -22,7 +23,10 @@ export const authClient = createAuthClient({
       if (!endpoint) return
 
       const result = { status: response.status }
-      if (endpoint === 'callback verification' || endpoint === 'session lookup') {
+      if (
+        endpoint === 'callback verification' ||
+        endpoint === 'session lookup'
+      ) {
         Object.assign(result, { sessionReturned: Boolean(data?.session) })
       }
       if (endpoint === 'Convex token') {

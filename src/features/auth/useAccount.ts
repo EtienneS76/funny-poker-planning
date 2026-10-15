@@ -1,15 +1,28 @@
-import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  createElement,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useConvexAuth, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { authClient } from './auth-client'
 
 function useAccountState() {
   const { isAuthenticated, isLoading } = useConvexAuth()
-  const hasOAuthCallback = useRef(new URLSearchParams(window.location.search).has('ott')).current
+  const hasOAuthCallback = useRef(
+    new URLSearchParams(window.location.search).has('ott'),
+  ).current
   const callbackLogged = useRef(false)
   const sessionLogged = useRef(false)
   const configured = useQuery(api.auth.auth.isConfigured)
-  const user = useQuery(api.auth.auth.currentUser, isAuthenticated ? {} : 'skip')
+  const user = useQuery(
+    api.auth.auth.currentUser,
+    isAuthenticated ? {} : 'skip',
+  )
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const oauthError = new URLSearchParams(window.location.search).has('error')
@@ -33,9 +46,12 @@ function useAccountState() {
         provider: 'github',
         callbackURL: window.location.origin,
       })
-      if (result.error) throw new Error(result.error.message ?? 'Connexion GitHub impossible')
+      if (result.error)
+        throw new Error(result.error.message ?? 'Connexion GitHub impossible')
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Connexion GitHub impossible')
+      setError(
+        error instanceof Error ? error.message : 'Connexion GitHub impossible',
+      )
       setPending(false)
     }
   }
@@ -45,9 +61,12 @@ function useAccountState() {
     setError(null)
     try {
       const result = await authClient.signOut()
-      if (result.error) throw new Error(result.error.message ?? 'Déconnexion impossible')
+      if (result.error)
+        throw new Error(result.error.message ?? 'Déconnexion impossible')
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Déconnexion impossible')
+      setError(
+        error instanceof Error ? error.message : 'Déconnexion impossible',
+      )
     } finally {
       setPending(false)
     }
@@ -59,7 +78,8 @@ function useAccountState() {
     loading: isLoading || (isAuthenticated && user === undefined),
     configured,
     pending,
-    error: error ?? (oauthError ? 'La connexion GitHub a échoué. Réessaie.' : null),
+    error:
+      error ?? (oauthError ? 'La connexion GitHub a échoué. Réessaie.' : null),
     signIn,
     signOut,
   }
@@ -76,6 +96,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 export function useAccount(): AccountState {
   const account = useContext(AccountContext)
-  if (!account) throw new Error('useAccount doit être utilisé dans AccountProvider')
+  if (!account)
+    throw new Error('useAccount doit être utilisé dans AccountProvider')
   return account
 }

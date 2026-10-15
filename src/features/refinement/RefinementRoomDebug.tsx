@@ -1,4 +1,4 @@
-import { Eye, FlaskConical, RotateCcw, Shuffle } from 'lucide-react'
+import { Eye, FlaskConical, PartyPopper, RotateCcw, Shuffle } from 'lucide-react'
 
 type Props = {
   revealed: boolean
@@ -6,6 +6,7 @@ type Props = {
   onReveal: () => void
   onReset: () => void
   onSimulate: () => void
+  onSimulateConsensus: () => void
 }
 
 export function RefinementRoomDebug({
@@ -14,6 +15,7 @@ export function RefinementRoomDebug({
   onReveal,
   onReset,
   onSimulate,
+  onSimulateConsensus,
 }: Props) {
   return (
     <details className='room-debug'>
@@ -27,6 +29,9 @@ export function RefinementRoomDebug({
         <strong>Simulation locale</strong>
         <button type='button' disabled={revealed} onClick={onSimulate}>
           <Shuffle size={16} aria-hidden='true' /> Simuler les votes
+        </button>
+        <button type='button' disabled={revealed} onClick={onSimulateConsensus}>
+          <PartyPopper size={16} aria-hidden='true' /> Simuler un consensus
         </button>
         <button
           type='button'
