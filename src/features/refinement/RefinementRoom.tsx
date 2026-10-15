@@ -1,13 +1,238 @@
+import { useState, type CSSProperties } from 'react'
 import { useAccount } from '../auth/useAccount'
+import { sizings } from './options'
+import { RefinementRoomDebug } from './RefinementRoomDebug'
+import { RefinementRoomControls } from './RefinementRoomControls'
+import { RefinementIssue } from './RefinementIssue'
+import '../../styles/planning-poker.css'
+import '../../styles/refinement-room.css'
+
+type Seat = {
+  id: string
+  name: string
+  avatarUrl: string | null
+  vote: string | null
+  isMe: boolean
+}
+
+const tempGithubUrl: string | null =
+  'https://github.com/fulll/portail-rh/issues/10596'
+
+// Données mock en attendant les vraies tables participants / votes
+const mockPlayers = [
+  { id: 'mock-1', name: 'ada-lovelace', vote: '5' },
+  { id: 'mock-2', name: 'linus-t', vote: null },
+  { id: 'mock-3', name: 'grace-hopper', vote: '8' },
+  { id: 'mock-4', name: 'margaret-h', vote: null },
+  { id: 'mock-5', name: 'alan-turing', vote: '5' },
+]
+
+// Placement des sièges sur une ellipse, le joueur courant en bas (90°)
+const SEAT_RX = 40
+const SEAT_RY = 37
+
+function seatStyle(index: number, total: number): CSSProperties {
+  const angle = Math.PI / 2 + (index * 2 * Math.PI) / total
+  return {
+    left: `${50 + SEAT_RX * Math.cos(angle)}%`,
+    top: `${50 + SEAT_RY * Math.sin(angle)}%`,
+  }
+}
 
 export function RefinementRoom() {
-  const connectedUser = useAccount().user
+  const account = useAccount()
+  const [selectedCard, setSelectedCard] = useState<string | null>(null)
+  const [players, setPlayers] = useState(mockPlayers)
+  const [revealed, setRevealed] = useState(false)
+
+  // Fibonacci par défaut, en attendant que le sizing soit stocké sur le refinement
+  const cards = sizings[0].cards
+
+  const seats: Seat[] = [
+    {
+      id: 'me',
+      name: account.user?.username ?? 'Invité',
+      avatarUrl: account.user?.avatarUrl ?? null,
+      vote: selectedCard,
+      isMe: true,
+    },
+    ...players.map((player) => ({
+      ...player,
+      avatarUrl: null,
+      isMe: false,
+    })),
+  ]
+  const votes = seats.flatMap((seat) =>
+    seat.vote === null ? [] : [Number(seat.vote)],
+  )
+  const votedCount = votes.length
+  const average = votes.length
+    ? votes.reduce((sum, vote) => sum + vote, 0) / votes.length
+    : null
+
+  function resetRound() {
+    setRevealed(false)
+    setSelectedCard(null)
+    setPlayers((previous) =>
+      previous.map((player) => ({ ...player, vote: null })),
+    )
+  }
+
+  function revealCards() {
+    if (!revealed && votedCount >= 2) setRevealed(true)
+  }
+
+  function simulateVotes() {
+    setPlayers((previous) =>
+      previous.map((player) => ({
+        ...player,
+        vote: cards[Math.floor(Math.random() * cards.length)],
+      })),
+    )
+  }
+
   return (
-    <p>
-      Refinement Room{' '}
-      {connectedUser
-        ? `- Connected as ${connectedUser.username}`
-        : '- Not connected'}
-    </p>
+    <div className='multivers multivers--room'>
+      <main className='pp-room'>
+        <div className='room-toolbar'>
+          <RefinementRoomDebug
+            revealed={revealed}
+            voteCount={votedCount}
+            onReveal={revealCards}
+            onReset={resetRound}
+            onSimulate={simulateVotes}
+          />
+        </div>
+        <RefinementIssue url={tempGithubUrl} />
+        <section
+          className={`pp-table-area${revealed ? ' pp-table-area--revealed' : ''}`}
+          aria-label='Table de vote'
+        >
+          <div className='pp-table'>
+            {revealed ? (
+              <div className='room-results' role='status'>
+                <span className='room-results-caption'>Moyenne</span>
+                <strong className='room-average'>
+                  {average?.toLocaleString('fr-FR', {
+                    maximumFractionDigits: 1,
+                  }) ?? '—'}
+                </strong>
+              </div>
+            ) : (
+              <p className='pp-table-count'>
+                <strong>
+                  {votedCount}/{seats.length}
+                </strong>
+                ont voté
+              </p>
+            )}
+          </div>
+          {revealed && (
+            <ul className='room-thrown-cards' aria-label='Cartes révélées'>
+              {seats.map((seat, index) => {
+                if (seat.vote === null) return null
+                const angle = Math.PI / 2 + (index * 2 * Math.PI) / seats.length
+                return (
+                  <li
+                    key={seat.id}
+                    className='room-thrown-card'
+                    aria-label={`${seat.name} : ${seat.vote}`}
+                    style={
+                      {
+                        '--start-x': `${50 + SEAT_RX * Math.cos(angle)}%`,
+                        '--start-y': `${50 + SEAT_RY * Math.sin(angle)}%`,
+                        '--end-x': `${50 + 23 * Math.cos(angle)}%`,
+                        '--end-y': `calc(50% + ${Math.sin(angle)} * var(--reveal-ry, 21%))`,
+                        '--card-turn': `${index % 2 === 0 ? -12 : 9}deg`,
+                        '--deal-delay': `${index * 70}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    <span>{seat.vote}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <ul className='pp-seats'>
+            {seats.map((seat, index) => (
+              <li
+                key={seat.id}
+                className={`pp-seat${seat.isMe ? ' pp-seat--me' : ''}`}
+                style={seatStyle(index, seats.length)}
+              >
+                <span className='seat-portrait'>
+                  <span className='seat-avatar'>
+                    <span aria-hidden='true'>
+                      {seat.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    {seat.avatarUrl && (
+                      <img
+                        src={seat.avatarUrl}
+                        alt=''
+                        width={56}
+                        height={56}
+                        onError={(event) => {
+                          event.currentTarget.hidden = true
+                        }}
+                      />
+                    )}
+                  </span>
+                  <span
+                    className={`seat-card${seat.vote !== null ? ' seat-card--voted' : ''}`}
+                    role='img'
+                    aria-label={
+                      seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
+                    }
+                  />
+                </span>
+                <span className='seat-name'>{seat.name}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <RefinementRoomControls
+          revealed={revealed}
+          voteCount={votedCount}
+          onReveal={revealCards}
+          onReset={resetRound}
+        />
+
+        <section className='pp-hand-area' aria-label='Tes cartes'>
+          <p className='pp-hand-caption' aria-live='polite'>
+            {revealed
+              ? 'Votes révélés'
+              : selectedCard
+                ? `Tu as choisi ${selectedCard}`
+                : 'Choisis ta carte'}
+          </p>
+          <div className='pp-hand'>
+            {cards.map((card, index) => {
+              const selected = card === selectedCard
+              const offset = index - (cards.length - 1) / 2
+              return (
+                <button
+                  key={card}
+                  type='button'
+                  disabled={revealed}
+                  className={`vote-card${selected ? ' vote-card--selected' : ''}`}
+                  aria-pressed={selected}
+                  onClick={() => setSelectedCard(selected ? null : card)}
+                  style={
+                    {
+                      '--tilt': `${offset * 3}deg`,
+                      '--drop': `${offset * offset * 2}px`,
+                    } as CSSProperties
+                  }
+                >
+                  {card}
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }

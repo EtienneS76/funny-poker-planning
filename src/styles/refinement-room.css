@@ -1,0 +1,704 @@
+.pp-room {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(136px, 1fr) minmax(0, 800px) minmax(136px, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  gap: 12px 16px;
+  padding: 8px 28px 12px;
+}
+
+.room-controls {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: center;
+  justify-self: end;
+  width: 100%;
+  max-width: 216px;
+  margin-top: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--pp-border);
+  border-bottom: 1px solid var(--pp-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.room-controls-status {
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.room-controls-actions {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+.room-controls-actions .pp-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.room-controls-actions .pp-button:disabled {
+  opacity: 0.45;
+  transform: none;
+}
+.room-controls-actions svg {
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .room-controls-actions {
+    width: 100%;
+  }
+  .room-controls-actions .pp-button {
+    flex: 1 1 140px;
+  }
+}
+
+.room-issue {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--pp-border);
+  border-left: 3px solid #43825e;
+  border-radius: 8px;
+  background: var(--pp-paper);
+  box-shadow: 0 4px 16px #39454108;
+}
+.room-issue-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #34744e;
+}
+.room-issue-icon--closed {
+  color: #746077;
+}
+.room-issue-content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.room-issue-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+.room-issue-state {
+  font-weight: 700;
+}
+.room-issue-link {
+  min-width: 0;
+  flex: 1 1 120px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--pp-ink);
+  text-decoration: none;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.room-issue-link:hover span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.room-issue-link svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.room-issue-detail {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.room-toolbar {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  width: 42px;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.room-debug {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto;
+}
+.room-debug summary {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  list-style: none;
+  cursor: pointer;
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  background: var(--pp-paper);
+}
+.room-debug summary::-webkit-details-marker {
+  display: none;
+}
+.room-debug[open] summary {
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+.room-debug-menu {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  width: 248px;
+  max-width: calc(100vw - 32px);
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--pp-line);
+  border-radius: 8px;
+  background: var(--pp-paper);
+  box-shadow: 0 12px 36px #39454124;
+}
+.room-debug-menu strong {
+  padding: 8px;
+  font-size: 12px;
+  color: var(--pp-muted);
+}
+.room-debug-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pp-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.room-debug-menu button:not(:disabled):hover {
+  background: var(--pp-pink);
+}
+.room-debug-menu button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.room-results {
+  position: relative;
+  z-index: 2;
+  width: 130px;
+  text-align: center;
+  animation: results-arrive 350ms 850ms both;
+}
+.room-results-caption {
+  display: block;
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.room-average {
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 44px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.room-results-total {
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+.room-distribution {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-top: 8px;
+}
+.room-distribution span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+}
+.room-distribution small {
+  color: var(--pp-muted);
+}
+.room-thrown-cards {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.room-thrown-card {
+  position: absolute;
+  left: var(--end-x);
+  top: var(--end-y);
+  width: 46px;
+  aspect-ratio: 5 / 7;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--pp-border);
+  border-radius: 7px;
+  background: var(--pp-paper);
+  color: var(--pp-ink);
+  box-shadow: 2px 8px 14px #39454130;
+  font:
+    800 24px 'Bricolage Grotesque',
+    sans-serif;
+  transform: translate(-50%, -50%) rotate(var(--card-turn));
+  animation: poker-toss 650ms var(--deal-delay) cubic-bezier(0.2, 0.8, 0.3, 1)
+    both;
+}
+.room-thrown-card span {
+  animation: card-face 650ms var(--deal-delay) both;
+}
+.pp-table-area--revealed .seat-card--voted {
+  opacity: 0;
+  animation: none;
+}
+.vote-card:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.vote-card:disabled:hover {
+  transform: translateY(var(--drop)) rotate(var(--tilt));
+}
+.vote-card--selected:disabled:hover {
+  transform: translateY(-22px);
+}
+@keyframes poker-toss {
+  0% {
+    left: var(--start-x);
+    top: var(--start-y);
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-30deg) scale(0.45);
+    background: var(--pp-ink);
+  }
+  15% {
+    opacity: 1;
+  }
+  55% {
+    transform: translate(-50%, -65%) rotate(16deg) scale(1.15);
+    background: var(--pp-ink);
+  }
+  100% {
+    left: var(--end-x);
+    top: var(--end-y);
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--card-turn));
+  }
+}
+@keyframes card-face {
+  0%,
+  55% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes results-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Table et participants ---------- */
+.pp-table-area {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  width: min(100%, max(360px, calc((100svh - 240px) * 1.85)));
+  aspect-ratio: 1.85;
+  margin: 0 auto;
+}
+
+.pp-table {
+  position: absolute;
+  inset: 17% 12%;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--pp-border);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    var(--pp-paper),
+    var(--pp-pink)
+  );
+  box-shadow:
+    inset 0 0 0 10px var(--pp-paper),
+    inset 0 0 0 12px var(--pp-line),
+    0 24px 48px #39454122;
+}
+
+.pp-table-count {
+  margin: 0;
+  text-align: center;
+  color: var(--pp-muted);
+  font-size: 15px;
+}
+.pp-table-count strong {
+  display: block;
+  color: var(--pp-ink);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pp-seats {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pp-seat {
+  --seat-size: 56px;
+  position: absolute;
+  width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  /* centre l'avatar (pas le bloc avatar + pseudo) sur le point de l'ellipse */
+  transform: translate(-50%, calc(var(--seat-size) / -2));
+}
+
+.seat-portrait {
+  position: relative;
+  width: var(--seat-size);
+  height: var(--seat-size);
+}
+
+.seat-avatar {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid var(--pp-paper);
+  border-radius: 50%;
+  background: var(--pp-pink);
+  box-shadow:
+    0 0 0 2px var(--pp-line),
+    0 8px 18px #39454122;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.seat-avatar > * {
+  grid-area: 1 / 1;
+}
+.seat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pp-seat--me .seat-avatar {
+  box-shadow:
+    0 0 0 3px var(--pp-ink),
+    0 8px 18px #39454133;
+}
+
+/* mini carte posée sur l'avatar : pointillés = pas encore voté, dos de carte = a voté */
+.seat-card {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  width: 20px;
+  height: 28px;
+  border: 2px dashed var(--pp-border);
+  border-radius: 5px;
+  background: var(--pp-paper);
+  transform: rotate(10deg);
+}
+.seat-card--voted {
+  border: 2px solid var(--pp-ink);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--pp-ink) 0 3px,
+    #55645e 3px 6px
+  );
+  animation: card-drop 250ms ease both;
+}
+
+.seat-name {
+  max-width: 100%;
+  padding: 2px 10px;
+  overflow: hidden;
+  border: 1px solid var(--pp-line);
+  border-radius: 999px;
+  background: var(--pp-paper);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.pp-seat--me .seat-name {
+  border-color: var(--pp-ink);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+  font-weight: 700;
+}
+
+.pp-seat:nth-child(4) .seat-name {
+  position: absolute;
+  bottom: calc(100% + 8px);
+}
+
+/* ---------- Main de cartes ---------- */
+.pp-hand-area {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: end;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+.pp-hand-caption {
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+.pp-hand {
+  width: min(100%, 420px);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 8px 18px;
+}
+
+.vote-card {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--pp-line);
+  border-radius: 14px;
+  background: var(--pp-paper);
+  color: var(--pp-ink);
+  box-shadow: 0 10px 24px #39454124;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  transform: translateY(var(--drop)) rotate(var(--tilt));
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+}
+.vote-card:hover {
+  background: var(--pp-pink);
+  transform: translateY(calc(var(--drop) - 10px)) rotate(0deg);
+}
+.vote-card--selected,
+.vote-card--selected:hover {
+  border-color: var(--pp-ink);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+  transform: translateY(-22px) rotate(0deg);
+}
+
+@keyframes card-drop {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 700px) {
+  .pp-seat {
+    --seat-size: 44px;
+    width: 84px;
+  }
+  .seat-avatar {
+    font-size: 18px;
+  }
+  .seat-name {
+    font-size: 12px;
+  }
+  .room-thrown-card {
+    width: 28px;
+    font-size: 18px;
+  }
+  .room-results {
+    width: 100px;
+  }
+  .room-results-caption,
+  .room-results-total {
+    font-size: 11px;
+  }
+  .room-average {
+    font-size: 30px;
+  }
+  .room-distribution {
+    margin-top: 4px;
+  }
+  .room-distribution span {
+    font-size: 10px;
+  }
+  .pp-hand {
+    width: min(100%, 400px);
+  }
+}
+
+@media (max-width: 899px) {
+  .pp-room {
+    grid-template-columns: minmax(0, 1fr) 42px;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 14px 12px;
+    padding: 8px 20px 12px;
+  }
+  .room-toolbar {
+    position: static;
+    width: 100%;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .room-issue {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pp-table-area {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: min(100%, 560px);
+    margin: 16px auto 24px;
+  }
+  .room-controls {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    max-width: none;
+    margin-top: 0;
+    padding: 12px 0;
+  }
+  .room-controls-actions {
+    display: flex;
+    width: auto;
+  }
+  .pp-hand-area {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+}
+
+@media (max-width: 600px) {
+  .room-thrown-card {
+    --reveal-ry: 25%;
+    width: 24px;
+    font-size: 16px;
+    border-radius: 5px;
+  }
+  .room-results {
+    width: 100px;
+  }
+  .room-average {
+    font-size: 32px;
+  }
+  .room-distribution {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 6px;
+  }
+  .room-distribution span {
+    justify-content: center;
+    font-size: 10px;
+  }
+  .pp-room {
+    padding: 8px 16px 12px;
+  }
+  .pp-table-area {
+    width: min(100%, 360px);
+    aspect-ratio: 1;
+  }
+  .room-controls {
+    gap: 8px;
+  }
+  .room-controls-actions {
+    width: 100%;
+  }
+  .room-controls-actions .pp-button {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .vote-card {
+    font-size: 18px;
+    border-radius: 8px;
+  }
+  .pp-table-count strong {
+    font-size: 34px;
+  }
+  .pp-seat {
+    --seat-size: 44px;
+    width: 72px;
+  }
+  .seat-avatar {
+    font-size: 18px;
+  }
+  .seat-name {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+  .seat-card {
+    width: 16px;
+    height: 22px;
+    right: -8px;
+    top: -6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-thrown-card,
+  .room-thrown-card span,
+  .room-results {
+    animation: none;
+  }
+  .vote-card {
+    transition: none;
+  }
+  .seat-card--voted {
+    animation: none;
+  }
+}
