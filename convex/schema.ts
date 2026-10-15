@@ -1,8 +1,8 @@
-import { defineSchema, defineTable } from 'convex/server'
-import { v } from 'convex/values'
+import { defineSchema } from 'convex/server'
+import { refinementTable } from './refinement/schema'
+import { participantTable } from './participant/schema'
 
 export default defineSchema({
-  messages: defineTable({
-    text: v.string(),
-  }),
+  refinements: refinementTable,
+  participants: participantTable,
 })

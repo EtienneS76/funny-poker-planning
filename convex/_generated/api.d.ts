@@ -8,9 +8,10 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
+import type * as auth_auth from "../auth/auth.js";
 import type * as http from "../http.js";
 import type * as message from "../message.js";
+import type * as refinement_mutations from "../refinement/mutations.js";
 
 import type {
   ApiFromModules,
@@ -19,9 +20,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
+  "auth/auth": typeof auth_auth;
   http: typeof http;
   message: typeof message;
+  "refinement/mutations": typeof refinement_mutations;
 }>;
 
 /**

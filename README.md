@@ -96,3 +96,12 @@ docker run --rm -p 8080:80 github-auth
 
 Le backend Convex doit etre accessible depuis le navigateur. Sa configuration
 locale et les fichiers `.env` ne sont pas inclus dans l'image.
+
+### Consultation des données
+
+```
+yarn convex data                       # liste les tables
+yarn convex data refinements           # affiche le contenu d'une table
+yarn convex run refinements:getBySlug '{"slug":"abc1234"}'
+yarn convex logs                       # logs en continu
+```
