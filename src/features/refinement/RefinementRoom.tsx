@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { useAccount } from '../auth/useAccount'
 import { sizings } from './options'
 import { RefinementRoomDebug } from './RefinementRoomDebug'
+import { useRefinementRoomDebug } from './hooks/useRefinementRoomDebug'
 import { RefinementRoomControls } from './RefinementRoomControls'
 import { RefinementIssue } from './RefinementIssue'
 import {
@@ -23,15 +24,6 @@ type Seat = {
 const tempGithubUrl: string | null =
   'https://github.com/fulll/portail-rh/issues/10596'
 
-// Données mock en attendant les vraies tables participants / votes
-const mockPlayers = [
-  { id: 'mock-1', name: 'ada-lovelace', vote: '5' },
-  { id: 'mock-2', name: 'linus-t', vote: null },
-  { id: 'mock-3', name: 'grace-hopper', vote: '8' },
-  { id: 'mock-4', name: 'margaret-h', vote: null },
-  { id: 'mock-5', name: 'alan-turing', vote: '5' },
-]
-
 // Placement des sièges sur une ellipse, le joueur courant en bas (90°)
 const SEAT_RX = 40
 const SEAT_RY = 37
@@ -47,7 +39,6 @@ function seatStyle(index: number, total: number): CSSProperties {
 export function RefinementRoom() {
   const account = useAccount()
   const [selectedCard, setSelectedCard] = useState<string | null>(null)
-  const [players, setPlayers] = useState(mockPlayers)
   const [revealed, setRevealed] = useState(false)
   const [reactionTarget, setReactionTarget] = useState<string | null>(null)
   const [reactionRound, setReactionRound] = useState(0)
@@ -56,6 +47,8 @@ export function RefinementRoom() {
 
   // Fibonacci par défaut, en attendant que le sizing soit stocké sur le refinement
   const cards = sizings[0].cards
+  const { players, resetPlayers, simulateVotes, simulateConsensus } =
+    useRefinementRoomDebug(cards)
 
   const seats: Seat[] = [
     {
@@ -90,28 +83,15 @@ export function RefinementRoom() {
     setReactionTarget(null)
     setDodging({})
     setReactionRound((previous) => previous + 1)
-    setPlayers((previous) =>
-      previous.map((player) => ({ ...player, vote: null })),
-    )
+    resetPlayers()
   }
 
   function revealCards() {
     if (!revealed && votedCount >= 2) setRevealed(true)
   }
 
-  function simulateVotes() {
-    setPlayers((previous) =>
-      previous.map((player) => ({
-        ...player,
-        vote: cards[Math.floor(Math.random() * cards.length)],
-      })),
-    )
-  }
-
-  function simulateConsensus() {
-    const vote = selectedCard ?? cards[Math.floor(cards.length / 2)]
-    setSelectedCard(vote)
-    setPlayers(previous => previous.map(player => ({ ...player, vote })))
+  function simulateConsensusVote() {
+    setSelectedCard(simulateConsensus(selectedCard))
   }
 
   function closeReactionMenu() {
@@ -136,7 +116,7 @@ export function RefinementRoom() {
             onReveal={revealCards}
             onReset={resetRound}
             onSimulate={simulateVotes}
-            onSimulateConsensus={simulateConsensus}
+            onSimulateConsensus={simulateConsensusVote}
           />
         </div>
         <RefinementIssue url={tempGithubUrl} />
@@ -259,7 +239,11 @@ export function RefinementRoom() {
             onClose={closeReactionMenu}
             onDodge={dodgeSeat}
           />
-          {consensus && <ConsensusCelebration revealDelay={650 + (seats.length - 1) * 70 + 150} />}
+          {consensus && (
+            <ConsensusCelebration
+              revealDelay={650 + (seats.length - 1) * 70 + 150}
+            />
+          )}
         </section>
 
         <RefinementRoomControls
