@@ -1,4 +1,4 @@
-export const universes = [
+export const upcomingThemes = [
   { id: 'hp', label: 'Harry Potter' },
   { id: 'pk', label: 'Pokémon' },
   { id: 'sw', label: 'Star Wars' },
@@ -12,8 +12,6 @@ export const sizings = [
 ] as const
 
 export type RefinementDraft = {
-  name: string
-  universe: typeof universes[number]['id']
   sizing: typeof sizings[number]['id']
   issueUrl: string | null
 }

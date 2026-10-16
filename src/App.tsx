@@ -5,11 +5,12 @@ import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { authClient } from './features/auth/auth-client'
 import { AccountProvider } from './features/auth/useAccount'
+import { AppSnackbarProvider } from './components/AppSnackbar'
 import Home from './Home'
-import { SnackbarProvider } from 'notistack'
 import { RefinementRoom } from './features/refinement/RefinementRoom'
 import AppErrorBoundary from './components/AppErrorBoundary'
 import './styles/index.css'
+import './styles/app-snackbar.css'
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null
@@ -24,9 +25,9 @@ export default function App() {
   }
 
   return (
-    <SnackbarProvider>
-      <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-        <AccountProvider>
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <AccountProvider>
+        <AppSnackbarProvider>
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/refinement' element={<Navigate to='/' replace />} />
@@ -35,9 +36,9 @@ export default function App() {
               element={<RefinementRoom />}
             />
           </Routes>
-        </AccountProvider>
-      </ConvexBetterAuthProvider>
-    </SnackbarProvider>
+        </AppSnackbarProvider>
+      </AccountProvider>
+    </ConvexBetterAuthProvider>
   )
 }
 

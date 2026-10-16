@@ -211,6 +211,17 @@
   text-align: center;
   animation: results-arrive 350ms 850ms both;
 }
+.room-results--tshirts {
+  width: min(400px, 95%);
+}
+.room-tshirt-summary {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+}
 .room-results-caption {
   display: block;
   color: var(--pp-muted);
@@ -274,6 +285,29 @@
 }
 .room-thrown-card span {
   animation: card-face 650ms var(--deal-delay) both;
+}
+.room-thrown-card--shirt {
+  width: 78px;
+  aspect-ratio: 1;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.room-thrown-shirt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--pp-ink);
+}
+.room-thrown-shirt svg {
+  width: 68px;
+  height: 68px;
+  fill: var(--pp-pink);
+}
+.room-thrown-shirt small {
+  position: absolute;
+  top: 53%;
+  font: 800 10px 'Bricolage Grotesque', sans-serif;
 }
 .pp-table-area--revealed .seat-card--voted {
   opacity: 0;
@@ -454,14 +488,15 @@
 }
 
 .seat-name {
-  max-width: 100%;
+  width: max-content;
+  max-width: min(36ch, calc(100vw - 24px));
   padding: 2px 10px;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   border: 1px solid var(--pp-line);
   border-radius: 999px;
   background: var(--pp-paper);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: center;
+  white-space: normal;
   font-size: 13px;
   font-weight: 500;
 }
@@ -499,7 +534,7 @@
 .pp-hand {
   width: min(100%, 420px);
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--card-count, 7), minmax(0, 1fr));
   align-items: flex-end;
   justify-content: center;
   gap: 6px;
@@ -524,6 +559,21 @@
   transition:
     transform 150ms ease,
     background 150ms ease;
+}
+.vote-card--shirt {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.vote-card--shirt svg {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
 }
 .vote-card:hover {
   background: var(--pp-pink);
@@ -565,6 +615,9 @@
   }
   .room-results {
     width: 100px;
+  }
+  .room-results--tshirts {
+    width: min(280px, 95%);
   }
   .room-results-caption,
   .room-results-total {
@@ -630,6 +683,19 @@
     width: 24px;
     font-size: 16px;
     border-radius: 5px;
+  }
+  .room-thrown-card--shirt {
+    width: 56px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .room-thrown-shirt svg {
+    width: 48px;
+    height: 48px;
+  }
+  .room-thrown-shirt small {
+    font-size: 8px;
   }
   .room-results {
     width: 100px;

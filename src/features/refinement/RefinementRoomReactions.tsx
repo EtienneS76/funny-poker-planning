@@ -9,9 +9,12 @@ type ReactionSeat = {
 }
 type Props = {
   seats: ReactionSeat[]
+  events: SharedReaction[]
+  eventsReady: boolean
   targetId: string | null
   onClose: () => void
   onDodge: (seatId: string, active: boolean) => void
+  onSend: (targetUserId: string, kind: Reaction['id']) => void
 }
 
 const reactions = [
@@ -22,9 +25,19 @@ const reactions = [
 ] as const
 
 type Reaction = (typeof reactions)[number]
+type SharedReaction = {
+  _id: string
+  sourceUserId: string
+  targetUserId: string
+  kind: Reaction['id']
+  createdAt: number
+  hatched: boolean
+  dodged: boolean
+  escapeAngle: number | null
+}
 type StainKind = 'tomato' | 'poop'
 type Throw = {
-  id: number
+  id: string
   expiresAt: number
   target: ReactionSeat
   source: ReactionSeat
@@ -42,9 +55,12 @@ type Throw = {
 
 export function RefinementRoomReactions({
   seats,
+  events,
+  eventsReady,
   targetId,
   onClose,
   onDodge,
+  onSend,
 }: Props) {
   const [activeThrows, setActiveThrows] = useState<Throw[]>([])
   const [announcement, setAnnouncement] = useState('')
@@ -53,7 +69,8 @@ export function RefinementRoomReactions({
   >({})
   const impactTimers = useRef(new Set<number>())
   const lastThrow = useRef(-Infinity)
-  const nextThrowId = useRef(0)
+  const seenReactions = useRef(new Set<string>())
+  const initializedEvents = useRef(false)
   const menu = useRef<HTMLDivElement>(null)
   const target = seats.find((seat) => seat.id === targetId)
   const source = seats.find((seat) => seat.isMe)
@@ -102,85 +119,108 @@ export function RefinementRoomReactions({
     return () => window.clearTimeout(timeout)
   }, [activeThrows])
 
+  useEffect(() => {
+    if (!eventsReady) return
+    if (!initializedEvents.current) {
+      for (const event of events) seenReactions.current.add(event._id)
+      initializedEvents.current = true
+      return
+    }
+
+    for (const event of events) {
+      if (seenReactions.current.has(event._id)) continue
+      seenReactions.current.add(event._id)
+      const target = seats.find((seat) => seat.id === event.targetUserId)
+      const source = seats.find((seat) => seat.id === event.sourceUserId)
+      const reaction = reactions.find((option) => option.id === event.kind)
+      if (!target || !source || !reaction || Date.now() - event.createdAt > 8_000) {
+        continue
+      }
+
+      const table = event.hatched
+        ? menu.current?.closest('.pp-table-area')?.getBoundingClientRect()
+        : null
+      const escapeAngle = event.escapeAngle ?? 0
+      const escapeDistance = table
+        ? Math.hypot(window.innerWidth, window.innerHeight) + 96
+        : 0
+      const item: Throw = {
+        id: event._id,
+        expiresAt: Date.now() + (event.hatched ? 4800 : 1900),
+        target,
+        source,
+        reaction,
+        hatched: event.hatched,
+        dodged: event.dodged,
+        escapeOrigin: table
+          ? {
+              x:
+                table.left +
+                (table.width * Number.parseFloat(String(target.position.left))) /
+                  100,
+              y:
+                table.top +
+                (table.height * Number.parseFloat(String(target.position.top))) /
+                  100,
+              travelX: Math.cos(escapeAngle) * escapeDistance,
+              travelY: Math.sin(escapeAngle) * escapeDistance,
+              angle: escapeAngle,
+            }
+          : null,
+      }
+      setActiveThrows((previous) => [
+        ...previous.filter((active) => active.expiresAt > Date.now()).slice(-39),
+        item,
+      ])
+
+      if (event.dodged) {
+        onDodge(target.id, true)
+        const end = window.setTimeout(() => {
+          impactTimers.current.delete(end)
+          onDodge(target.id, false)
+        }, 1000)
+        impactTimers.current.add(end)
+      }
+
+      if (
+        !event.dodged &&
+        (event.kind === 'tomato' || event.kind === 'poop' || event.kind === 'soap')
+      ) {
+        const stainKind = event.kind
+        const timeout = window.setTimeout(() => {
+          impactTimers.current.delete(timeout)
+          setHits((previous) => {
+            if (stainKind === 'soap') {
+              const cleaned = { ...previous }
+              delete cleaned[target.id]
+              return cleaned
+            }
+            return {
+              ...previous,
+              [target.id]: {
+                ...previous[target.id],
+                [stainKind]: Math.min(
+                  10,
+                  (previous[target.id]?.[stainKind] ?? 0) + 1,
+                ),
+              },
+            }
+          })
+        }, 700)
+        impactTimers.current.add(timeout)
+      }
+
+      setAnnouncement(
+        `${source.name} envoie ${reaction.description} à ${target.name}.${event.dodged ? ` ${target.name} esquive !` : event.hatched ? ' Surprise : un poussin éclot et s’enfuit !' : ''}`,
+      )
+    }
+  }, [events, eventsReady, onDodge, seats])
+
   function sendReaction(reaction: Reaction) {
     const now = performance.now()
-    if (!source || !target || now - lastThrow.current < 100) return
+    if (!source || !target || now - lastThrow.current < 500) return
     lastThrow.current = now
-    const hatched = reaction.id === 'egg' && Math.random() < 0.1
-    const dodged = !hatched && reaction.id !== 'soap' && Math.random() < 0.15
-    const table = hatched
-      ? menu.current?.closest('.pp-table-area')?.getBoundingClientRect()
-      : null
-    const escapeAngle = table ? Math.random() * Math.PI * 2 : 0
-    const escapeDistance = table
-      ? Math.hypot(window.innerWidth, window.innerHeight) + 96
-      : 0
-    const item: Throw = {
-      id: nextThrowId.current++,
-      expiresAt: Date.now() + (hatched ? 4800 : 1900),
-      target,
-      source,
-      reaction,
-      hatched,
-      dodged,
-      escapeOrigin: table
-        ? {
-            x:
-              table.left +
-              (table.width * Number.parseFloat(String(target.position.left))) /
-                100,
-            y:
-              table.top +
-              (table.height * Number.parseFloat(String(target.position.top))) /
-                100,
-            travelX: Math.cos(escapeAngle) * escapeDistance,
-            travelY: Math.sin(escapeAngle) * escapeDistance,
-            angle: escapeAngle,
-          }
-        : null,
-    }
-    setActiveThrows((previous) => [
-      ...previous.filter((active) => active.expiresAt > Date.now()).slice(-39),
-      item,
-    ])
-    if (dodged) {
-      onDodge(target.id, true)
-      const end = window.setTimeout(() => {
-        impactTimers.current.delete(end)
-        onDodge(target.id, false)
-      }, 1000)
-      impactTimers.current.add(end)
-    }
-    const stainKind = reaction.id
-    if (
-      !dodged &&
-      (stainKind === 'tomato' || stainKind === 'poop' || stainKind === 'soap')
-    ) {
-      const timeout = window.setTimeout(() => {
-        impactTimers.current.delete(timeout)
-        setHits((previous) => {
-          if (stainKind === 'soap') {
-            const cleaned = { ...previous }
-            delete cleaned[target.id]
-            return cleaned
-          }
-          return {
-            ...previous,
-            [target.id]: {
-              ...previous[target.id],
-              [stainKind]: Math.min(
-                10,
-                (previous[target.id]?.[stainKind] ?? 0) + 1,
-              ),
-            },
-          }
-        })
-      }, 700)
-      impactTimers.current.add(timeout)
-    }
-    setAnnouncement(
-      `${source.name} envoie ${reaction.description} à ${target.name}.${dodged ? ` ${target.name} esquive !` : hatched ? ' Surprise : un poussin éclot et s’enfuit !' : ''}`,
-    )
+    onSend(target.id, reaction.id)
   }
 
   return (

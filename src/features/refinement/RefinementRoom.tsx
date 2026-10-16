@@ -1,8 +1,15 @@
-import { useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useParams } from 'react-router'
+import { useMutation } from 'convex/react'
+import { Shirt } from 'lucide-react'
+import { api } from '../../../convex/_generated/api'
 import { useAccount } from '../auth/useAccount'
+import Topbar from '../../components/Topbar'
+import { useAppSnackbar } from '../../components/AppSnackbar'
 import { sizings } from './options'
 import { RefinementRoomDebug } from './RefinementRoomDebug'
 import { useRefinementRoomDebug } from './hooks/useRefinementRoomDebug'
+import { useRefinementRoom } from './hooks/useRefinementRoom'
 import { RefinementRoomControls } from './RefinementRoomControls'
 import { RefinementIssue } from './RefinementIssue'
 import {
@@ -18,11 +25,9 @@ type Seat = {
   name: string
   avatarUrl: string | null
   vote: string | null
+  hasVoted: boolean
   isMe: boolean
 }
-
-const tempGithubUrl: string | null =
-  'https://github.com/fulll/portail-rh/issues/10596'
 
 // Placement des sièges sur une ellipse, le joueur courant en bas (90°)
 const SEAT_RX = 40
@@ -38,60 +43,278 @@ function seatStyle(index: number, total: number): CSSProperties {
 
 export function RefinementRoom() {
   const account = useAccount()
-  const [selectedCard, setSelectedCard] = useState<string | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  const { playerJoined, playerLeft, success, error } = useAppSnackbar()
+  const { refinementSlug = '' } = useParams()
+  const room = useRefinementRoom(refinementSlug)
+  const recordVote = useMutation(api.refinement.mutations.recordVote)
+  const sendReactionMutation = useMutation(api.refinement.mutations.sendReaction)
+  const revealVotes = useMutation(api.refinement.mutations.reveal)
+  const startNewRound = useMutation(api.refinement.mutations.startNewRound)
+
+  const [voteOverride, setVoteOverride] = useState<{
+    roundId: string
+    card: string | null
+  } | null>(null)
+  const [debugRevealed, setDebugRevealed] = useState(false)
   const [reactionTarget, setReactionTarget] = useState<string | null>(null)
   const [reactionRound, setReactionRound] = useState(0)
   const [dodging, setDodging] = useState<Record<string, number>>({})
+  const [roundUpdating, setRoundUpdating] = useState(false)
+
   const reactionTrigger = useRef<HTMLButtonElement | null>(null)
 
   // Fibonacci par défaut, en attendant que le sizing soit stocké sur le refinement
-  const cards = sizings[0].cards
-  const { players, resetPlayers, simulateVotes, simulateConsensus } =
-    useRefinementRoomDebug(cards)
+  const cards =
+    sizings.find((sizing) => sizing.id === room?.refinement.sizing)?.cards ??
+    sizings[0].cards
+  const isTshirtSizing = room?.refinement.sizing === 'tee'
+
+  const {
+    players: debugPlayers,
+    consensusVote,
+    addPlayers,
+    removePlayers,
+    resetPlayers,
+    simulateVotes,
+    simulateConsensus,
+  } = useRefinementRoomDebug(cards)
+
+  const currentUserId = account.isAuthenticated
+    ? account.profileId
+      ? String(account.profileId)
+      : null
+    : `guest:${account.guestId}`
+  const currentRoundId = room?.round?._id
+  const remoteSelectedCard =
+    room?.participants.find(
+      (participant) => participant.userId === currentUserId,
+    )?.vote ?? null
+  const selectedCard =
+    voteOverride?.roundId === String(currentRoundId)
+      ? voteOverride.card
+      : remoteSelectedCard
+  const revealed = room?.round?.revealedAt !== undefined || debugRevealed
+  const hasJoinedRoom = Boolean(
+    room?.participants.some(
+      (participant) => participant.userId === currentUserId,
+    ),
+  )
+
+  useEffect(() => {
+    if (
+      voteOverride &&
+      (voteOverride.roundId !== String(currentRoundId) ||
+        remoteSelectedCard === voteOverride.card)
+    ) {
+      setVoteOverride(null)
+    }
+  }, [currentRoundId, remoteSelectedCard, voteOverride])
+
+  const previousParticipants = useRef<Map<string, string> | null>(null)
+
+  useEffect(() => {
+    if (
+      !room ||
+      account.loading ||
+      (account.isAuthenticated && !account.profileId)
+    ) {
+      return
+    }
+
+    const current = new Map(
+      room.participants.map((participant) => [
+        participant.userId,
+        participant.name,
+      ]),
+    )
+    const previous = previousParticipants.current
+
+    if (previous) {
+      for (const [userId, name] of current) {
+        if (userId !== currentUserId && !previous.has(userId)) {
+          playerJoined(name)
+        }
+      }
+
+      const currentName = account.user?.username ?? account.guestName
+      for (const [userId, name] of previous) {
+        const isCurrentIdentityMigration =
+          current.has(currentUserId ?? '') && name === currentName
+        if (
+          !current.has(userId) &&
+          userId !== currentUserId &&
+          !isCurrentIdentityMigration
+        ) {
+          playerLeft(name)
+        }
+      }
+    }
+
+    previousParticipants.current = current
+  }, [
+    account.guestName,
+    account.isAuthenticated,
+    account.loading,
+    account.profileId,
+    account.user?.username,
+    currentUserId,
+    playerJoined,
+    playerLeft,
+    room,
+  ])
+
+  const realSeats: Seat[] = (room?.participants ?? []).map((participant) => ({
+    id: participant.userId,
+    name: participant.name,
+    avatarUrl: participant.avatarUrl,
+    vote: consensusVote ?? participant.vote,
+    hasVoted: consensusVote !== null || participant.hasVoted,
+    isMe: participant.userId === currentUserId,
+  }))
+
+  if (!realSeats.some((seat) => seat.isMe)) {
+    realSeats.push({
+      id: currentUserId ?? `guest:${account.guestId}`,
+      name: account.user?.username ?? account.guestName,
+      avatarUrl: account.user?.avatarUrl ?? null,
+      vote: consensusVote ?? selectedCard,
+      hasVoted: consensusVote !== null || selectedCard !== null,
+      isMe: true,
+    })
+  }
 
   const seats: Seat[] = [
-    {
-      id: 'me',
-      name: account.user?.username ?? 'Invité',
-      avatarUrl: account.user?.avatarUrl ?? null,
-      vote: selectedCard,
-      isMe: true,
-    },
-    ...players.map((player) => ({
-      ...player,
+    ...realSeats,
+    ...debugPlayers.map((player) => ({
+      id: `debug:${player.id}`,
+      name: player.name,
       avatarUrl: null,
+      vote: player.vote,
+      hasVoted: player.vote !== null,
       isMe: false,
     })),
   ]
-  const votes = seats.flatMap((seat) =>
-    seat.vote === null ? [] : [Number(seat.vote)],
-  )
-  const votedCount = votes.length
+  const votes = seats.flatMap((seat) => {
+    if (seat.vote === null) return []
+    const value = Number(seat.vote)
+    return Number.isFinite(value) ? [value] : []
+  })
+  const votedCount = seats.filter((seat) => seat.hasVoted).length
+  const realVotedCount =
+    consensusVote === null
+      ? realSeats.filter((seat) => seat.hasVoted).length
+      : 0
   const average = votes.length
     ? votes.reduce((sum, vote) => sum + vote, 0) / votes.length
     : null
+  const revealedCards = seats.flatMap((seat) =>
+    seat.vote === null ? [] : [seat.vote],
+  )
+  const cardOrder: readonly string[] = cards
+  const tshirtSummary = [
+    ...seats.reduce((counts, seat) => {
+      if (seat.vote !== null) {
+        counts.set(seat.vote, (counts.get(seat.vote) ?? 0) + 1)
+      }
+      return counts
+    }, new Map<string, number>()),
+  ]
+    .sort(
+      ([left], [right]) => cardOrder.indexOf(left) - cardOrder.indexOf(right),
+    )
+    .map(([size, count]) => `${count}x${size}`)
+    .join(' · ')
   const consensus =
     revealed &&
     votedCount === seats.length &&
     votedCount >= 2 &&
-    new Set(votes).size === 1
+    new Set(revealedCards).size === 1
 
   function resetRound() {
-    setRevealed(false)
-    setSelectedCard(null)
+    if (!room) return
+    setDebugRevealed(false)
+    setVoteOverride(null)
     setReactionTarget(null)
     setDodging({})
     setReactionRound((previous) => previous + 1)
     resetPlayers()
+    setRoundUpdating(true)
+    void startNewRound({
+      slug: refinementSlug,
+      guestId: account.guestId,
+      guestName: account.user?.username ?? account.guestName,
+    })
+      .catch((resetError: unknown) => {
+        error(
+          'Manche non sauvegardée',
+          resetError instanceof Error
+            ? resetError.message
+            : 'Réessaie de lancer une nouvelle manche.',
+        )
+      })
+      .finally(() => setRoundUpdating(false))
+  }
+
+  function selectCard(card: string) {
+    if (roundUpdating || revealed || !currentRoundId) return
+    const nextCard = selectedCard === card ? null : card
+    setVoteOverride({ roundId: String(currentRoundId), card: nextCard })
+    void recordVote({
+      slug: refinementSlug,
+      guestId: account.guestId,
+      guestName: account.user?.username ?? account.guestName,
+      card: nextCard,
+    }).catch((voteError: unknown) => {
+      setVoteOverride(null)
+      error(
+        'Vote non sauvegardé',
+        voteError instanceof Error ? voteError.message : 'Réessaie de voter.',
+      )
+    })
   }
 
   function revealCards() {
-    if (!revealed && votedCount >= 2) setRevealed(true)
+    if (revealed || votedCount < 2) return
+    if (realVotedCount < 2) {
+      setDebugRevealed(true)
+      return
+    }
+    void revealVotes({
+      slug: refinementSlug,
+      guestId: account.guestId,
+      guestName: account.user?.username ?? account.guestName,
+    }).catch((revealError: unknown) => {
+      error(
+        'Révélation impossible',
+        revealError instanceof Error
+          ? revealError.message
+          : 'Réessaie de révéler les cartes.',
+      )
+    })
   }
 
   function simulateConsensusVote() {
-    setSelectedCard(simulateConsensus(selectedCard))
+    simulateConsensus(selectedCard)
+  }
+
+  function sendReaction(
+    targetUserId: string,
+    kind: 'tomato' | 'poop' | 'egg' | 'soap',
+  ) {
+    void sendReactionMutation({
+      slug: refinementSlug,
+      guestId: account.guestId,
+      guestName: account.user?.username ?? account.guestName,
+      targetUserId,
+      kind,
+    }).catch((reactionError: unknown) => {
+      error(
+        'Réaction non envoyée',
+        reactionError instanceof Error
+          ? reactionError.message
+          : 'Réessaie dans un instant.',
+      )
+    })
   }
 
   function closeReactionMenu() {
@@ -106,34 +329,61 @@ export function RefinementRoom() {
     }))
   }
 
+  async function copyInviteLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      success('Lien copié', 'Partage-le pour inviter à participer.')
+    } catch {
+      error('Copie impossible', 'Vérifie les permissions du presse-papiers.')
+    }
+  }
+
   return (
     <div className='multivers multivers--room'>
+      <Topbar account={account} onInvitePlayers={copyInviteLink} />
       <main className='pp-room'>
         <div className='room-toolbar'>
           <RefinementRoomDebug
             revealed={revealed}
             voteCount={votedCount}
+            debugPlayerCount={debugPlayers.length}
+            onAddPlayers={addPlayers}
+            onRemovePlayers={removePlayers}
             onReveal={revealCards}
             onReset={resetRound}
             onSimulate={simulateVotes}
             onSimulateConsensus={simulateConsensusVote}
           />
         </div>
-        <RefinementIssue url={tempGithubUrl} />
+        <RefinementIssue url={room?.refinement.issueUrl ?? null} />
         <section
           className={`pp-table-area${revealed ? ' pp-table-area--revealed' : ''}${consensus ? ' pp-table-area--consensus' : ''}`}
           aria-label='Table de vote'
         >
           <div className='pp-table'>
             {revealed ? (
-              <div className='room-results' role='status'>
-                <span className='room-results-caption'>Moyenne</span>
-                <strong className='room-average'>
-                  {average?.toLocaleString('fr-FR', {
-                    maximumFractionDigits: 1,
-                  }) ?? '—'}
-                </strong>
-              </div>
+              isTshirtSizing ? (
+                <div
+                  className='room-results room-results--tshirts'
+                  role='status'
+                >
+                  <span className='room-results-caption'>
+                    Répartition des tailles
+                  </span>
+                  <strong className='room-tshirt-summary'>
+                    {tshirtSummary}
+                  </strong>
+                </div>
+              ) : average !== null ? (
+                <div className='room-results' role='status'>
+                  <span className='room-results-caption'>Moyenne</span>
+                  <strong className='room-average'>
+                    {average.toLocaleString('fr-FR', {
+                      maximumFractionDigits: 1,
+                    })}
+                  </strong>
+                </div>
+              ) : null
             ) : (
               <p className='pp-table-count'>
                 <strong>
@@ -151,7 +401,7 @@ export function RefinementRoom() {
                 return (
                   <li
                     key={seat.id}
-                    className='room-thrown-card'
+                    className={`room-thrown-card${isTshirtSizing ? ' room-thrown-card--shirt' : ''}`}
                     aria-label={`${seat.name} : ${seat.vote}`}
                     style={
                       {
@@ -164,7 +414,14 @@ export function RefinementRoom() {
                       } as CSSProperties
                     }
                   >
-                    <span>{seat.vote}</span>
+                    {isTshirtSizing ? (
+                      <span className='room-thrown-shirt'>
+                        <Shirt size={62} strokeWidth={1.8} aria-hidden='true' />
+                        <small>{seat.vote}</small>
+                      </span>
+                    ) : (
+                      <span>{seat.vote}</span>
+                    )}
                   </li>
                 )
               })}
@@ -181,7 +438,7 @@ export function RefinementRoom() {
                   <button
                     className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
                     type='button'
-                    disabled={seat.isMe}
+                    disabled={seat.isMe || seat.id.startsWith('debug:')}
                     aria-label={
                       seat.isMe
                         ? `Ton profil : ${seat.name}`
@@ -218,7 +475,7 @@ export function RefinementRoom() {
                     )}
                   </button>
                   <span
-                    className={`seat-card${seat.vote !== null ? ' seat-card--voted' : ''}`}
+                    className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
                     role='img'
                     aria-label={
                       seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
@@ -235,9 +492,12 @@ export function RefinementRoom() {
               ...seat,
               position: seatStyle(index, seats.length),
             }))}
+            events={room?.reactions ?? []}
+            eventsReady={room !== undefined}
             targetId={reactionTarget}
             onClose={closeReactionMenu}
             onDodge={dodgeSeat}
+            onSend={sendReaction}
           />
           {consensus && (
             <ConsensusCelebration
@@ -261,7 +521,10 @@ export function RefinementRoom() {
                 ? `Tu as choisi ${selectedCard}`
                 : 'Choisis ta carte'}
           </p>
-          <div className='pp-hand'>
+          <div
+            className={`pp-hand${isTshirtSizing ? ' pp-hand--shirts' : ''}`}
+            style={{ '--card-count': cards.length } as CSSProperties}
+          >
             {cards.map((card, index) => {
               const selected = card === selectedCard
               const offset = index - (cards.length - 1) / 2
@@ -269,10 +532,10 @@ export function RefinementRoom() {
                 <button
                   key={card}
                   type='button'
-                  disabled={revealed}
-                  className={`vote-card${selected ? ' vote-card--selected' : ''}`}
+                  disabled={revealed || roundUpdating || !hasJoinedRoom}
+                  className={`vote-card${selected ? ' vote-card--selected' : ''}${isTshirtSizing ? ' vote-card--shirt' : ''}`}
                   aria-pressed={selected}
-                  onClick={() => setSelectedCard(selected ? null : card)}
+                  onClick={() => selectCard(card)}
                   style={
                     {
                       '--tilt': `${offset * 3}deg`,
@@ -280,7 +543,14 @@ export function RefinementRoom() {
                     } as CSSProperties
                   }
                 >
-                  {card}
+                  {isTshirtSizing ? (
+                    <>
+                      <Shirt size={32} strokeWidth={1.8} aria-hidden='true' />
+                      <span>{card}</span>
+                    </>
+                  ) : (
+                    card
+                  )}
                 </button>
               )
             })}

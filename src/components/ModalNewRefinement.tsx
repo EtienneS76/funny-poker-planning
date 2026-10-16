@@ -1,22 +1,25 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Check, GitBranch, Link, X } from 'lucide-react'
 import type { AccountState } from '../features/auth/useAccount'
-import { parseIssueUrl, sizings, universes, type RefinementDraft } from '../features/refinement/options'
+import {
+  parseIssueUrl,
+  sizings,
+  upcomingThemes,
+  type RefinementDraft,
+} from '../features/refinement/options'
 
 type Props = {
   account: AccountState
-  initialDraft: RefinementDraft | null
   onClose: () => void
-  onSubmit: (draft: RefinementDraft) => void
+  onSubmit: (draft: RefinementDraft, creatorName: string) => void
 }
 
-export default function ModalNewRefinement({ account, initialDraft, onClose, onSubmit }: Props) {
+export default function ModalNewRefinement({ account, onClose, onSubmit }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
-  const [name, setName] = useState(initialDraft?.name ?? '')
-  const [universe, setUniverse] = useState<RefinementDraft['universe']>(initialDraft?.universe ?? 'hp')
-  const [sizing, setSizing] = useState<RefinementDraft['sizing']>(initialDraft?.sizing ?? 'fib')
-  const [issueInput, setIssueInput] = useState(initialDraft?.issueUrl ?? '')
-  const [issue, setIssue] = useState(initialDraft?.issueUrl ? parseIssueUrl(initialDraft.issueUrl) : null)
+  const [guestName, setGuestName] = useState(account.guestName)
+  const [sizing, setSizing] = useState<RefinementDraft['sizing']>('fib')
+  const [issueInput, setIssueInput] = useState('')
+  const [issue, setIssue] = useState<ReturnType<typeof parseIssueUrl>>(null)
   const [error, setError] = useState<string | null>(null)
   const selectedSizing = sizings.find(option => option.id === sizing)!
 
@@ -45,39 +48,68 @@ export default function ModalNewRefinement({ account, initialDraft, onClose, onS
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!name.trim()) {
-      setError('Donne un nom à la session.')
+    if (!account.isAuthenticated && !guestName.trim()) {
+      setError('Choisis un pseudo pour rejoindre la salle.')
       return
     }
     if (account.isAuthenticated && issueInput.trim() && !issue) {
       setError('Lie cette issue ou efface son lien avant de continuer.')
       return
     }
-    onSubmit({ name: name.trim(), universe, sizing, issueUrl: account.isAuthenticated ? issue?.url ?? null : null })
+    onSubmit(
+      {
+        sizing,
+        issueUrl: account.isAuthenticated ? issue?.url ?? null : null,
+      },
+      account.isAuthenticated ? account.user?.username ?? account.guestName : guestName.trim(),
+    )
   }
 
   return (
     <dialog className='pp-modal' ref={dialog} aria-labelledby='refinement-title' onCancel={onClose} onClick={event => { if (event.target === dialog.current) onClose() }}>
       <form className='pp-modal-content' onSubmit={submit}>
         <div className='pp-modal-heading'>
-          <h2 id='refinement-title'>Nouveau refinement</h2>
+          <h2 id='refinement-title'>Nouvelle partie</h2>
           <button className='pp-icon-button' type='button' aria-label='Fermer' title='Fermer' onClick={onClose}><X size={20} /></button>
         </div>
 
-        <label className='pp-field'>
-          <span>Nom de la session</span>
-          <input autoFocus required maxLength={100} placeholder='Sprint 42 - refinement' value={name} onChange={event => setName(event.target.value)} />
-        </label>
+        {!account.isAuthenticated && (
+          <label className='pp-field'>
+            <span>Pseudo</span>
+            <input
+              required
+              maxLength={36}
+              value={guestName}
+              onChange={event => setGuestName(event.target.value)}
+            />
+          </label>
+        )}
 
         <fieldset className='pp-fieldset'>
-          <legend>Univers</legend>
+          <legend>Mode de jeu</legend>
+          <div className='universe-grid universe-grid--classic'>
+            <label className='universe-option universe-option--classic'>
+              <input type='radio' name='universe' value='classic' checked readOnly />
+              <span className='universe-swatches' aria-hidden='true'><span /><span /></span>
+              <span>Poker planning classique</span>
+              <Check className='universe-check' size={16} aria-hidden='true' />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className='pp-fieldset'>
+          <legend>Thèmes</legend>
           <div className='universe-grid'>
-            {universes.map(option => (
-              <label key={option.id} className={`universe-option universe-option--${option.id}`}>
-                <input type='radio' name='universe' value={option.id} checked={universe === option.id} onChange={() => setUniverse(option.id)} />
+            {upcomingThemes.map(theme => (
+              <label
+                key={theme.id}
+                className={`universe-option universe-option--${theme.id} universe-option--upcoming`}
+                aria-disabled='true'
+              >
+                <input type='radio' name='universe' value={theme.id} disabled />
                 <span className='universe-swatches' aria-hidden='true'><span /><span /></span>
-                <span>{option.label}</span>
-                {universe === option.id && <Check className='universe-check' size={16} aria-hidden='true' />}
+                <span>{theme.label}</span>
+                <span className='universe-coming-soon'>Prochainement</span>
               </label>
             ))}
           </div>

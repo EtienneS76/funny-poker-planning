@@ -9,9 +9,17 @@
  */
 
 import type * as auth_auth from "../auth/auth.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
-import type * as message from "../message.js";
 import type * as refinement_mutations from "../refinement/mutations.js";
+import type * as refinement_queries from "../refinement/queries.js";
+import type * as refinement_reactionSchema from "../refinement/reactionSchema.js";
+import type * as refinement_roundSchema from "../refinement/roundSchema.js";
+import type * as refinement_slug from "../refinement/slug.js";
+import type * as refinement_voteSchema from "../refinement/voteSchema.js";
+import type * as user_mutations from "../user/mutations.js";
+import type * as user_profile from "../user/profile.js";
+import type * as user_queries from "../user/queries.js";
 
 import type {
   ApiFromModules,
@@ -21,9 +29,17 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "auth/auth": typeof auth_auth;
+  crons: typeof crons;
   http: typeof http;
-  message: typeof message;
   "refinement/mutations": typeof refinement_mutations;
+  "refinement/queries": typeof refinement_queries;
+  "refinement/reactionSchema": typeof refinement_reactionSchema;
+  "refinement/roundSchema": typeof refinement_roundSchema;
+  "refinement/slug": typeof refinement_slug;
+  "refinement/voteSchema": typeof refinement_voteSchema;
+  "user/mutations": typeof user_mutations;
+  "user/profile": typeof user_profile;
+  "user/queries": typeof user_queries;
 }>;
 
 /**

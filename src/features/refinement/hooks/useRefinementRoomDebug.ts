@@ -10,18 +10,31 @@ const mockPlayers: MockPlayer[] = [
   { id: 'mock-1', name: 'ada-lovelace', vote: '5' },
   { id: 'mock-2', name: 'linus-t', vote: null },
   { id: 'mock-3', name: 'grace-hopper', vote: '8' },
-  { id: 'mock-4', name: 'margaret-h', vote: null },
-  { id: 'mock-5', name: 'alan-turing', vote: '5' },
 ]
 
 export function useRefinementRoomDebug(cards: readonly string[]) {
-  const [players, setPlayers] = useState(mockPlayers)
+  const [players, setPlayers] = useState<MockPlayer[]>([])
+  const [consensusVote, setConsensusVote] = useState<string | null>(null)
+
+  function addPlayers() {
+    setPlayers(mockPlayers.map((player) => ({ ...player, vote: null })))
+    setConsensusVote(null)
+  }
+
+  function removePlayers() {
+    setPlayers([])
+    setConsensusVote(null)
+  }
 
   function resetPlayers() {
-    setPlayers(mockPlayers.map((player) => ({ ...player, vote: null })))
+    setPlayers((previous) =>
+      previous.map((player) => ({ ...player, vote: null })),
+    )
+    setConsensusVote(null)
   }
 
   function simulateVotes() {
+    setConsensusVote(null)
     setPlayers((previous) =>
       previous.map((player) => ({
         ...player,
@@ -32,9 +45,23 @@ export function useRefinementRoomDebug(cards: readonly string[]) {
 
   function simulateConsensus(selectedCard: string | null) {
     const vote = selectedCard ?? cards[Math.floor(cards.length / 2)]
-    setPlayers((previous) => previous.map((player) => ({ ...player, vote })))
+    setPlayers((previous) => {
+      const playersToVote = previous.length
+        ? previous
+        : mockPlayers.map((player) => ({ ...player, vote: null }))
+      return playersToVote.map((player) => ({ ...player, vote }))
+    })
+    setConsensusVote(vote)
     return vote
   }
 
-  return { players, resetPlayers, simulateVotes, simulateConsensus }
+  return {
+    players,
+    consensusVote,
+    addPlayers,
+    removePlayers,
+    resetPlayers,
+    simulateVotes,
+    simulateConsensus,
+  }
 }
