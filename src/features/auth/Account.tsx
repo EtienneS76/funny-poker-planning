@@ -26,7 +26,11 @@ export default function Account({ account }: { account: AccountState }) {
 
   useEffect(() => {
     function closeOutside(event: PointerEvent) {
-      if (menu.current && event.target instanceof Node && !menu.current.contains(event.target)) {
+      if (
+        menu.current &&
+        event.target instanceof Node &&
+        !menu.current.contains(event.target)
+      ) {
         menu.current.open = false
       }
     }
@@ -44,12 +48,20 @@ export default function Account({ account }: { account: AccountState }) {
     }
   }, [])
 
-  if (account.loading) return <span className='account-loading' role='status'>Connexion...</span>
+  if (account.loading)
+    return (
+      <span className='account-loading' role='status'>
+        Connexion...
+      </span>
+    )
 
   if (!account.isAuthenticated || !account.user) {
     return (
       <details className='profile-menu' ref={menu}>
-        <summary className='profile-trigger' aria-label={`Profil invité ${account.guestName}`}>
+        <summary
+          className='profile-trigger'
+          aria-label={`Profil invité ${account.guestName}`}
+        >
           <span className='profile-avatar' aria-hidden='true'>
             {account.guestName.slice(0, 1).toUpperCase()}
           </span>
@@ -115,14 +127,27 @@ export default function Account({ account }: { account: AccountState }) {
   return (
     <>
       <details className='profile-menu' ref={menu}>
-        <summary className='profile-trigger' aria-label={`Compte GitHub de ${displayName}`}>
+        <summary
+          className='profile-trigger'
+          aria-label={`Compte GitHub de ${displayName}`}
+        >
           <AvatarFrame
             frameId={account.profile?.avatarFrameId}
             className='profile-avatar-frame avatar-frame--compact'
           >
             <span className='profile-avatar' aria-hidden='true'>
               <span>{displayName.slice(0, 1).toUpperCase()}</span>
-              {account.user.avatarUrl && <img src={account.user.avatarUrl} alt='' width={32} height={32} onError={event => { event.currentTarget.hidden = true }} />}
+              {account.user.avatarUrl && (
+                <img
+                  src={account.user.avatarUrl}
+                  alt=''
+                  width={32}
+                  height={32}
+                  onError={(event) => {
+                    event.currentTarget.hidden = true
+                  }}
+                />
+              )}
             </span>
           </AvatarFrame>
           <span className='profile-username'>@{displayName}</span>
@@ -161,7 +186,10 @@ export default function Account({ account }: { account: AccountState }) {
                 try {
                   await account.updateDisplayName(name)
                   setEditingDisplayName(false)
-                  snackbar.success('Pseudo mis à jour', 'Il sera conservé à chaque connexion.')
+                  snackbar.success(
+                    'Pseudo mis à jour',
+                    'Il sera conservé à chaque connexion.',
+                  )
                 } catch (updateError) {
                   snackbar.error(
                     'Pseudo non sauvegardé',
@@ -198,7 +226,11 @@ export default function Account({ account }: { account: AccountState }) {
               Changer mon pseudo
             </button>
           )}
-          <button className='profile-signout' disabled={account.pending} onClick={account.signOut}>
+          <button
+            className='profile-signout'
+            disabled={account.pending}
+            onClick={account.signOut}
+          >
             <LogOut size={17} aria-hidden='true' />
             {account.pending ? 'Déconnexion...' : 'Se déconnecter'}
           </button>

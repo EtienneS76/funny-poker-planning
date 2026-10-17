@@ -43,7 +43,9 @@ export const getBySlug = query({
     const reactions = await context.db
       .query('roomReactions')
       .withIndex('by_refinement_created', (q) =>
-        q.eq('refinementId', refinement._id).gt('createdAt', Date.now() - 8_000),
+        q
+          .eq('refinementId', refinement._id)
+          .gt('createdAt', Date.now() - 8_000),
       )
       .collect()
     const votes = await context.db
@@ -94,7 +96,7 @@ export const getBySlug = query({
           hasVoted: votesByUserId.has(participant.userId),
           vote:
             revealed || participant.userId === currentUserId
-              ? votesByUserId.get(participant.userId) ?? null
+              ? (votesByUserId.get(participant.userId) ?? null)
               : null,
         }
       }),
@@ -104,7 +106,9 @@ export const getBySlug = query({
       refinement,
       round: currentRound,
       reactions,
-      participants: enrichedParticipants.filter((participant) => participant !== null),
+      participants: enrichedParticipants.filter(
+        (participant) => participant !== null,
+      ),
     }
   },
 })

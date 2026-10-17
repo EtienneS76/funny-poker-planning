@@ -91,7 +91,9 @@ export default function ModalShop({
       await buyAvatarFrame({ frameId })
     } catch (error) {
       setPurchaseError(
-        error instanceof Error ? error.message : 'Achat impossible pour le moment.',
+        error instanceof Error
+          ? error.message
+          : 'Achat impossible pour le moment.',
       )
     } finally {
       setBuyingFrame(null)
@@ -174,7 +176,10 @@ export default function ModalShop({
                 if (!tierFrames.length) return null
 
                 return (
-                  <section className={`pp-frame-tier pp-frame-tier--${tier.id}`} key={tier.id}>
+                  <section
+                    className={`pp-frame-tier pp-frame-tier--${tier.id}`}
+                    key={tier.id}
+                  >
                     <div className='pp-frame-tier-heading'>
                       <h3>{tier.label}</h3>
                       <span>{tierFrames[0].price} Wikisous</span>
@@ -193,7 +198,10 @@ export default function ModalShop({
                                 frameId={frame.id}
                                 className='pp-frame-avatar'
                               >
-                                <span className='pp-frame-avatar-initial' aria-hidden='true'>
+                                <span
+                                  className='pp-frame-avatar-initial'
+                                  aria-hidden='true'
+                                >
                                   A
                                 </span>
                               </AvatarFrame>

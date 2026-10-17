@@ -307,7 +307,9 @@
 .room-thrown-shirt small {
   position: absolute;
   top: 53%;
-  font: 800 10px 'Bricolage Grotesque', sans-serif;
+  font:
+    800 10px 'Bricolage Grotesque',
+    sans-serif;
 }
 .pp-table-area--revealed .seat-card--voted {
   opacity: 0;

@@ -58,7 +58,9 @@ export const buyAvatarFrame = mutation({
       throw new ConvexError('Tu n’as pas assez de Wikisous pour ce cadre.')
     }
 
-    await context.db.patch(wallet._id, { balance: wallet.balance - frame.price })
+    await context.db.patch(wallet._id, {
+      balance: wallet.balance - frame.price,
+    })
     await context.db.insert('userAvatarFrames', {
       userId: user._id,
       frameId,

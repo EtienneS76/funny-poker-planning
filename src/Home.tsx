@@ -87,7 +87,9 @@ export default function Home() {
           catalog={shopData?.catalog ?? []}
           ownedIds={shopData?.ownedIds ?? []}
           isAuthenticated={account.isAuthenticated}
-          canSignIn={account.configured === true && !account.loading && !account.pending}
+          canSignIn={
+            account.configured === true && !account.loading && !account.pending
+          }
           onSignIn={() => void account.signIn()}
           onClose={() => setShopOpen(false)}
         />

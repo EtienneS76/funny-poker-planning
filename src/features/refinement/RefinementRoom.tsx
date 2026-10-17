@@ -49,7 +49,9 @@ export function RefinementRoom() {
   const { refinementSlug = '' } = useParams()
   const room = useRefinementRoom(refinementSlug)
   const recordVote = useMutation(api.refinement.mutations.recordVote)
-  const sendReactionMutation = useMutation(api.refinement.mutations.sendReaction)
+  const sendReactionMutation = useMutation(
+    api.refinement.mutations.sendReaction,
+  )
   const revealVotes = useMutation(api.refinement.mutations.reveal)
   const startNewRound = useMutation(api.refinement.mutations.startNewRound)
 

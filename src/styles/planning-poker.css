@@ -652,7 +652,9 @@
   z-index: 2;
   inset: -4px;
   border: 2px solid #d77a91;
-  box-shadow: 0 0 0 2px #ffe2e8, inset 0 0 0 2px #fff8f0;
+  box-shadow:
+    0 0 0 2px #ffe2e8,
+    inset 0 0 0 2px #fff8f0;
 }
 .avatar-frame--clover::before {
   z-index: 2;
@@ -670,7 +672,9 @@
   z-index: 2;
   inset: -4px;
   border: 3px solid #59a99f;
-  box-shadow: 0 0 0 2px #d7f3e9, 0 0 10px #7ccfc477;
+  box-shadow:
+    0 0 0 2px #d7f3e9,
+    0 0 10px #7ccfc477;
 }
 .avatar-frame--waterlily::after {
   z-index: 2;
@@ -681,7 +685,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #69b9ae;
-  box-shadow: 0 0 0 2px #d8f4e9, 0 0 12px #83dfcb99;
+  box-shadow:
+    0 0 0 2px #d8f4e9,
+    0 0 12px #83dfcb99;
   animation: avatar-frame-aurora 3s ease-in-out infinite;
 }
 .avatar-frame--aurora::after {
@@ -693,13 +699,17 @@
   z-index: 2;
   inset: -4px;
   border: 3px solid #a9d9e9;
-  box-shadow: 0 0 0 2px #effaff, 0 0 10px #91d5ef99;
+  box-shadow:
+    0 0 0 2px #effaff,
+    0 0 10px #91d5ef99;
 }
 .avatar-frame--neon::before {
   z-index: 2;
   inset: -4px;
   border: 3px solid #d253bb;
-  box-shadow: 0 0 0 2px #f9d8f2, 0 0 12px #eb67d699;
+  box-shadow:
+    0 0 0 2px #f9d8f2,
+    0 0 12px #eb67d699;
   animation: avatar-frame-neon 2.4s ease-in-out infinite;
 }
 .avatar-frame--neon::after {
@@ -711,7 +721,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #579edc;
-  box-shadow: 0 0 0 2px #d4edff, 0 0 15px #6cc8ffbb;
+  box-shadow:
+    0 0 0 2px #d4edff,
+    0 0 15px #6cc8ffbb;
   animation: avatar-frame-charge 1.6s ease-in-out infinite;
 }
 .avatar-frame--lightning::after {
@@ -723,7 +735,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #c49a43;
-  box-shadow: 0 0 0 2px #fff2c6, 0 0 14px #c49a4399;
+  box-shadow:
+    0 0 0 2px #fff2c6,
+    0 0 14px #c49a4399;
 }
 .avatar-frame--gold::after {
   z-index: 2;
@@ -734,7 +748,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #db592e;
-  box-shadow: 0 0 0 2px #ffd27c, 0 0 16px #f36c36aa;
+  box-shadow:
+    0 0 0 2px #ffd27c,
+    0 0 16px #f36c36aa;
   animation: avatar-frame-flare 1.8s ease-in-out infinite alternate;
 }
 .avatar-frame--phoenix::after {
@@ -746,7 +762,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #7860b7;
-  box-shadow: 0 0 0 2px #d9c8ff, 0 0 15px #9a76e2aa;
+  box-shadow:
+    0 0 0 2px #d9c8ff,
+    0 0 15px #9a76e2aa;
 }
 .avatar-frame--galaxy::after {
   z-index: 2;
@@ -758,7 +776,9 @@
   z-index: 2;
   inset: -5px;
   border: 4px solid #267a55;
-  box-shadow: 0 0 0 2px #c6a85a, 0 0 14px #50c68d99;
+  box-shadow:
+    0 0 0 2px #c6a85a,
+    0 0 14px #50c68d99;
 }
 .avatar-frame--emerald-dragon::after {
   z-index: 2;
@@ -771,15 +791,11 @@
   border: 4px solid transparent;
   background:
     linear-gradient(transparent, transparent) padding-box,
-    conic-gradient(
-      #59d8c5,
-      #a77bea,
-      #f078b1,
-      #f4ca69,
-      #6fc9e8,
-      #59d8c5
-    ) border-box;
-  box-shadow: 0 0 0 2px #fff, 0 0 18px #ad76e8bb;
+    conic-gradient(#59d8c5, #a77bea, #f078b1, #f4ca69, #6fc9e8, #59d8c5)
+      border-box;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 18px #ad76e8bb;
   animation: avatar-frame-orbit 3.5s linear infinite;
 }
 .avatar-frame--multiverse::after {
@@ -851,7 +867,16 @@
   height: 11px;
   border: 1px solid #f0fffa;
   background: linear-gradient(145deg, #d8fff3, #56b7b5 65%, #438fb3);
-  clip-path: polygon(50% 0, 92% 54%, 88% 77%, 70% 93%, 50% 100%, 30% 93%, 12% 77%, 8% 54%);
+  clip-path: polygon(
+    50% 0,
+    92% 54%,
+    88% 77%,
+    70% 93%,
+    50% 100%,
+    30% 93%,
+    12% 77%,
+    8% 54%
+  );
   content: '';
   filter: drop-shadow(0 0 3px #80e0db);
 }
@@ -912,7 +937,9 @@
   height: 7px;
   border: 2px solid #75eafa;
   border-radius: 50%;
-  box-shadow: 0 0 6px #75eafa, 0 0 10px #ec67d8;
+  box-shadow:
+    0 0 6px #75eafa,
+    0 0 10px #ec67d8;
   content: '';
 }
 .avatar-frame-ornament--lightning::before {
@@ -921,7 +948,9 @@
   font-size: 19px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 0 4px #64cfff, 0 0 8px #7caaff;
+  text-shadow:
+    0 0 4px #64cfff,
+    0 0 8px #7caaff;
 }
 .avatar-frame--compact .avatar-frame-ornament--lightning::before {
   font-size: 12px;
@@ -931,7 +960,9 @@
   content: '✦';
   font-size: 15px;
   line-height: 1;
-  text-shadow: 0 0 5px #fff0ae, 0 0 10px #d9a63d;
+  text-shadow:
+    0 0 5px #fff0ae,
+    0 0 10px #d9a63d;
   animation: avatar-frame-twinkle 1.2s ease-in-out infinite;
 }
 .avatar-frame-ornament--ember::before {
@@ -947,7 +978,9 @@
 .avatar-frame-ornament--galaxy::before {
   color: #edddff;
   font-size: 12px;
-  text-shadow: 0 0 5px #c7a4ff, 0 0 9px #fff;
+  text-shadow:
+    0 0 5px #c7a4ff,
+    0 0 9px #fff;
 }
 .avatar-frame-ornament--scale::before {
   width: 11px;
@@ -955,7 +988,9 @@
   border: 1px solid #f0d77e;
   border-radius: 55% 55% 45% 45%;
   background: linear-gradient(135deg, #9ce0a2, #27875b 58%, #14533f);
-  box-shadow: inset 0 1px 2px #e6ffd077, 0 0 5px #55c589;
+  box-shadow:
+    inset 0 1px 2px #e6ffd077,
+    0 0 5px #55c589;
   clip-path: polygon(50% 0, 100% 36%, 86% 82%, 50% 100%, 14% 82%, 0 36%);
   content: '';
 }
@@ -1586,21 +1621,29 @@
 @keyframes avatar-frame-neon {
   from,
   to {
-    box-shadow: 0 0 0 2px #f9d8f2, 0 0 8px #eb67d699;
+    box-shadow:
+      0 0 0 2px #f9d8f2,
+      0 0 8px #eb67d699;
   }
   50% {
-    box-shadow: 0 0 0 2px #d6faff, 0 0 16px #75eafa;
+    box-shadow:
+      0 0 0 2px #d6faff,
+      0 0 16px #75eafa;
   }
 }
 
 @keyframes avatar-frame-flare {
   from {
     filter: brightness(0.95);
-    box-shadow: 0 0 0 2px #ffd27c, 0 0 10px #f36c3688;
+    box-shadow:
+      0 0 0 2px #ffd27c,
+      0 0 10px #f36c3688;
   }
   to {
     filter: brightness(1.25);
-    box-shadow: 0 0 0 3px #ffe7a0, 0 0 20px #ff773dcc;
+    box-shadow:
+      0 0 0 3px #ffe7a0,
+      0 0 20px #ff773dcc;
   }
 }
 
@@ -1619,11 +1662,15 @@
   0%,
   100% {
     filter: brightness(0.95);
-    box-shadow: 0 0 0 2px #d4edff, 0 0 8px #6cc8ff88;
+    box-shadow:
+      0 0 0 2px #d4edff,
+      0 0 8px #6cc8ff88;
   }
   50% {
     filter: brightness(1.2);
-    box-shadow: 0 0 0 3px #e6faff, 0 0 18px #6cc8ff;
+    box-shadow:
+      0 0 0 3px #e6faff,
+      0 0 18px #6cc8ff;
   }
 }
 

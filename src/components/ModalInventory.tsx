@@ -16,7 +16,8 @@ export default function ModalInventory({ onClose }: Props) {
   const equipAvatarFrame = useMutation(api.user.mutations.equipAvatarFrame)
   const [pendingFrame, setPendingFrame] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const displayName = account.profile?.displayName ?? account.user?.username ?? 'Joueur'
+  const displayName =
+    account.profile?.displayName ?? account.user?.username ?? 'Joueur'
   const ownedFrames = data?.catalog.filter((frame) =>
     data.ownedIds.includes(frame.id),
   )
@@ -63,7 +64,9 @@ export default function ModalInventory({ onClose }: Props) {
       <div className='pp-modal-content pp-inventory-content'>
         <div className='pp-modal-heading'>
           <div>
-            <span className='pp-inventory-kicker'>Profil de @{displayName}</span>
+            <span className='pp-inventory-kicker'>
+              Profil de @{displayName}
+            </span>
             <h2 id='inventory-title'>Inventaire</h2>
           </div>
           <button
@@ -88,8 +91,14 @@ export default function ModalInventory({ onClose }: Props) {
                 return (
                   <article className='pp-frame-card' key={frame.id}>
                     <div className='pp-frame-preview'>
-                      <AvatarFrame frameId={frame.id} className='pp-frame-avatar'>
-                        <span className='pp-frame-avatar-initial' aria-hidden='true'>
+                      <AvatarFrame
+                        frameId={frame.id}
+                        className='pp-frame-avatar'
+                      >
+                        <span
+                          className='pp-frame-avatar-initial'
+                          aria-hidden='true'
+                        >
                           {displayName.slice(0, 1).toUpperCase()}
                         </span>
                         {account.user?.avatarUrl && (
@@ -121,7 +130,9 @@ export default function ModalInventory({ onClose }: Props) {
                         disabled={pendingFrame !== null}
                         onClick={() => void setEquippedFrame(frame.id)}
                       >
-                        {pendingFrame === frame.id ? 'Équipement...' : 'Équiper'}
+                        {pendingFrame === frame.id
+                          ? 'Équipement...'
+                          : 'Équiper'}
                       </button>
                     )}
                   </article>
@@ -134,7 +145,11 @@ export default function ModalInventory({ onClose }: Props) {
             </p>
           )}
         </section>
-        {error && <p className='pp-form-error' role='alert'>{error}</p>}
+        {error && (
+          <p className='pp-form-error' role='alert'>
+            {error}
+          </p>
+        )}
       </div>
     </dialog>
   )
