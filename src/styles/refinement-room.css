@@ -434,6 +434,10 @@
   width: var(--seat-size);
   height: var(--seat-size);
 }
+.seat-avatar-frame {
+  width: 100%;
+  height: 100%;
+}
 
 .seat-avatar {
   width: 100%;

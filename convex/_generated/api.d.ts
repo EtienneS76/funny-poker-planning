@@ -17,6 +17,7 @@ import type * as refinement_reactionSchema from "../refinement/reactionSchema.js
 import type * as refinement_roundSchema from "../refinement/roundSchema.js";
 import type * as refinement_slug from "../refinement/slug.js";
 import type * as refinement_voteSchema from "../refinement/voteSchema.js";
+import type * as user_avatarFrames from "../user/avatarFrames.js";
 import type * as user_mutations from "../user/mutations.js";
 import type * as user_profile from "../user/profile.js";
 import type * as user_queries from "../user/queries.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   "refinement/roundSchema": typeof refinement_roundSchema;
   "refinement/slug": typeof refinement_slug;
   "refinement/voteSchema": typeof refinement_voteSchema;
+  "user/avatarFrames": typeof user_avatarFrames;
   "user/mutations": typeof user_mutations;
   "user/profile": typeof user_profile;
   "user/queries": typeof user_queries;

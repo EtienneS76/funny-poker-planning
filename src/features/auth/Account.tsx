@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   BarChart3,
+  Backpack,
   Check,
   ChevronDown,
   GitBranch,
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react'
 import { useAppSnackbar } from '../../components/AppSnackbar'
 import { AccountStatisticsModal } from './AccountStatisticsModal'
+import ModalInventory from '../../components/ModalInventory'
+import { AvatarFrame } from '../avatar/AvatarFrame'
 import type { AccountState } from './useAccount'
 
 export default function Account({ account }: { account: AccountState }) {
@@ -18,6 +21,7 @@ export default function Account({ account }: { account: AccountState }) {
   const [editingDisplayName, setEditingDisplayName] = useState(false)
   const [displayNameDraft, setDisplayNameDraft] = useState('')
   const [statisticsOpen, setStatisticsOpen] = useState(false)
+  const [inventoryOpen, setInventoryOpen] = useState(false)
   const snackbar = useAppSnackbar()
 
   useEffect(() => {
@@ -112,16 +116,31 @@ export default function Account({ account }: { account: AccountState }) {
     <>
       <details className='profile-menu' ref={menu}>
         <summary className='profile-trigger' aria-label={`Compte GitHub de ${displayName}`}>
-          <span className='profile-avatar' aria-hidden='true'>
-            <span>{displayName.slice(0, 1).toUpperCase()}</span>
-            {account.user.avatarUrl && <img src={account.user.avatarUrl} alt='' width={32} height={32} onError={event => { event.currentTarget.hidden = true }} />}
-          </span>
+          <AvatarFrame
+            frameId={account.profile?.avatarFrameId}
+            className='profile-avatar-frame avatar-frame--compact'
+          >
+            <span className='profile-avatar' aria-hidden='true'>
+              <span>{displayName.slice(0, 1).toUpperCase()}</span>
+              {account.user.avatarUrl && <img src={account.user.avatarUrl} alt='' width={32} height={32} onError={event => { event.currentTarget.hidden = true }} />}
+            </span>
+          </AvatarFrame>
           <span className='profile-username'>@{displayName}</span>
           <ChevronDown size={16} aria-hidden='true' />
         </summary>
         <div className='profile-dropdown'>
           <span className='profile-caption'>Connecté avec GitHub</span>
           <strong className='profile-name'>@{displayName}</strong>
+          <button
+            className='profile-signout'
+            onClick={() => {
+              if (menu.current) menu.current.open = false
+              setInventoryOpen(true)
+            }}
+          >
+            <Backpack size={17} aria-hidden='true' />
+            Inventaire
+          </button>
           <button
             className='profile-signout'
             onClick={() => {
@@ -190,11 +209,15 @@ export default function Account({ account }: { account: AccountState }) {
         username={account.user.username}
         displayName={displayName}
         avatarUrl={account.user.avatarUrl}
+        avatarFrameId={account.profile?.avatarFrameId ?? null}
         firstConnectedAt={account.profile?.firstConnectedAt ?? Date.now()}
         refinementCount={statistics?.refinementCount ?? 0}
         roundCount={statistics?.roundCount ?? 0}
         onClose={() => setStatisticsOpen(false)}
       />
+      {inventoryOpen && (
+        <ModalInventory onClose={() => setInventoryOpen(false)} />
+      )}
     </>
   )
 }

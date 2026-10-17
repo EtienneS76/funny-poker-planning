@@ -4,6 +4,7 @@ import { useMutation } from 'convex/react'
 import { Shirt } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { useAccount } from '../auth/useAccount'
+import { AvatarFrame } from '../avatar/AvatarFrame'
 import Topbar from '../../components/Topbar'
 import { useAppSnackbar } from '../../components/AppSnackbar'
 import { sizings } from './options'
@@ -24,6 +25,7 @@ type Seat = {
   id: string
   name: string
   avatarUrl: string | null
+  avatarFrameId: string | null
   vote: string | null
   hasVoted: boolean
   isMe: boolean
@@ -167,6 +169,7 @@ export function RefinementRoom() {
     id: participant.userId,
     name: participant.name,
     avatarUrl: participant.avatarUrl,
+    avatarFrameId: participant.avatarFrameId,
     vote: consensusVote ?? participant.vote,
     hasVoted: consensusVote !== null || participant.hasVoted,
     isMe: participant.userId === currentUserId,
@@ -177,6 +180,7 @@ export function RefinementRoom() {
       id: currentUserId ?? `guest:${account.guestId}`,
       name: account.user?.username ?? account.guestName,
       avatarUrl: account.user?.avatarUrl ?? null,
+      avatarFrameId: account.profile?.avatarFrameId ?? null,
       vote: consensusVote ?? selectedCard,
       hasVoted: consensusVote !== null || selectedCard !== null,
       isMe: true,
@@ -189,6 +193,7 @@ export function RefinementRoom() {
       id: `debug:${player.id}`,
       name: player.name,
       avatarUrl: null,
+      avatarFrameId: null,
       vote: player.vote,
       hasVoted: player.vote !== null,
       isMe: false,
@@ -435,45 +440,50 @@ export function RefinementRoom() {
                 style={seatStyle(index, seats.length)}
               >
                 <span className='seat-portrait'>
-                  <button
-                    className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
-                    type='button'
-                    disabled={seat.isMe || seat.id.startsWith('debug:')}
-                    aria-label={
-                      seat.isMe
-                        ? `Ton profil : ${seat.name}`
-                        : `Réagir à ${seat.name}`
-                    }
-                    aria-expanded={
-                      seat.isMe ? undefined : reactionTarget === seat.id
-                    }
-                    aria-controls={
-                      seat.isMe || reactionTarget !== seat.id
-                        ? undefined
-                        : 'room-reaction-menu'
-                    }
-                    onClick={(event) => {
-                      reactionTrigger.current = event.currentTarget
-                      setReactionTarget((previous) =>
-                        previous === seat.id ? null : seat.id,
-                      )
-                    }}
+                  <AvatarFrame
+                    frameId={seat.avatarFrameId}
+                    className='seat-avatar-frame'
                   >
-                    <span aria-hidden='true'>
-                      {seat.name.slice(0, 1).toUpperCase()}
-                    </span>
-                    {seat.avatarUrl && (
-                      <img
-                        src={seat.avatarUrl}
-                        alt=''
-                        width={56}
-                        height={56}
-                        onError={(event) => {
-                          event.currentTarget.hidden = true
-                        }}
-                      />
-                    )}
-                  </button>
+                    <button
+                      className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
+                      type='button'
+                      disabled={seat.isMe || seat.id.startsWith('debug:')}
+                      aria-label={
+                        seat.isMe
+                          ? `Ton profil : ${seat.name}`
+                          : `Réagir à ${seat.name}`
+                      }
+                      aria-expanded={
+                        seat.isMe ? undefined : reactionTarget === seat.id
+                      }
+                      aria-controls={
+                        seat.isMe || reactionTarget !== seat.id
+                          ? undefined
+                          : 'room-reaction-menu'
+                      }
+                      onClick={(event) => {
+                        reactionTrigger.current = event.currentTarget
+                        setReactionTarget((previous) =>
+                          previous === seat.id ? null : seat.id,
+                        )
+                      }}
+                    >
+                      <span aria-hidden='true'>
+                        {seat.name.slice(0, 1).toUpperCase()}
+                      </span>
+                      {seat.avatarUrl && (
+                        <img
+                          src={seat.avatarUrl}
+                          alt=''
+                          width={56}
+                          height={56}
+                          onError={(event) => {
+                            event.currentTarget.hidden = true
+                          }}
+                        />
+                      )}
+                    </button>
+                  </AvatarFrame>
                   <span
                     className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
                     role='img'

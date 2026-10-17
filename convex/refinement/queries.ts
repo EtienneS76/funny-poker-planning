@@ -90,6 +90,7 @@ export const getBySlug = query({
             participant.name ??
             'Invité',
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
+          avatarFrameId: user?.avatarFrameId ?? null,
           hasVoted: votesByUserId.has(participant.userId),
           vote:
             revealed || participant.userId === currentUserId

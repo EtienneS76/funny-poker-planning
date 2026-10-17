@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { CalendarDays, Layers3, Trophy, X } from 'lucide-react'
+import { AvatarFrame } from '../avatar/AvatarFrame'
 
 type Props = {
   open: boolean
   username: string
   displayName: string
   avatarUrl: string | null
+  avatarFrameId: string | null
   firstConnectedAt: number
   refinementCount: number
   roundCount: number
@@ -17,6 +19,7 @@ export function AccountStatisticsModal({
   username,
   displayName,
   avatarUrl,
+  avatarFrameId,
   firstConnectedAt,
   refinementCount,
   roundCount,
@@ -68,20 +71,25 @@ export function AccountStatisticsModal({
         </div>
 
         <div className='account-stats-profile'>
-          <span className='account-stats-avatar' aria-hidden='true'>
-            <span>{displayName.slice(0, 1).toUpperCase()}</span>
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt=''
-                width={54}
-                height={54}
-                onError={(event) => {
-                  event.currentTarget.hidden = true
-                }}
-              />
-            )}
-          </span>
+          <AvatarFrame
+            frameId={avatarFrameId}
+            className='account-stats-avatar-frame avatar-frame--compact'
+          >
+            <span className='account-stats-avatar' aria-hidden='true'>
+              <span>{displayName.slice(0, 1).toUpperCase()}</span>
+              {avatarUrl && (
+                <img
+                  src={avatarUrl}
+                  alt=''
+                  width={54}
+                  height={54}
+                  onError={(event) => {
+                    event.currentTarget.hidden = true
+                  }}
+                />
+              )}
+            </span>
+          </AvatarFrame>
           <div>
             <strong>{displayName}</strong>
             <span>GitHub · @{username}</span>

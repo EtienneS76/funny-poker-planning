@@ -20,7 +20,7 @@ export default function Home() {
   const [shopOpen, setShopOpen] = useState(false)
 
   const createRefinement = useMutation(api.refinement.mutations.create)
-  const pokisous = useQuery(api.user.queries.pokisous, {})
+  const shopData = useQuery(api.user.queries.shopData, {})
 
   const onSubmitNewRefinement = async (
     configuration: RefinementDraft,
@@ -82,7 +82,15 @@ export default function Home() {
         />
       )}
       {shopOpen && (
-        <ModalShop balance={pokisous ?? 0} onClose={() => setShopOpen(false)} />
+        <ModalShop
+          balance={shopData?.balance ?? 0}
+          catalog={shopData?.catalog ?? []}
+          ownedIds={shopData?.ownedIds ?? []}
+          isAuthenticated={account.isAuthenticated}
+          canSignIn={account.configured === true && !account.loading && !account.pending}
+          onSignIn={() => void account.signIn()}
+          onClose={() => setShopOpen(false)}
+        />
       )}
     </div>
   )

@@ -1,7 +1,11 @@
 import { defineSchema } from 'convex/server'
 import { refinementTable } from './refinement/schema'
 import { participantTable } from './participant/schema'
-import { pokisouWalletTable, userTable } from './user/schema'
+import {
+  pokisouWalletTable,
+  userAvatarFramesTable,
+  userTable,
+} from './user/schema'
 import {
   statisticsTable,
   userRoundParticipationTable,
@@ -16,6 +20,7 @@ export default defineSchema({
   participants: participantTable,
   users: userTable,
   pokisouWallets: pokisouWalletTable,
+  userAvatarFrames: userAvatarFramesTable,
   statistics: statisticsTable,
   userRoundParticipations: userRoundParticipationTable,
   presences: presenceTable,
