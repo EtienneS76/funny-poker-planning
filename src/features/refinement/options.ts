@@ -1,8 +1,6 @@
 export const upcomingThemes = [
-  { id: 'hp', label: 'Harry Potter' },
   { id: 'pk', label: 'Pokémon' },
   { id: 'sw', label: 'Star Wars' },
-  { id: 'lr', label: 'Seigneur des Anneaux' },
 ] as const
 
 export const sizings = [

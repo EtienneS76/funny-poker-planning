@@ -35,6 +35,7 @@ export default function App() {
               path='/refinement/:refinementSlug'
               element={<RefinementRoom />}
             />
+            <Route path='*' element={<Navigate to='/' replace />} />
           </Routes>
         </AppSnackbarProvider>
       </AccountProvider>

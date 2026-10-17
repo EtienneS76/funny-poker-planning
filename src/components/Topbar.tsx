@@ -12,7 +12,7 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
   return (
     <header className='pp-topbar'>
       <Link className='pp-brand' to='/'>
-        Multivers Poker Planning
+        Funny Poker Planning
       </Link>
       <div className='pp-topbar-actions'>
         {onInvitePlayers && (

@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Store } from 'lucide-react'
 import Topbar from './components/Topbar'
 import ModalNewRefinement from './components/ModalNewRefinement'
+import ModalShop from './components/ModalShop'
 import { useAppSnackbar } from './components/AppSnackbar'
 import { useAccount } from './features/auth/useAccount'
 import type { RefinementDraft } from './features/refinement/options'
 import './styles/planning-poker.css'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../convex/_generated/api'
 import { useNavigate } from 'react-router'
 
@@ -16,8 +17,10 @@ export default function Home() {
   const snackbar = useAppSnackbar()
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [shopOpen, setShopOpen] = useState(false)
 
   const createRefinement = useMutation(api.refinement.mutations.create)
+  const pokisous = useQuery(api.user.queries.pokisous, {})
 
   const onSubmitNewRefinement = async (
     configuration: RefinementDraft,
@@ -54,16 +57,22 @@ export default function Home() {
         </div>
         <div className='pp-home-copy'>
           <h1>Estimez vos tickets en équipe.</h1>
-          <p>
-            Un planning poker classique, prêt à lancer avec votre équipe.
-          </p>
+          <p>Un planning poker classique, prêt à lancer avec votre équipe.</p>
         </div>
-        <button
-          className='pp-button pp-button--launch'
-          onClick={() => setModalOpen(true)}
-        >
-          Lancer un refinement <ArrowRight size={21} aria-hidden='true' />
-        </button>
+        <div className='pp-home-actions'>
+          <button
+            className='pp-button pp-button--launch'
+            onClick={() => setModalOpen(true)}
+          >
+            Lancer un refinement <ArrowRight size={21} aria-hidden='true' />
+          </button>
+          <button
+            className='pp-button pp-button--secondary pp-button--shop'
+            onClick={() => setShopOpen(true)}
+          >
+            <Store size={19} aria-hidden='true' /> Boutique
+          </button>
+        </div>
       </main>
       {modalOpen && (
         <ModalNewRefinement
@@ -71,6 +80,9 @@ export default function Home() {
           onClose={() => setModalOpen(false)}
           onSubmit={onSubmitNewRefinement}
         />
+      )}
+      {shopOpen && (
+        <ModalShop balance={pokisous ?? 0} onClose={() => setShopOpen(false)} />
       )}
     </div>
   )

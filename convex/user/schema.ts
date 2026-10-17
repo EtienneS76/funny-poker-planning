@@ -9,3 +9,8 @@ export const userTable = defineTable({
   createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
 }).index('by_auth_user', ['authUserId'])
+
+export const pokisouWalletTable = defineTable({
+  userId: v.string(),
+  balance: v.number(),
+}).index('by_user_id', ['userId'])

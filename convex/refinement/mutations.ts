@@ -1,5 +1,9 @@
 import { ConvexError, v } from 'convex/values'
-import { internalMutation, mutation, type MutationCtx } from '../_generated/server'
+import {
+  internalMutation,
+  mutation,
+  type MutationCtx,
+} from '../_generated/server'
 import type { Doc, Id } from '../_generated/dataModel'
 import { generateSlug } from './slug'
 import { syncAuthenticatedUser } from '../user/profile'
@@ -125,7 +129,9 @@ async function getOrCreateCurrentRound(
     ) {
       voteTimes.push(refinement.savedAt)
     }
-    const firstVoteAt = [...voteTimes, ...participationTimes].reduce<number | undefined>(
+    const firstVoteAt = [...voteTimes, ...participationTimes].reduce<
+      number | undefined
+    >(
       (earliest, timestamp) =>
         earliest === undefined ? timestamp : Math.min(earliest, timestamp),
       undefined,
@@ -134,7 +140,8 @@ async function getOrCreateCurrentRound(
       refinementId: refinement._id,
       sequence,
       firstVoteAt,
-      ...(sequence === legacyCurrentSequence && refinement.revealedAt !== undefined
+      ...(sequence === legacyCurrentSequence &&
+      refinement.revealedAt !== undefined
         ? { revealedAt: refinement.revealedAt }
         : {}),
     })
@@ -310,7 +317,7 @@ export const recordVote = mutation({
         query
           .eq('userId', user._id)
           .eq('refinementId', refinement._id)
-            .eq('roundId', currentRound._id),
+          .eq('roundId', currentRound._id),
       )
       .unique()
     if (existingRound) return null
@@ -367,7 +374,8 @@ export const reveal = mutation({
         query.eq('refinementId', refinement._id).eq('userId', userId),
       )
       .unique()
-    if (!participant) throw new ConvexError('Rejoins la salle avant de révéler les votes.')
+    if (!participant)
+      throw new ConvexError('Rejoins la salle avant de révéler les votes.')
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
     if (currentRound.revealedAt !== undefined) return null
@@ -382,10 +390,53 @@ export const reveal = mutation({
       (vote) => vote.roundId === currentRound._id,
     )
     if (currentVotes.length < 2) {
-      throw new ConvexError('Il faut au moins deux votes pour révéler les cartes.')
+      throw new ConvexError(
+        'Il faut au moins deux votes pour révéler les cartes.',
+      )
     }
 
+    const participants = await context.db
+      .query('participants')
+      .withIndex('by_refinement', (query) =>
+        query.eq('refinementId', refinement._id),
+      )
+      .collect()
+    const firstCard = currentVotes[0]?.card
+    const hasConsensus =
+      participants.length >= 2 &&
+      currentVotes.length === participants.length &&
+      firstCard !== undefined &&
+      currentVotes.every((vote) => vote.card === firstCard)
+    const reward = hasConsensus ? 25 : 10
+
     await context.db.patch(currentRound._id, { revealedAt: Date.now() })
+    const authenticatedVoterIds = new Set<string>()
+    for (const userId of new Set(currentVotes.map((vote) => vote.userId))) {
+      if (userId.startsWith('guest:')) continue
+      const user = await context.db.get(userId as Id<'users'>)
+      if (!user) continue
+      authenticatedVoterIds.add(userId)
+    }
+
+    if (authenticatedVoterIds.size >= 2) {
+      for (const userId of authenticatedVoterIds) {
+        const wallet = await context.db
+          .query('pokisouWallets')
+          .withIndex('by_user_id', (query) => query.eq('userId', userId))
+          .unique()
+
+        if (wallet) {
+          await context.db.patch(wallet._id, {
+            balance: wallet.balance + reward,
+          })
+        } else {
+          await context.db.insert('pokisouWallets', {
+            userId,
+            balance: reward,
+          })
+        }
+      }
+    }
     return null
   },
 })
@@ -413,7 +464,8 @@ export const startNewRound = mutation({
         query.eq('refinementId', refinement._id).eq('userId', userId),
       )
       .unique()
-    if (!participant) throw new ConvexError('Rejoins la salle avant de continuer.')
+    if (!participant)
+      throw new ConvexError('Rejoins la salle avant de continuer.')
 
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
@@ -453,17 +505,12 @@ export const join = mutation({
     await getOrCreateCurrentRound(context, refinement)
 
     if (user) {
-      for (const previousUserId of [
-        `guest:${guestId}`,
-        user.authUserId,
-      ]) {
+      for (const previousUserId of [`guest:${guestId}`, user.authUserId]) {
         if (previousUserId === userId) continue
         const previousParticipant = await context.db
           .query('participants')
           .withIndex('by_refinement_and_user', (q) =>
-            q
-              .eq('refinementId', refinement._id)
-              .eq('userId', previousUserId),
+            q.eq('refinementId', refinement._id).eq('userId', previousUserId),
           )
           .unique()
         if (previousParticipant) {
@@ -550,7 +597,10 @@ export const sendReaction = mutation({
     kind: reactionKind,
   },
   returns: v.null(),
-  handler: async (context, { slug, guestId, guestName, targetUserId, kind }) => {
+  handler: async (
+    context,
+    { slug, guestId, guestName, targetUserId, kind },
+  ) => {
     const identity = await context.auth.getUserIdentity()
     const user = identity ? await syncAuthenticatedUser(context) : null
     const sourceUserId = user ? String(user._id) : `guest:${guestId}`
@@ -567,17 +617,13 @@ export const sendReaction = mutation({
     const source = await context.db
       .query('participants')
       .withIndex('by_refinement_and_user', (query) =>
-        query
-          .eq('refinementId', refinement._id)
-          .eq('userId', sourceUserId),
+        query.eq('refinementId', refinement._id).eq('userId', sourceUserId),
       )
       .unique()
     const target = await context.db
       .query('participants')
       .withIndex('by_refinement_and_user', (query) =>
-        query
-          .eq('refinementId', refinement._id)
-          .eq('userId', targetUserId),
+        query.eq('refinementId', refinement._id).eq('userId', targetUserId),
       )
       .unique()
     if (!source || !target) {
@@ -621,7 +667,9 @@ export const cleanupInactiveRooms = internalMutation({
     const cutoff = Date.now() - 30_000
     const expiredReactions = await context.db
       .query('roomReactions')
-      .withIndex('by_created', (query) => query.lt('createdAt', Date.now() - 8_000))
+      .withIndex('by_created', (query) =>
+        query.lt('createdAt', Date.now() - 8_000),
+      )
       .collect()
     for (const reaction of expiredReactions) {
       await context.db.delete(reaction._id)
