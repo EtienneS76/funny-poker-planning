@@ -8,7 +8,6 @@ import { AvatarFrame } from '../avatar/AvatarFrame'
 import Topbar from '../../components/Topbar'
 import { useAppSnackbar } from '../../components/AppSnackbar'
 import { sizings } from './options'
-import { useRefinementRoomDebug } from './hooks/useRefinementRoomDebug'
 import { useRefinementRoom } from './hooks/useRefinementRoom'
 import { RefinementRoomControls } from './RefinementRoomControls'
 import { RefinementIssue } from './RefinementIssue'
@@ -67,7 +66,6 @@ export function RefinementRoom() {
     roundId: string
     card: string | null
   } | null>(null)
-  const [debugRevealed, setDebugRevealed] = useState(false)
   const [reactionTarget, setReactionTarget] = useState<string | null>(null)
   const [reactionRound, setReactionRound] = useState(0)
   const [dodging, setDodging] = useState<Record<string, number>>({})
@@ -81,16 +79,6 @@ export function RefinementRoom() {
     sizings.find((sizing) => sizing.id === room?.refinement.sizing)?.cards ??
     sizings[0].cards
   const isTshirtSizing = room?.refinement.sizing === 'tee'
-
-  const {
-    players: debugPlayers,
-    consensusVote,
-    addPlayers,
-    removePlayers,
-    resetPlayers,
-    simulateVotes,
-    simulateConsensus,
-  } = useRefinementRoomDebug(cards)
 
   const currentUserId = account.isAuthenticated
     ? account.profileId
@@ -112,7 +100,7 @@ export function RefinementRoom() {
     voteOverride?.roundId === String(currentRoundId)
       ? voteOverride.card
       : remoteSelectedCard
-  const revealed = room?.round?.revealedAt !== undefined || debugRevealed
+  const revealed = room?.round?.revealedAt !== undefined
   const hasJoinedRoom = Boolean(currentParticipant)
 
   useEffect(() => {
@@ -188,10 +176,8 @@ export function RefinementRoom() {
     avatarUrl: participant.avatarUrl,
     avatarFrameId: participant.avatarFrameId,
     isSpectator: participant.isSpectator,
-    vote: participant.isSpectator ? null : (consensusVote ?? participant.vote),
-    hasVoted:
-      !participant.isSpectator &&
-      (consensusVote !== null || participant.hasVoted),
+    vote: participant.isSpectator ? null : participant.vote,
+    hasVoted: !participant.isSpectator && participant.hasVoted,
     isMe: participant.userId === currentUserId,
   }))
 
@@ -202,25 +188,13 @@ export function RefinementRoom() {
       avatarUrl: account.user?.avatarUrl ?? null,
       avatarFrameId: account.profile?.avatarFrameId ?? null,
       isSpectator: false,
-      vote: consensusVote ?? selectedCard,
-      hasVoted: consensusVote !== null || selectedCard !== null,
+      vote: selectedCard,
+      hasVoted: selectedCard !== null,
       isMe: true,
     })
   }
 
-  const seats: Seat[] = [
-    ...realSeats,
-    ...debugPlayers.map((player) => ({
-      id: `debug:${player.id}`,
-      name: player.name,
-      avatarUrl: null,
-      avatarFrameId: null,
-      isSpectator: false,
-      vote: player.vote,
-      hasVoted: player.vote !== null,
-      isMe: false,
-    })),
-  ]
+  const seats: Seat[] = realSeats
   const votes = seats.flatMap((seat) => {
     if (seat.vote === null || seat.isSpectator) return []
     const value = Number(seat.vote)
@@ -229,10 +203,6 @@ export function RefinementRoom() {
   const votingSeats = seats.filter((seat) => !seat.isSpectator)
   const votedCount = votingSeats.filter((seat) => seat.hasVoted).length
   const playerCount = votingSeats.length
-  const realVotedCount =
-    consensusVote === null
-      ? realSeats.filter((seat) => !seat.isSpectator && seat.hasVoted).length
-      : 0
   const average = votes.length
     ? votes.reduce((sum, vote) => sum + vote, 0) / votes.length
     : null
@@ -261,12 +231,10 @@ export function RefinementRoom() {
 
   function resetRound() {
     if (!room) return
-    setDebugRevealed(false)
     setVoteOverride(null)
     setReactionTarget(null)
     setDodging({})
     setReactionRound((previous) => previous + 1)
-    resetPlayers()
     setRoundUpdating(true)
     void startNewRound({
       slug: refinementSlug,
@@ -304,10 +272,6 @@ export function RefinementRoom() {
 
   function revealCards() {
     if (isSpectator || revealed || votedCount < 2) return
-    if (realVotedCount < 2) {
-      setDebugRevealed(true)
-      return
-    }
     void revealVotes({
       slug: refinementSlug,
       guestId: account.guestId,
@@ -391,10 +355,6 @@ export function RefinementRoom() {
       )
       return false
     }
-  }
-
-  function simulateConsensusVote() {
-    simulateConsensus(selectedCard)
   }
 
   function sendReaction(
@@ -533,11 +493,7 @@ export function RefinementRoom() {
                     <button
                       className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
                       type='button'
-                      disabled={
-                        seat.isMe ||
-                        seat.id.startsWith('debug:') ||
-                        !funInteractionsEnabled
-                      }
+                      disabled={seat.isMe || !funInteractionsEnabled}
                       aria-label={
                         seat.isMe
                           ? `Ton profil : ${seat.name}`

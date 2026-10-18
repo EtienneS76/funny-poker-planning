@@ -225,77 +225,6 @@
   background: var(--pp-cream);
   color: var(--pp-ink);
 }
-.room-toolbar {
-  grid-column: 3;
-  grid-row: 1;
-  justify-self: end;
-  width: 42px;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-.room-debug {
-  position: relative;
-  z-index: 5;
-  pointer-events: auto;
-}
-.room-debug summary {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  list-style: none;
-  cursor: pointer;
-  border: 1px solid var(--pp-border);
-  border-radius: 8px;
-  background: var(--pp-paper);
-}
-.room-debug summary::-webkit-details-marker {
-  display: none;
-}
-.room-debug[open] summary {
-  background: var(--pp-ink);
-  color: var(--pp-paper);
-}
-.room-debug-menu {
-  position: absolute;
-  right: 0;
-  top: 50px;
-  width: 248px;
-  max-width: calc(100vw - 32px);
-  padding: 12px;
-  display: grid;
-  gap: 6px;
-  border: 1px solid var(--pp-line);
-  border-radius: 8px;
-  background: var(--pp-paper);
-  box-shadow: 0 12px 36px #39454124;
-}
-.room-debug-menu strong {
-  padding: 8px;
-  font-size: 12px;
-  color: var(--pp-muted);
-}
-.room-debug-menu button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--pp-ink);
-  text-align: left;
-  cursor: pointer;
-}
-.room-debug-menu button:not(:disabled):hover {
-  background: var(--pp-pink);
-}
-.room-debug-menu button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
 .room-results {
   position: relative;
   z-index: 2;
@@ -767,16 +696,10 @@
 
 @media (max-width: 899px) {
   .pp-room {
-    grid-template-columns: minmax(0, 1fr) 42px;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto 1fr;
     gap: 14px 12px;
     padding: 8px 20px 12px;
-  }
-  .room-toolbar {
-    position: static;
-    width: 100%;
-    grid-column: 2;
-    grid-row: 1;
   }
   .room-issue {
     grid-column: 1;

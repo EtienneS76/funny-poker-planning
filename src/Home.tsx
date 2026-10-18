@@ -75,6 +75,16 @@ export default function Home() {
           </button>
         </div>
       </main>
+      <footer className='pp-home-credit'>
+        <span>Crafted with <span role='img' aria-label='amour'>❤️</span> by </span>
+        <a
+          href='https://github.com/EtienneS76/funny-poker-planning'
+          target='_blank'
+          rel='noopener noreferrer'
+        >
+          Etienne
+        </a>
+      </footer>
       {modalOpen && (
         <ModalNewRefinement
           account={account}

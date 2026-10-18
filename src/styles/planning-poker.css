@@ -431,6 +431,20 @@
   justify-content: center;
   gap: 12px;
 }
+.pp-home-credit {
+  padding: 0 56px 24px;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+.pp-home-credit a {
+  color: var(--pp-ink);
+  font-weight: 700;
+  text-decoration-color: var(--pp-border);
+  text-underline-offset: 3px;
+}
+.pp-home-credit a:hover {
+  text-decoration-color: currentColor;
+}
 .pp-button--shop {
   min-height: 64px;
   padding: 1rem 1.75rem;
@@ -1266,6 +1280,9 @@
   .pp-home {
     padding: 38px 24px 56px;
     gap: 28px;
+  }
+  .pp-home-credit {
+    padding: 0 20px 18px;
   }
   .pp-home h1 {
     font-size: 40px;
