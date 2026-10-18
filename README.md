@@ -1,5 +1,7 @@
 # Funny Poker Planning
 
+<img width="1512" height="834" alt="image" src="https://github.com/user-attachments/assets/1f190786-6c20-4832-a12c-93c6be97bfa8" />
+
 Application collaborative de planning poker, avec React, TypeScript, Vite et
 Convex. La connexion se fait avec GitHub via Better Auth.
 
