@@ -40,14 +40,17 @@ export const getBySlug = query({
       .collect()
     const currentRound =
       rounds.sort((left, right) => right.sequence - left.sequence)[0] ?? null
-    const reactions = await context.db
-      .query('roomReactions')
-      .withIndex('by_refinement_created', (q) =>
-        q
-          .eq('refinementId', refinement._id)
-          .gt('createdAt', Date.now() - 8_000),
-      )
-      .collect()
+    const reactions =
+      refinement.funInteractionsEnabled === false
+        ? []
+        : await context.db
+            .query('roomReactions')
+            .withIndex('by_refinement_created', (q) =>
+              q
+                .eq('refinementId', refinement._id)
+                .gt('createdAt', Date.now() - 8_000),
+            )
+            .collect()
     const votes = await context.db
       .query('votes')
       .withIndex('by_refinement', (q) => q.eq('refinementId', refinement._id))
@@ -93,6 +96,7 @@ export const getBySlug = query({
             'Invité',
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
           avatarFrameId: user?.avatarFrameId ?? null,
+          isSpectator: participant.isSpectator ?? false,
           hasVoted: votesByUserId.has(participant.userId),
           vote:
             revealed || participant.userId === currentUserId

@@ -9,6 +9,31 @@ import { generateSlug } from './slug'
 import { syncAuthenticatedUser } from '../user/profile'
 import { reactionKind } from './reactionSchema'
 
+function normalizeIssueUrl(value: string) {
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    throw new ConvexError('Lien d’issue GitHub invalide.')
+  }
+
+  const match = url.pathname.match(
+    /^\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9_.-]+)\/issues\/([1-9][0-9]*)\/?$/,
+  )
+  if (
+    url.protocol !== 'https:' ||
+    url.hostname !== 'github.com' ||
+    url.port ||
+    url.username ||
+    url.password ||
+    !match
+  ) {
+    throw new ConvexError('Lien d’issue GitHub invalide.')
+  }
+
+  return `https://github.com/${match[1]}/${match[2]}/issues/${match[3]}`
+}
+
 async function upsertPresence(
   context: MutationCtx,
   participantId: Id<'participants'>,
@@ -202,9 +227,13 @@ export const create = mutation({
     guestName: v.string(),
     sizing: v.string(),
     issueUrl: v.union(v.string(), v.null()),
+    funInteractionsEnabled: v.boolean(),
   },
   returns: v.string(),
-  handler: async (context, { guestId, guestName, sizing, issueUrl }) => {
+  handler: async (
+    context,
+    { guestId, guestName, sizing, issueUrl, funInteractionsEnabled },
+  ) => {
     const slug = generateSlug()
     const identity = await context.auth.getUserIdentity()
     const user = identity ? await syncAuthenticatedUser(context) : null
@@ -222,6 +251,7 @@ export const create = mutation({
       slug,
       sizing,
       issueUrl,
+      funInteractionsEnabled,
       creatorId,
     })
     await context.db.insert('refinementRounds', {
@@ -235,6 +265,82 @@ export const create = mutation({
     await upsertPresence(context, participantId, user ? null : creatorName)
 
     return slug
+  },
+})
+
+export const updateIssueUrl = mutation({
+  args: {
+    slug: v.string(),
+    guestId: v.string(),
+    guestName: v.string(),
+    issueUrl: v.union(v.string(), v.null()),
+  },
+  returns: v.null(),
+  handler: async (context, { slug, guestId, guestName, issueUrl }) => {
+    const normalizedUrl = issueUrl === null ? null : normalizeIssueUrl(issueUrl)
+    const identity = await context.auth.getUserIdentity()
+    const user = identity ? await syncAuthenticatedUser(context) : null
+    const userId = user ? String(user._id) : `guest:${guestId}`
+
+    if (!user && (!guestName.trim() || guestName.trim().length > 36)) {
+      throw new ConvexError('Pseudo invalide.')
+    }
+
+    const refinement = await context.db
+      .query('refinements')
+      .withIndex('by_slug', (query) => query.eq('slug', slug))
+      .unique()
+    if (!refinement) throw new ConvexError('Refinement introuvable.')
+
+    const participant = await context.db
+      .query('participants')
+      .withIndex('by_refinement_and_user', (query) =>
+        query.eq('refinementId', refinement._id).eq('userId', userId),
+      )
+      .unique()
+    if (!participant) {
+      throw new ConvexError('Rejoins la salle pour modifier son issue.')
+    }
+
+    await context.db.patch(refinement._id, { issueUrl: normalizedUrl })
+    return null
+  },
+})
+
+export const setFunInteractionsEnabled = mutation({
+  args: {
+    slug: v.string(),
+    guestId: v.string(),
+    guestName: v.string(),
+    enabled: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (context, { slug, guestId, guestName, enabled }) => {
+    const identity = await context.auth.getUserIdentity()
+    const user = identity ? await syncAuthenticatedUser(context) : null
+    const userId = user ? String(user._id) : `guest:${guestId}`
+    if (!user && (!guestName.trim() || guestName.trim().length > 36)) {
+      throw new ConvexError('Pseudo invalide.')
+    }
+
+    const refinement = await context.db
+      .query('refinements')
+      .withIndex('by_slug', (query) => query.eq('slug', slug))
+      .unique()
+    if (!refinement) throw new ConvexError('Refinement introuvable.')
+
+    const participant = await context.db
+      .query('participants')
+      .withIndex('by_refinement_and_user', (query) =>
+        query.eq('refinementId', refinement._id).eq('userId', userId),
+      )
+      .unique()
+    if (!participant) {
+      throw new ConvexError('Rejoins la salle pour modifier ses paramètres.')
+    }
+
+    await context.db.patch(refinement._id, { funInteractionsEnabled: enabled })
+    return null
   },
 })
 
@@ -268,6 +374,9 @@ export const recordVote = mutation({
       )
       .unique()
     if (!participant) throw new ConvexError('Rejoins la salle avant de voter.')
+    if (participant.isSpectator) {
+      throw new ConvexError('Les spectateurs ne peuvent pas voter.')
+    }
 
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
@@ -376,24 +485,12 @@ export const reveal = mutation({
       .unique()
     if (!participant)
       throw new ConvexError('Rejoins la salle avant de révéler les votes.')
+    if (participant.isSpectator) {
+      throw new ConvexError('Les spectateurs ne peuvent pas révéler les votes.')
+    }
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
     if (currentRound.revealedAt !== undefined) return null
-
-    const votes = await context.db
-      .query('votes')
-      .withIndex('by_refinement', (query) =>
-        query.eq('refinementId', refinement._id),
-      )
-      .collect()
-    const currentVotes = votes.filter(
-      (vote) => vote.roundId === currentRound._id,
-    )
-    if (currentVotes.length < 2) {
-      throw new ConvexError(
-        'Il faut au moins deux votes pour révéler les cartes.',
-      )
-    }
 
     const participants = await context.db
       .query('participants')
@@ -401,25 +498,64 @@ export const reveal = mutation({
         query.eq('refinementId', refinement._id),
       )
       .collect()
+    const players = participants.filter((item) => !item.isSpectator)
+    const playerIds = new Set(players.map((item) => item.userId))
+    const votes = await context.db
+      .query('votes')
+      .withIndex('by_refinement', (query) =>
+        query.eq('refinementId', refinement._id),
+      )
+      .collect()
+    const currentVotes = votes.filter(
+      (vote) => vote.roundId === currentRound._id && playerIds.has(vote.userId),
+    )
+    if (currentVotes.length < 2) {
+      throw new ConvexError(
+        'Il faut au moins deux votes pour révéler les cartes.',
+      )
+    }
+
     const firstCard = currentVotes[0]?.card
     const hasConsensus =
-      participants.length >= 2 &&
-      currentVotes.length === participants.length &&
+      players.length >= 2 &&
+      currentVotes.length === players.length &&
       firstCard !== undefined &&
       currentVotes.every((vote) => vote.card === firstCard)
     const reward = hasConsensus ? 25 : 10
 
     await context.db.patch(currentRound._id, { revealedAt: Date.now() })
-    const authenticatedVoterIds = new Set<string>()
-    for (const userId of new Set(currentVotes.map((vote) => vote.userId))) {
-      if (userId.startsWith('guest:')) continue
-      const user = await context.db.get(userId as Id<'users'>)
-      if (!user) continue
-      authenticatedVoterIds.add(userId)
+    const activeBefore = Date.now() - 30_000
+    const activePlayers: Doc<'participants'>[] = []
+    for (const player of players) {
+      const presence = await context.db
+        .query('presences')
+        .withIndex('by_participant', (query) =>
+          query.eq('participantId', player._id),
+        )
+        .unique()
+      const lastSeenAt =
+        presence?.lastSeenAt ?? player.lastSeenAt ?? player._creationTime
+      if (lastSeenAt > activeBefore) activePlayers.push(player)
     }
 
-    if (authenticatedVoterIds.size >= 2) {
-      for (const userId of authenticatedVoterIds) {
+    const activeAuthenticatedIds = new Set<string>()
+    for (const player of activePlayers) {
+      if (player.userId.startsWith('guest:')) continue
+      try {
+        const user = await context.db.get(player.userId as Id<'users'>)
+        if (user) activeAuthenticatedIds.add(player.userId)
+      } catch {
+        // Legacy participant IDs are not authenticated user IDs.
+      }
+    }
+
+    if (activePlayers.length >= 3 && activeAuthenticatedIds.size >= 2) {
+      const activeAuthenticatedVoterIds = new Set(
+        currentVotes
+          .map((vote) => vote.userId)
+          .filter((userId) => activeAuthenticatedIds.has(userId)),
+      )
+      for (const userId of activeAuthenticatedVoterIds) {
         const wallet = await context.db
           .query('pokisouWallets')
           .withIndex('by_user_id', (query) => query.eq('userId', userId))
@@ -466,6 +602,9 @@ export const startNewRound = mutation({
       .unique()
     if (!participant)
       throw new ConvexError('Rejoins la salle avant de continuer.')
+    if (participant.isSpectator) {
+      throw new ConvexError('Les spectateurs ne peuvent pas lancer une manche.')
+    }
 
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
@@ -543,6 +682,100 @@ export const join = mutation({
   },
 })
 
+export const setSpectator = mutation({
+  args: {
+    slug: v.string(),
+    guestId: v.string(),
+    guestName: v.string(),
+    isSpectator: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (context, { slug, guestId, guestName, isSpectator }) => {
+    const identity = await context.auth.getUserIdentity()
+    const user = identity ? await syncAuthenticatedUser(context) : null
+    const userId = user ? String(user._id) : `guest:${guestId}`
+    if (!user && (!guestName.trim() || guestName.trim().length > 36)) {
+      throw new ConvexError('Pseudo invalide.')
+    }
+
+    const refinement = await context.db
+      .query('refinements')
+      .withIndex('by_slug', (query) => query.eq('slug', slug))
+      .unique()
+    if (!refinement) throw new ConvexError('Refinement introuvable.')
+
+    const participant = await context.db
+      .query('participants')
+      .withIndex('by_refinement_and_user', (query) =>
+        query.eq('refinementId', refinement._id).eq('userId', userId),
+      )
+      .unique()
+    if (!participant) {
+      throw new ConvexError('Rejoins la salle pour changer de mode.')
+    }
+    if ((participant.isSpectator ?? false) === isSpectator) return null
+
+    const currentRound = await getOrCreateCurrentRound(context, refinement)
+    if (!currentRound) throw new ConvexError('Manche introuvable.')
+    if (isSpectator && currentRound.revealedAt !== undefined) {
+      throw new ConvexError(
+        'Attends la prochaine manche pour passer spectateur.',
+      )
+    }
+
+    await context.db.patch(participant._id, { isSpectator })
+    if (!isSpectator || currentRound.revealedAt !== undefined) return null
+
+    const vote = await context.db
+      .query('votes')
+      .withIndex('by_refinement_user_round', (query) =>
+        query
+          .eq('refinementId', refinement._id)
+          .eq('userId', userId)
+          .eq('roundId', currentRound._id),
+      )
+      .unique()
+    if (vote) await context.db.delete(vote._id)
+
+    if (user) {
+      const participation = await context.db
+        .query('userRoundParticipations')
+        .withIndex('by_user_refinement_round', (query) =>
+          query
+            .eq('userId', user._id)
+            .eq('refinementId', refinement._id)
+            .eq('roundId', currentRound._id),
+        )
+        .unique()
+      if (participation) {
+        const otherParticipations = await context.db
+          .query('userRoundParticipations')
+          .withIndex('by_user_refinement', (query) =>
+            query.eq('userId', user._id).eq('refinementId', refinement._id),
+          )
+          .collect()
+        const statistics = await context.db
+          .query('statistics')
+          .withIndex('by_user', (query) => query.eq('userId', user._id))
+          .unique()
+        await context.db.delete(participation._id)
+        if (statistics) {
+          await context.db.patch(statistics._id, {
+            roundCount: Math.max(0, statistics.roundCount - 1),
+            refinementCount: Math.max(
+              0,
+              statistics.refinementCount -
+                (otherParticipations.length === 1 ? 1 : 0),
+            ),
+          })
+        }
+      }
+    }
+
+    return null
+  },
+})
+
 export const heartbeat = mutation({
   args: {
     slug: v.string(),
@@ -613,6 +846,11 @@ export const sendReaction = mutation({
       .withIndex('by_slug', (query) => query.eq('slug', slug))
       .unique()
     if (!refinement) throw new ConvexError('Refinement introuvable.')
+    if (refinement.funInteractionsEnabled === false) {
+      throw new ConvexError(
+        'Les interactions fun sont désactivées dans cette salle.',
+      )
+    }
 
     const source = await context.db
       .query('participants')

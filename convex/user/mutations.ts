@@ -55,7 +55,7 @@ export const buyAvatarFrame = mutation({
       .withIndex('by_user_id', (query) => query.eq('userId', String(user._id)))
       .unique()
     if (!wallet || wallet.balance < frame.price) {
-      throw new ConvexError('Tu n’as pas assez de Wikisous pour ce cadre.')
+      throw new ConvexError('Tu n’as pas assez de Pokisous pour ce cadre.')
     }
 
     await context.db.patch(wallet._id, {

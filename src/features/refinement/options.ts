@@ -20,6 +20,7 @@ export const sizings = [
 export type RefinementDraft = {
   sizing: (typeof sizings)[number]['id']
   issueUrl: string | null
+  funInteractionsEnabled: boolean
 }
 
 export function parseIssueUrl(value: string) {

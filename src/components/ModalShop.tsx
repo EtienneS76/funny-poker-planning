@@ -117,10 +117,10 @@ export default function ModalShop({
             <div
               className='pp-shop-currency'
               role='img'
-              aria-label={`${formattedBalance} Wikisous`}
+              aria-label={`${formattedBalance} Pokisous`}
             >
               <span className='pp-shop-coin' aria-hidden='true'>
-                W
+                P
               </span>
               <span className='pp-shop-currency-value'>{formattedBalance}</span>
             </div>
@@ -182,7 +182,7 @@ export default function ModalShop({
                   >
                     <div className='pp-frame-tier-heading'>
                       <h3>{tier.label}</h3>
-                      <span>{tierFrames[0].price} Wikisous</span>
+                      <span>{tierFrames[0].price} Pokisous</span>
                     </div>
                     <div className='pp-frame-grid'>
                       {tierFrames.map((frame) => {
@@ -210,7 +210,7 @@ export default function ModalShop({
                               <strong>{frame.name}</strong>
                               <p>{frame.description}</p>
                               <span className='pp-frame-price'>
-                                {frame.price} Wikisous
+                                {frame.price} Pokisous
                               </span>
                             </div>
                             <button

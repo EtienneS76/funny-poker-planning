@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, CircleDot, CircleCheck } from 'lucide-react'
+import { ArrowUpRight, CircleDot, CircleCheck, Pencil } from 'lucide-react'
 import { parseIssueUrl } from './options'
 
 type IssuePreview = {
@@ -9,7 +9,13 @@ type IssuePreview = {
   loading: boolean
 }
 
-export function RefinementIssue({ url }: { url: string | null }) {
+export function RefinementIssue({
+  url,
+  onEdit,
+}: {
+  url: string | null
+  onEdit: () => void
+}) {
   const issue = url ? parseIssueUrl(url) : null
   const issueUrl = issue?.url
   const [preview, setPreview] = useState<IssuePreview | null>(null)
@@ -70,14 +76,16 @@ export function RefinementIssue({ url }: { url: string | null }) {
     }
   }, [issueUrl])
 
-  if (!issue) return null
-  const current = preview?.url === issue.url ? preview : null
-  const loading = !current
+  const current = issue && preview?.url === issue.url ? preview : null
+  const loading = Boolean(issue && !current)
   const closed = current?.state === 'closed'
   const IssueIcon = closed ? CircleCheck : CircleDot
 
   return (
-    <aside className='room-issue' aria-label='Issue liée'>
+    <aside
+      className={`room-issue${issue ? '' : ' room-issue--empty'}`}
+      aria-label={issue ? 'Issue liée' : 'Aucune issue liée'}
+    >
       <IssueIcon
         className={`room-issue-icon${closed ? ' room-issue-icon--closed' : ''}`}
         size={22}
@@ -85,28 +93,45 @@ export function RefinementIssue({ url }: { url: string | null }) {
       />
       <div className='room-issue-content'>
         <div className='room-issue-meta'>
-          <span>Issue liée</span>
+          <span>{issue ? 'Issue liée' : 'Aucune issue liée'}</span>
           {current?.state && (
             <span className='room-issue-state'>
               {closed ? 'Fermée' : 'Ouverte'}
             </span>
           )}
         </div>
-        <a
-          href={issue.url}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='room-issue-link'
-        >
-          <span>{current?.title ?? issue.label}</span>
-          <ArrowUpRight size={18} aria-hidden='true' />
-        </a>
-        {(loading || current?.title) && (
-          <p className='room-issue-detail' aria-live='polite'>
-            {loading ? 'Chargement du titre…' : issue.label}
+        {issue ? (
+          <>
+            <a
+              href={issue.url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='room-issue-link'
+            >
+              <span>{current?.title ?? issue.label}</span>
+              <ArrowUpRight size={18} aria-hidden='true' />
+            </a>
+            {(loading || current?.title) && (
+              <p className='room-issue-detail' aria-live='polite'>
+                {loading ? 'Chargement du titre…' : issue.label}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className='room-issue-detail'>
+            Ajoute une issue GitHub à cette salle.
           </p>
         )}
       </div>
+      <button
+        className='room-issue-edit'
+        type='button'
+        aria-label={issue ? 'Modifier le lien de l’issue' : 'Lier une issue'}
+        title={issue ? 'Modifier le lien de l’issue' : 'Lier une issue'}
+        onClick={onEdit}
+      >
+        <Pencil size={17} aria-hidden='true' />
+      </button>
     </aside>
   )
 }

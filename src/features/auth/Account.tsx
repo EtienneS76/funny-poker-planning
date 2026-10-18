@@ -156,76 +156,86 @@ export default function Account({ account }: { account: AccountState }) {
         <div className='profile-dropdown'>
           <span className='profile-caption'>Connecté avec GitHub</span>
           <strong className='profile-name'>@{displayName}</strong>
-          <button
-            className='profile-signout'
-            onClick={() => {
-              if (menu.current) menu.current.open = false
-              setInventoryOpen(true)
-            }}
-          >
-            <Backpack size={17} aria-hidden='true' />
-            Inventaire
-          </button>
-          <button
-            className='profile-signout'
-            onClick={() => {
-              if (menu.current) menu.current.open = false
-              setStatisticsOpen(true)
-            }}
-          >
-            <BarChart3 size={17} aria-hidden='true' />
-            Statistiques
-          </button>
-          {editingDisplayName ? (
-            <form
-              className='profile-edit-form'
-              onSubmit={async (event: FormEvent<HTMLFormElement>) => {
-                event.preventDefault()
-                const name = displayNameDraft.trim()
-                if (!name) return
-                try {
-                  await account.updateDisplayName(name)
-                  setEditingDisplayName(false)
-                  snackbar.success(
-                    'Pseudo mis à jour',
-                    'Il sera conservé à chaque connexion.',
-                  )
-                } catch (updateError) {
-                  snackbar.error(
-                    'Pseudo non sauvegardé',
-                    updateError instanceof Error
-                      ? updateError.message
-                      : 'Réessaie dans un instant.',
-                  )
-                }
-              }}
-            >
-              <label htmlFor='github-display-name'>Pseudo affiché</label>
-              <input
-                id='github-display-name'
-                autoFocus
-                required
-                maxLength={36}
-                value={displayNameDraft}
-                onChange={(event) => setDisplayNameDraft(event.target.value)}
-              />
-              <button className='profile-signout' type='submit'>
-                <Check size={17} aria-hidden='true' />
-                Enregistrer
+          <details className='profile-submenu'>
+            <summary className='profile-submenu-trigger'>
+              <span>Mon profil</span>
+              <ChevronDown size={16} aria-hidden='true' />
+            </summary>
+            <div className='profile-submenu-content'>
+              <button
+                className='profile-signout'
+                onClick={() => {
+                  if (menu.current) menu.current.open = false
+                  setInventoryOpen(true)
+                }}
+              >
+                <Backpack size={17} aria-hidden='true' />
+                Inventaire
               </button>
-            </form>
-          ) : (
-            <button
-              className='profile-signout'
-              onClick={() => {
-                setDisplayNameDraft(displayName)
-                setEditingDisplayName(true)
-              }}
-            >
-              <Pencil size={17} aria-hidden='true' />
-              Changer mon pseudo
-            </button>
-          )}
+              {editingDisplayName ? (
+                <form
+                  className='profile-edit-form'
+                  onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+                    event.preventDefault()
+                    const name = displayNameDraft.trim()
+                    if (!name) return
+                    try {
+                      await account.updateDisplayName(name)
+                      setEditingDisplayName(false)
+                      snackbar.success(
+                        'Pseudo mis à jour',
+                        'Il sera conservé à chaque connexion.',
+                      )
+                    } catch (updateError) {
+                      snackbar.error(
+                        'Pseudo non sauvegardé',
+                        updateError instanceof Error
+                          ? updateError.message
+                          : 'Réessaie dans un instant.',
+                      )
+                    }
+                  }}
+                >
+                  <label htmlFor='github-display-name'>Pseudo affiché</label>
+                  <input
+                    id='github-display-name'
+                    autoFocus
+                    required
+                    maxLength={36}
+                    value={displayNameDraft}
+                    onChange={(event) =>
+                      setDisplayNameDraft(event.target.value)
+                    }
+                  />
+                  <button className='profile-signout' type='submit'>
+                    <Check size={17} aria-hidden='true' />
+                    Enregistrer
+                  </button>
+                </form>
+              ) : (
+                <button
+                  className='profile-signout'
+                  onClick={() => {
+                    setDisplayNameDraft(displayName)
+                    setEditingDisplayName(true)
+                  }}
+                >
+                  <Pencil size={17} aria-hidden='true' />
+                  Changer mon pseudo
+                </button>
+              )}
+              <button
+                className='profile-signout'
+                onClick={() => {
+                  if (menu.current) menu.current.open = false
+                  setStatisticsOpen(true)
+                }}
+              >
+                <BarChart3 size={17} aria-hidden='true' />
+                Statistiques
+              </button>
+            </div>
+          </details>
           <button
             className='profile-signout'
             disabled={account.pending}

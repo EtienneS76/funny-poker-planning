@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useParams } from 'react-router'
 import { useMutation } from 'convex/react'
-import { Shirt } from 'lucide-react'
+import { Eye, Shirt } from 'lucide-react'
 import { api } from '../../../convex/_generated/api'
 import { useAccount } from '../auth/useAccount'
 import { AvatarFrame } from '../avatar/AvatarFrame'
 import Topbar from '../../components/Topbar'
 import { useAppSnackbar } from '../../components/AppSnackbar'
 import { sizings } from './options'
-import { RefinementRoomDebug } from './RefinementRoomDebug'
 import { useRefinementRoomDebug } from './hooks/useRefinementRoomDebug'
 import { useRefinementRoom } from './hooks/useRefinementRoom'
 import { RefinementRoomControls } from './RefinementRoomControls'
 import { RefinementIssue } from './RefinementIssue'
+import { ModalEditIssue } from './ModalEditIssue'
 import {
   ConsensusCelebration,
   RefinementRoomReactions,
@@ -26,6 +26,7 @@ type Seat = {
   name: string
   avatarUrl: string | null
   avatarFrameId: string | null
+  isSpectator: boolean
   vote: string | null
   hasVoted: boolean
   isMe: boolean
@@ -54,6 +55,13 @@ export function RefinementRoom() {
   )
   const revealVotes = useMutation(api.refinement.mutations.reveal)
   const startNewRound = useMutation(api.refinement.mutations.startNewRound)
+  const setSpectatorMutation = useMutation(
+    api.refinement.mutations.setSpectator,
+  )
+  const setFunInteractionsEnabledMutation = useMutation(
+    api.refinement.mutations.setFunInteractionsEnabled,
+  )
+  const updateIssueUrl = useMutation(api.refinement.mutations.updateIssueUrl)
 
   const [voteOverride, setVoteOverride] = useState<{
     roundId: string
@@ -64,6 +72,7 @@ export function RefinementRoom() {
   const [reactionRound, setReactionRound] = useState(0)
   const [dodging, setDodging] = useState<Record<string, number>>({})
   const [roundUpdating, setRoundUpdating] = useState(false)
+  const [issueEditorOpen, setIssueEditorOpen] = useState(false)
 
   const reactionTrigger = useRef<HTMLButtonElement | null>(null)
 
@@ -89,6 +98,12 @@ export function RefinementRoom() {
       : null
     : `guest:${account.guestId}`
   const currentRoundId = room?.round?._id
+  const funInteractionsEnabled =
+    room?.refinement.funInteractionsEnabled !== false
+  const currentParticipant = room?.participants.find(
+    (participant) => participant.userId === currentUserId,
+  )
+  const isSpectator = currentParticipant?.isSpectator ?? false
   const remoteSelectedCard =
     room?.participants.find(
       (participant) => participant.userId === currentUserId,
@@ -98,11 +113,7 @@ export function RefinementRoom() {
       ? voteOverride.card
       : remoteSelectedCard
   const revealed = room?.round?.revealedAt !== undefined || debugRevealed
-  const hasJoinedRoom = Boolean(
-    room?.participants.some(
-      (participant) => participant.userId === currentUserId,
-    ),
-  )
+  const hasJoinedRoom = Boolean(currentParticipant)
 
   useEffect(() => {
     if (
@@ -113,6 +124,10 @@ export function RefinementRoom() {
       setVoteOverride(null)
     }
   }, [currentRoundId, remoteSelectedCard, voteOverride])
+
+  useEffect(() => {
+    if (!funInteractionsEnabled) setReactionTarget(null)
+  }, [funInteractionsEnabled])
 
   const previousParticipants = useRef<Map<string, string> | null>(null)
 
@@ -172,8 +187,11 @@ export function RefinementRoom() {
     name: participant.name,
     avatarUrl: participant.avatarUrl,
     avatarFrameId: participant.avatarFrameId,
-    vote: consensusVote ?? participant.vote,
-    hasVoted: consensusVote !== null || participant.hasVoted,
+    isSpectator: participant.isSpectator,
+    vote: participant.isSpectator ? null : (consensusVote ?? participant.vote),
+    hasVoted:
+      !participant.isSpectator &&
+      (consensusVote !== null || participant.hasVoted),
     isMe: participant.userId === currentUserId,
   }))
 
@@ -183,6 +201,7 @@ export function RefinementRoom() {
       name: account.user?.username ?? account.guestName,
       avatarUrl: account.user?.avatarUrl ?? null,
       avatarFrameId: account.profile?.avatarFrameId ?? null,
+      isSpectator: false,
       vote: consensusVote ?? selectedCard,
       hasVoted: consensusVote !== null || selectedCard !== null,
       isMe: true,
@@ -196,26 +215,29 @@ export function RefinementRoom() {
       name: player.name,
       avatarUrl: null,
       avatarFrameId: null,
+      isSpectator: false,
       vote: player.vote,
       hasVoted: player.vote !== null,
       isMe: false,
     })),
   ]
   const votes = seats.flatMap((seat) => {
-    if (seat.vote === null) return []
+    if (seat.vote === null || seat.isSpectator) return []
     const value = Number(seat.vote)
     return Number.isFinite(value) ? [value] : []
   })
-  const votedCount = seats.filter((seat) => seat.hasVoted).length
+  const votingSeats = seats.filter((seat) => !seat.isSpectator)
+  const votedCount = votingSeats.filter((seat) => seat.hasVoted).length
+  const playerCount = votingSeats.length
   const realVotedCount =
     consensusVote === null
-      ? realSeats.filter((seat) => seat.hasVoted).length
+      ? realSeats.filter((seat) => !seat.isSpectator && seat.hasVoted).length
       : 0
   const average = votes.length
     ? votes.reduce((sum, vote) => sum + vote, 0) / votes.length
     : null
   const revealedCards = seats.flatMap((seat) =>
-    seat.vote === null ? [] : [seat.vote],
+    seat.vote === null || seat.isSpectator ? [] : [seat.vote],
   )
   const cardOrder: readonly string[] = cards
   const tshirtSummary = [
@@ -233,7 +255,7 @@ export function RefinementRoom() {
     .join(' · ')
   const consensus =
     revealed &&
-    votedCount === seats.length &&
+    votedCount === playerCount &&
     votedCount >= 2 &&
     new Set(revealedCards).size === 1
 
@@ -263,7 +285,7 @@ export function RefinementRoom() {
   }
 
   function selectCard(card: string) {
-    if (roundUpdating || revealed || !currentRoundId) return
+    if (isSpectator || roundUpdating || revealed || !currentRoundId) return
     const nextCard = selectedCard === card ? null : card
     setVoteOverride({ roundId: String(currentRoundId), card: nextCard })
     void recordVote({
@@ -281,7 +303,7 @@ export function RefinementRoom() {
   }
 
   function revealCards() {
-    if (revealed || votedCount < 2) return
+    if (isSpectator || revealed || votedCount < 2) return
     if (realVotedCount < 2) {
       setDebugRevealed(true)
       return
@@ -300,6 +322,77 @@ export function RefinementRoom() {
     })
   }
 
+  async function toggleSpectator() {
+    if (!hasJoinedRoom || (revealed && !isSpectator)) return
+    try {
+      await setSpectatorMutation({
+        slug: refinementSlug,
+        guestId: account.guestId,
+        guestName: account.user?.username ?? account.guestName,
+        isSpectator: !isSpectator,
+      })
+      setVoteOverride(null)
+      success(
+        isSpectator ? 'Mode joueur activé' : 'Mode spectateur activé',
+        isSpectator
+          ? 'Tu participeras aux prochaines manches.'
+          : 'Ton vote actuel ne sera pas pris en compte.',
+      )
+    } catch (modeError) {
+      error(
+        'Mode non modifié',
+        modeError instanceof Error
+          ? modeError.message
+          : 'Réessaie dans un instant.',
+      )
+    }
+  }
+
+  async function toggleFunInteractions() {
+    if (!hasJoinedRoom) return
+    try {
+      await setFunInteractionsEnabledMutation({
+        slug: refinementSlug,
+        guestId: account.guestId,
+        guestName: account.user?.username ?? account.guestName,
+        enabled: !funInteractionsEnabled,
+      })
+    } catch (settingsError) {
+      error(
+        'Paramètre non modifié',
+        settingsError instanceof Error
+          ? settingsError.message
+          : 'Réessaie dans un instant.',
+      )
+    }
+  }
+
+  async function saveIssueUrl(issueUrl: string | null) {
+    try {
+      await updateIssueUrl({
+        slug: refinementSlug,
+        guestId: account.guestId,
+        guestName: account.user?.username ?? account.guestName,
+        issueUrl,
+      })
+      success(
+        issueUrl ? 'Issue mise à jour' : 'Issue retirée',
+        issueUrl
+          ? 'Le lien est visible par toute la salle.'
+          : 'La salle n’a plus d’issue liée.',
+      )
+      return true
+    } catch (updateError) {
+      error(
+        'Issue non mise à jour',
+        updateError instanceof Error
+          ? updateError.message
+          : 'Réessaie dans un instant.',
+      )
+      return false
+    }
+  }
+
   function simulateConsensusVote() {
     simulateConsensus(selectedCard)
   }
@@ -308,6 +401,7 @@ export function RefinementRoom() {
     targetUserId: string,
     kind: 'tomato' | 'poop' | 'egg' | 'soap',
   ) {
+    if (!funInteractionsEnabled) return
     void sendReactionMutation({
       slug: refinementSlug,
       guestId: account.guestId,
@@ -349,20 +443,10 @@ export function RefinementRoom() {
     <div className='multivers multivers--room'>
       <Topbar account={account} onInvitePlayers={copyInviteLink} />
       <main className='pp-room'>
-        <div className='room-toolbar'>
-          <RefinementRoomDebug
-            revealed={revealed}
-            voteCount={votedCount}
-            debugPlayerCount={debugPlayers.length}
-            onAddPlayers={addPlayers}
-            onRemovePlayers={removePlayers}
-            onReveal={revealCards}
-            onReset={resetRound}
-            onSimulate={simulateVotes}
-            onSimulateConsensus={simulateConsensusVote}
-          />
-        </div>
-        <RefinementIssue url={room?.refinement.issueUrl ?? null} />
+        <RefinementIssue
+          url={room?.refinement.issueUrl ?? null}
+          onEdit={() => setIssueEditorOpen(true)}
+        />
         <section
           className={`pp-table-area${revealed ? ' pp-table-area--revealed' : ''}${consensus ? ' pp-table-area--consensus' : ''}`}
           aria-label='Table de vote'
@@ -394,7 +478,7 @@ export function RefinementRoom() {
             ) : (
               <p className='pp-table-count'>
                 <strong>
-                  {votedCount}/{seats.length}
+                  {votedCount}/{playerCount}
                 </strong>
                 ont voté
               </p>
@@ -438,7 +522,7 @@ export function RefinementRoom() {
             {seats.map((seat, index) => (
               <li
                 key={seat.id}
-                className={`pp-seat${seat.isMe ? ' pp-seat--me' : ''}`}
+                className={`pp-seat${seat.isMe ? ' pp-seat--me' : ''}${seat.isSpectator ? ' pp-seat--spectator' : ''}`}
                 style={seatStyle(index, seats.length)}
               >
                 <span className='seat-portrait'>
@@ -449,7 +533,11 @@ export function RefinementRoom() {
                     <button
                       className={`seat-avatar${dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
                       type='button'
-                      disabled={seat.isMe || seat.id.startsWith('debug:')}
+                      disabled={
+                        seat.isMe ||
+                        seat.id.startsWith('debug:') ||
+                        !funInteractionsEnabled
+                      }
                       aria-label={
                         seat.isMe
                           ? `Ton profil : ${seat.name}`
@@ -486,31 +574,50 @@ export function RefinementRoom() {
                       )}
                     </button>
                   </AvatarFrame>
-                  <span
-                    className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
-                    role='img'
-                    aria-label={
-                      seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
-                    }
-                  />
+                  {seat.isSpectator ? (
+                    <span
+                      className='seat-spectator-icon'
+                      role='img'
+                      aria-label='Spectateur'
+                    >
+                      <Eye size={15} aria-hidden='true' />
+                    </span>
+                  ) : (
+                    <span
+                      className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
+                      role='img'
+                      aria-label={
+                        seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
+                      }
+                    />
+                  )}
                 </span>
-                <span className='seat-name'>{seat.name}</span>
+                <span className='seat-name'>
+                  {seat.name}
+                  {seat.isSpectator && (
+                    <small className='seat-spectator'>
+                      <Eye size={11} aria-hidden='true' /> Spectateur
+                    </small>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
-          <RefinementRoomReactions
-            key={reactionRound}
-            seats={seats.map((seat, index) => ({
-              ...seat,
-              position: seatStyle(index, seats.length),
-            }))}
-            events={room?.reactions ?? []}
-            eventsReady={room !== undefined}
-            targetId={reactionTarget}
-            onClose={closeReactionMenu}
-            onDodge={dodgeSeat}
-            onSend={sendReaction}
-          />
+          {funInteractionsEnabled && (
+            <RefinementRoomReactions
+              key={reactionRound}
+              seats={seats.map((seat, index) => ({
+                ...seat,
+                position: seatStyle(index, seats.length),
+              }))}
+              events={room?.reactions ?? []}
+              eventsReady={room !== undefined}
+              targetId={reactionTarget}
+              onClose={closeReactionMenu}
+              onDodge={dodgeSeat}
+              onSend={sendReaction}
+            />
+          )}
           {consensus && (
             <ConsensusCelebration
               revealDelay={650 + (seats.length - 1) * 70 + 150}
@@ -521,17 +628,26 @@ export function RefinementRoom() {
         <RefinementRoomControls
           revealed={revealed}
           voteCount={votedCount}
+          playerCount={playerCount}
+          isSpectator={isSpectator}
+          canChangeMode={hasJoinedRoom && (!revealed || isSpectator)}
+          funInteractionsEnabled={funInteractionsEnabled}
+          canUpdateRoomSettings={hasJoinedRoom}
+          onToggleSpectator={() => void toggleSpectator()}
+          onToggleFunInteractions={() => void toggleFunInteractions()}
           onReveal={revealCards}
           onReset={resetRound}
         />
 
         <section className='pp-hand-area' aria-label='Tes cartes'>
           <p className='pp-hand-caption' aria-live='polite'>
-            {revealed
-              ? 'Votes révélés'
-              : selectedCard
-                ? `Tu as choisi ${selectedCard}`
-                : 'Choisis ta carte'}
+            {isSpectator
+              ? 'Mode spectateur · tu ne votes pas'
+              : revealed
+                ? 'Votes révélés'
+                : selectedCard
+                  ? `Tu as choisi ${selectedCard}`
+                  : 'Choisis ta carte'}
           </p>
           <div
             className={`pp-hand${isTshirtSizing ? ' pp-hand--shirts' : ''}`}
@@ -544,7 +660,9 @@ export function RefinementRoom() {
                 <button
                   key={card}
                   type='button'
-                  disabled={revealed || roundUpdating || !hasJoinedRoom}
+                  disabled={
+                    isSpectator || revealed || roundUpdating || !hasJoinedRoom
+                  }
                   className={`vote-card${selected ? ' vote-card--selected' : ''}${isTshirtSizing ? ' vote-card--shirt' : ''}`}
                   aria-pressed={selected}
                   onClick={() => selectCard(card)}
@@ -569,6 +687,13 @@ export function RefinementRoom() {
           </div>
         </section>
       </main>
+      {issueEditorOpen && (
+        <ModalEditIssue
+          url={room?.refinement.issueUrl ?? null}
+          onClose={() => setIssueEditorOpen(false)}
+          onSave={saveIssueUrl}
+        />
+      )}
     </div>
   )
 }

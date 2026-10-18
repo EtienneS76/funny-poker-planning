@@ -6,6 +6,7 @@ export const refinementTable = defineTable({
   creatorId: v.string(), // id Better Auth founris un string donc pas v.id
   sizing: v.optional(v.string()),
   issueUrl: v.optional(v.union(v.string(), v.null())),
+  funInteractionsEnabled: v.optional(v.boolean()),
   // Legacy fields remain optional until existing documents are migrated.
   name: v.optional(v.string()),
   savedAt: v.optional(v.number()),

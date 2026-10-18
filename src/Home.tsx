@@ -33,6 +33,7 @@ export default function Home() {
         guestName: creatorName,
         sizing: configuration.sizing,
         issueUrl: configuration.issueUrl,
+        funInteractionsEnabled: configuration.funInteractionsEnabled,
       })
 
       setModalOpen(false)
@@ -56,8 +57,8 @@ export default function Home() {
           <div className='poker-card poker-card--right'>8</div>
         </div>
         <div className='pp-home-copy'>
-          <h1>Estimez vos tickets en équipe.</h1>
-          <p>Un planning poker classique, prêt à lancer avec votre équipe.</p>
+          <h1>Estimez vos tickets de manière ludique.</h1>
+          <p>Une expérience interactive pour estimer vos tickets.</p>
         </div>
         <div className='pp-home-actions'>
           <button
