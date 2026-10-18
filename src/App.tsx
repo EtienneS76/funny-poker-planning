@@ -11,7 +11,7 @@ import { RefinementRoom } from './features/refinement/RefinementRoom'
 import AppErrorBoundary from './components/AppErrorBoundary'
 import './styles/index.css'
 import './styles/app-snackbar.css'
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from '@vercel/analytics/react'
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null
@@ -27,9 +27,9 @@ export default function App() {
 
   return (
     <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-      <Analytics />
       <AccountProvider>
         <AppSnackbarProvider>
+          <Analytics />
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/refinement' element={<Navigate to='/' replace />} />
