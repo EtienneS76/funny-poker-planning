@@ -1,7 +1,11 @@
+import { useState } from 'react'
+import { useQuery } from 'convex/react'
 import Account from '../features/auth/Account'
 import type { AccountState } from '../features/auth/useAccount'
-import { UserRoundPlus } from 'lucide-react'
+import { Store, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router'
+import { api } from '../../convex/_generated/api'
+import ModalShop from './ModalShop'
 
 type Props = {
   account: AccountState
@@ -9,6 +13,9 @@ type Props = {
 }
 
 export default function Topbar({ account, onInvitePlayers }: Props) {
+  const [shopOpen, setShopOpen] = useState(false)
+  const shopData = useQuery(api.user.queries.shopData, {})
+
   return (
     <header className='pp-topbar'>
       <Link className='pp-brand' to='/'>
@@ -21,10 +28,16 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
             type='button'
             onClick={onInvitePlayers}
           >
-            <UserRoundPlus size={17} aria-hidden='true' />
-            Inviter des participants
+            <UserRoundPlus size={17} aria-hidden='true' /> Invitation
           </button>
         )}
+        <button
+          className='pp-button pp-button--secondary pp-button--shop-nav'
+          type='button'
+          onClick={() => setShopOpen(true)}
+        >
+          <Store size={17} aria-hidden='true' /> Boutique
+        </button>
         <Account account={account} />
       </div>
       {(account.error || account.configured === false) && (
@@ -34,6 +47,19 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
         >
           {account.error ?? 'Connexion GitHub non configurée.'}
         </p>
+      )}
+      {shopOpen && (
+        <ModalShop
+          balance={shopData?.balance ?? 0}
+          catalog={shopData?.catalog ?? []}
+          ownedIds={shopData?.ownedIds ?? []}
+          isAuthenticated={account.isAuthenticated}
+          canSignIn={
+            account.configured === true && !account.loading && !account.pending
+          }
+          onSignIn={() => void account.signIn()}
+          onClose={() => setShopOpen(false)}
+        />
       )}
     </header>
   )

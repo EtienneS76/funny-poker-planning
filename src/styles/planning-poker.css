@@ -101,6 +101,12 @@
   font-size: 14px;
   white-space: nowrap;
 }
+.pp-button--shop-nav {
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+  font-size: 14px;
+  white-space: nowrap;
+}
 .pp-button--launch {
   min-height: 64px;
   padding: 1rem 2.5rem;
@@ -445,9 +451,9 @@
 .pp-home-credit a:hover {
   text-decoration-color: currentColor;
 }
-.pp-button--shop {
-  min-height: 64px;
-  padding: 1rem 1.75rem;
+.pp-button--quick {
+  min-height: 56px;
+  padding: 0.9rem 1.75rem;
   font-size: 18px;
 }
 .poker-hand {
@@ -517,6 +523,37 @@
   gap: 22px;
   padding: 32px;
 }
+@media (max-height: 960px) {
+  .pp-modal--guest .pp-modal-content {
+    gap: 15px;
+    padding-block: 22px;
+  }
+  .pp-modal--guest .pp-fieldset legend {
+    margin-bottom: 6px;
+  }
+  .pp-modal--guest .universe-option {
+    min-height: 54px;
+    padding-block: 8px;
+  }
+  .pp-modal--guest .sizing-option {
+    min-height: 40px;
+    padding-block: 8px;
+  }
+  .pp-modal--guest .sizing-preview {
+    margin-top: 6px;
+  }
+  .pp-modal--guest .pp-connect-issue {
+    min-height: 42px;
+    padding-block: 8px;
+  }
+  .pp-modal--guest .pp-room-setting-option {
+    padding-block: 8px;
+  }
+  .pp-modal--guest .pp-modal-actions .pp-button {
+    min-height: 42px;
+    padding-block: 9px;
+  }
+}
 .pp-shop-modal {
   width: min(760px, calc(100% - 32px));
 }
@@ -533,6 +570,46 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.pp-shop-help {
+  position: relative;
+  flex: 0 0 auto;
+}
+.pp-shop-help-trigger {
+  list-style: none;
+  cursor: pointer;
+}
+.pp-shop-help-trigger::-webkit-details-marker {
+  display: none;
+}
+.pp-shop-help[open] .pp-shop-help-trigger {
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+.pp-shop-help-panel {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(320px, calc(100vw - 40px));
+  padding: 14px 16px;
+  border: 1px solid var(--pp-line);
+  border-radius: 8px;
+  background: var(--pp-paper);
+  box-shadow: 0 8px 24px #39454124;
+  color: var(--pp-ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pp-shop-help-panel p {
+  margin: 8px 0;
+}
+.pp-shop-help-panel ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+.pp-shop-help-panel li + li {
+  margin-top: 4px;
 }
 .pp-shop-currency {
   display: flex;

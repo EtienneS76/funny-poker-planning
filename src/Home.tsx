@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { ArrowRight, Store } from 'lucide-react'
+import { ArrowRight, Zap } from 'lucide-react'
 import Topbar from './components/Topbar'
 import ModalNewRefinement from './components/ModalNewRefinement'
-import ModalShop from './components/ModalShop'
 import { useAppSnackbar } from './components/AppSnackbar'
 import { useAccount } from './features/auth/useAccount'
 import type { RefinementDraft } from './features/refinement/options'
 import './styles/planning-poker.css'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation } from 'convex/react'
 import { api } from '../convex/_generated/api'
 import { useNavigate } from 'react-router'
 
@@ -17,10 +16,8 @@ export default function Home() {
   const snackbar = useAppSnackbar()
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [shopOpen, setShopOpen] = useState(false)
 
   const createRefinement = useMutation(api.refinement.mutations.create)
-  const shopData = useQuery(api.user.queries.shopData, {})
 
   const onSubmitNewRefinement = async (
     configuration: RefinementDraft,
@@ -47,6 +44,17 @@ export default function Home() {
     }
   }
 
+  function startQuickRefinement() {
+    void onSubmitNewRefinement(
+      {
+        sizing: 'fib',
+        issueUrl: null,
+        funInteractionsEnabled: true,
+      },
+      account.user?.username ?? account.guestName,
+    )
+  }
+
   return (
     <div className='multivers'>
       <Topbar account={account} />
@@ -68,15 +76,21 @@ export default function Home() {
             Lancer un refinement <ArrowRight size={21} aria-hidden='true' />
           </button>
           <button
-            className='pp-button pp-button--secondary pp-button--shop'
-            onClick={() => setShopOpen(true)}
+            className='pp-button pp-button--secondary pp-button--quick'
+            onClick={startQuickRefinement}
           >
-            <Store size={19} aria-hidden='true' /> Boutique
+            <Zap size={19} aria-hidden='true' /> Refinement rapide
           </button>
         </div>
       </main>
       <footer className='pp-home-credit'>
-        <span>Crafted with <span role='img' aria-label='amour'>❤️</span> by </span>
+        <span>
+          Crafted with{' '}
+          <span role='img' aria-label='amour'>
+            ❤️
+          </span>{' '}
+          by{' '}
+        </span>
         <a
           href='https://github.com/EtienneS76/funny-poker-planning'
           target='_blank'
@@ -90,19 +104,6 @@ export default function Home() {
           account={account}
           onClose={() => setModalOpen(false)}
           onSubmit={onSubmitNewRefinement}
-        />
-      )}
-      {shopOpen && (
-        <ModalShop
-          balance={shopData?.balance ?? 0}
-          catalog={shopData?.catalog ?? []}
-          ownedIds={shopData?.ownedIds ?? []}
-          isAuthenticated={account.isAuthenticated}
-          canSignIn={
-            account.configured === true && !account.loading && !account.pending
-          }
-          onSignIn={() => void account.signIn()}
-          onClose={() => setShopOpen(false)}
         />
       )}
     </div>

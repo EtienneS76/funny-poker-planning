@@ -77,7 +77,7 @@ export default function ModalNewRefinement({
 
   return (
     <dialog
-      className='pp-modal'
+      className={`pp-modal${account.isAuthenticated ? '' : ' pp-modal--guest'}`}
       ref={dialog}
       aria-labelledby='refinement-title'
       onCancel={onClose}

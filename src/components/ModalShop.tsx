@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useMutation } from 'convex/react'
-import { X } from 'lucide-react'
+import { Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
 
@@ -124,6 +124,28 @@ export default function ModalShop({
               </span>
               <span className='pp-shop-currency-value'>{formattedBalance}</span>
             </div>
+            <details className='pp-shop-help'>
+              <summary
+                className='pp-icon-button pp-shop-help-trigger'
+                aria-label='Comment gagner des Pokisous ?'
+                title='Comment gagner des Pokisous ?'
+              >
+                <Info size={20} aria-hidden='true' />
+              </summary>
+              <div className='pp-shop-help-panel' role='note'>
+                <strong>Gagner des Pokisous</strong>
+                <p>
+                  Une manche révélée rapporte des Pokisous aux joueurs connectés
+                  qui ont voté. Il faut au moins 3 joueurs actifs, dont 2
+                  comptes connectés.
+                </p>
+                <ul>
+                  <li>10 Pokisous par joueur si les votes diffèrent.</li>
+                  <li>25 Pokisous par joueur si tous votent pareil.</li>
+                </ul>
+                <p>Les joueurs invités ne reçoivent pas de Pikisous.</p>
+              </div>
+            </details>
             <button
               className='pp-icon-button'
               type='button'
