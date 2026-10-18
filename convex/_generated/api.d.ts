@@ -8,12 +8,19 @@
  * @module
  */
 
-import type * as participants from "../participants.js";
-import type * as pokeballs from "../pokeballs.js";
-import type * as presence from "../presence.js";
-import type * as sizings from "../sizings.js";
-import type * as units from "../units.js";
-import type * as users from "../users.js";
+import type * as auth_auth from "../auth/auth.js";
+import type * as crons from "../crons.js";
+import type * as http from "../http.js";
+import type * as refinement_mutations from "../refinement/mutations.js";
+import type * as refinement_queries from "../refinement/queries.js";
+import type * as refinement_reactionSchema from "../refinement/reactionSchema.js";
+import type * as refinement_roundSchema from "../refinement/roundSchema.js";
+import type * as refinement_slug from "../refinement/slug.js";
+import type * as refinement_voteSchema from "../refinement/voteSchema.js";
+import type * as user_avatarFrames from "../user/avatarFrames.js";
+import type * as user_mutations from "../user/mutations.js";
+import type * as user_profile from "../user/profile.js";
+import type * as user_queries from "../user/queries.js";
 
 import type {
   ApiFromModules,
@@ -22,12 +29,19 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  participants: typeof participants;
-  pokeballs: typeof pokeballs;
-  presence: typeof presence;
-  sizings: typeof sizings;
-  units: typeof units;
-  users: typeof users;
+  "auth/auth": typeof auth_auth;
+  crons: typeof crons;
+  http: typeof http;
+  "refinement/mutations": typeof refinement_mutations;
+  "refinement/queries": typeof refinement_queries;
+  "refinement/reactionSchema": typeof refinement_reactionSchema;
+  "refinement/roundSchema": typeof refinement_roundSchema;
+  "refinement/slug": typeof refinement_slug;
+  "refinement/voteSchema": typeof refinement_voteSchema;
+  "user/avatarFrames": typeof user_avatarFrames;
+  "user/mutations": typeof user_mutations;
+  "user/profile": typeof user_profile;
+  "user/queries": typeof user_queries;
 }>;
 
 /**
@@ -57,5 +71,5 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
-  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+  betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
 };

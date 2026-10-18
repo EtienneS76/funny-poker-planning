@@ -1,0 +1,395 @@
+/*
+ * Cadres d'avatar — 13 cadres, 4 raretés.
+ * Tout est exprimé en `cqi` (1cqi = 1 % de la largeur du cadre) : les anneaux,
+ * halos et orbites s'adaptent seuls à 32 px (profil), 54 px (stats), 56 px
+ * (boutique / inventaire) ou à la taille d'un siège.
+ * Les variantes `.avatar-frame--compact` coupent les effets secondaires.
+ */
+.avatar-frame {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  isolation: isolate;
+  container-type: inline-size;
+}
+.avatar-frame::before,
+.avatar-frame::after {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    #0000 calc(100% - var(--w, 5px)),
+    #000 calc(100% - var(--w, 5px) + 0.6px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    #0000 calc(100% - var(--w, 5px)),
+    #000 calc(100% - var(--w, 5px) + 0.6px)
+  );
+}
+
+/* ───────── Communs : anneaux propres, mouvement discret ───────── */
+.avatar-frame--flower::before {
+  inset: -9.7cqi;
+  --w: max(2px, 6.9cqi);
+  background: repeating-conic-gradient(#f7a8bd 0 22.5deg, #ffd98a 0 45deg);
+}
+.avatar-frame--flower::after {
+  inset: -18cqi;
+  --w: max(2px, 6.9cqi);
+  background: repeating-conic-gradient(
+    from 11deg,
+    #e86f90 0 8deg,
+    #0000 0 45deg
+  );
+  animation: af-spin 24s linear infinite;
+}
+.avatar-frame--clover::before {
+  inset: -8.3cqi;
+  --w: max(2px, 6.9cqi);
+  background: linear-gradient(135deg, #7fb677, #4a8657);
+}
+.avatar-frame--clover::after {
+  inset: -16.7cqi;
+  --w: max(2px, 8.3cqi);
+  background: repeating-conic-gradient(
+    from 8deg,
+    #8fc07f 0 14deg,
+    #0000 0 45deg
+  );
+  animation: af-spin 30s linear infinite reverse;
+}
+.avatar-frame--stardust::before {
+  inset: -8.3cqi;
+  --w: max(1.5px, 4.2cqi);
+  background: #526287;
+}
+.avatar-frame--stardust::after {
+  inset: -16.7cqi;
+  --w: max(2px, 5.6cqi);
+  background: repeating-conic-gradient(#d1a94e 0 5deg, #0000 0 22.5deg);
+  animation:
+    af-spin 16s linear infinite,
+    af-fade 2s ease-in-out infinite;
+}
+.avatar-frame--waterlily::before {
+  inset: -8.3cqi;
+  --w: max(2px, 5.6cqi);
+  background: linear-gradient(135deg, #9be3d6, #3f9e94);
+}
+.avatar-frame--waterlily::after {
+  inset: -8.3cqi;
+  --w: max(1px, 2.8cqi);
+  background: #7ccfc4;
+  animation: af-ripple 2.8s ease-out infinite;
+}
+
+/* ───────── Rares : anneaux dégradés + halo qui pulse ───────── */
+.avatar-frame--aurora::before {
+  inset: -11.1cqi;
+  --w: max(2px, 9.7cqi);
+  background: conic-gradient(#69e0c8, #8a7be8, #f08ad0, #f5e27a, #69e0c8);
+  animation: af-spin 5s linear infinite;
+}
+.avatar-frame--aurora::after {
+  inset: -11.1cqi;
+  --w: max(1px, 2.1cqi);
+  background: #fffc;
+}
+.avatar-frame--frost::before {
+  inset: -9.7cqi;
+  --w: max(2px, 8.3cqi);
+  background: conic-gradient(#eafcff, #8fd0e8, #f6ffff, #a9d9e9, #eafcff);
+}
+.avatar-frame--frost::after {
+  inset: -19.4cqi;
+  --w: max(2px, 6.9cqi);
+  background: repeating-conic-gradient(#fff 0 3deg, #0000 0 30deg);
+  animation: af-spin 20s linear infinite reverse;
+}
+.avatar-frame--neon::before {
+  inset: -8.3cqi;
+  --w: max(2px, 4.2cqi);
+  background: #ff4fd8;
+  animation: af-flicker 3s steps(1) infinite;
+}
+.avatar-frame--neon::after {
+  inset: -16.7cqi;
+  --w: max(2px, 4.2cqi);
+  background: #4fe6ff;
+  animation: af-flicker 3s steps(1) infinite 0.4s;
+}
+.avatar-frame--lightning::before {
+  inset: -9.7cqi;
+  --w: max(2px, 8.3cqi);
+  background: conic-gradient(
+    #2d6bd6 0 15%,
+    #a9e4ff 22%,
+    #2d6bd6 30% 60%,
+    #fff 66%,
+    #2d6bd6 72%
+  );
+  animation: af-spin 1.4s linear infinite;
+}
+.avatar-frame--lightning::after {
+  inset: -9.7cqi;
+  --w: max(1px, 2.1cqi);
+  background: #d4edff;
+}
+
+/* ───────── Légendaires : anneaux épais, matières, orbites ───────── */
+.avatar-frame--gold::before {
+  inset: -10cqi;
+  --w: max(2px, 9cqi);
+  background: conic-gradient(
+    #7a5412,
+    #f7d97a,
+    #c49a43,
+    #fff2c6,
+    #a8761f,
+    #f7d97a,
+    #7a5412
+  );
+}
+.avatar-frame--gold::after {
+  inset: -10cqi;
+  --w: max(2px, 9cqi);
+  background: conic-gradient(#0000 0 80%, #fffbe8cc 92%, #0000 100%);
+  animation: af-spin 3s linear infinite;
+}
+.avatar-frame--emerald-dragon::before {
+  inset: -11cqi;
+  --w: max(2px, 10cqi);
+  background: repeating-conic-gradient(
+    #0f5a3d 0 10deg,
+    #2fae78 10deg 16deg,
+    #1c8a5d 16deg 24deg,
+    #0b3d2a 24deg 30deg
+  );
+}
+.avatar-frame--emerald-dragon::after {
+  inset: -11cqi;
+  --w: max(1px, 2.5cqi);
+  background: #f2d984;
+}
+.avatar-frame--phoenix::before {
+  inset: -11cqi;
+  --w: max(2px, 9cqi);
+  background: conic-gradient(#ffe27a, #ff8a2b, #e0332a, #ff8a2b, #ffe27a);
+  animation: af-spin 3s linear infinite;
+}
+.avatar-frame--phoenix::after {
+  inset: -11cqi;
+  --w: max(1px, 2cqi);
+  background: #ffe7a0;
+}
+.avatar-frame--galaxy::before {
+  inset: -11cqi;
+  --w: max(2px, 10cqi);
+  background: conic-gradient(#2a1b6e, #7a55d6, #d98bf0, #3a2a8e, #2a1b6e);
+  animation: af-spin 12s linear infinite;
+}
+.avatar-frame--galaxy::after {
+  inset: -11cqi;
+  --w: max(2px, 10cqi);
+  background: repeating-conic-gradient(#fff 0 1.2deg, #0000 0 19deg);
+  animation: af-fade 1.6s ease-in-out infinite;
+}
+
+/* ───────── Ultime : Cœur du Multivers ───────── */
+.avatar-frame--multiverse::before {
+  inset: -10cqi;
+  --w: max(2px, 6.25cqi);
+  background: conic-gradient(
+    #59f0d8,
+    #a77bff,
+    #ff6fb5,
+    #ffd96a,
+    #6fd0ff,
+    #59f0d8
+  );
+  animation: af-spin 4s linear infinite;
+}
+.avatar-frame--multiverse::after {
+  inset: -16.25cqi;
+  --w: max(1px, 2.5cqi);
+  background: repeating-conic-gradient(#fff 0 5deg, #0000 0 10deg);
+  animation: af-spin 12s linear infinite reverse;
+}
+
+/* ───────── Effets (éléments <i> rendus par AvatarFrame.tsx) ───────── */
+.avatar-frame-fx {
+  position: absolute;
+  font-style: normal;
+  pointer-events: none;
+}
+.avatar-frame-fx--glow {
+  inset: var(--gi, -10cqi);
+  z-index: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 var(--gr, 14cqi) var(--gs, 3cqi) var(--g),
+    0 0 calc(var(--gr, 14cqi) * 1.8) var(--g2, #0000);
+  animation: af-glow var(--t, 2.4s) ease-in-out infinite alternate;
+}
+.avatar-frame-fx--orb,
+.avatar-frame-fx--prism {
+  --s: max(4px, 6cqi);
+  inset: var(--r, -6cqi);
+  z-index: 3;
+  border-radius: 50%;
+  animation: af-spin var(--d, 6s) linear infinite;
+  animation-direction: var(--dir, normal);
+}
+.avatar-frame-fx--orb::before,
+.avatar-frame-fx--prism::before {
+  position: absolute;
+  top: calc(var(--s) / -2);
+  left: calc(50% - var(--s) / 2);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: var(--c, #fff);
+  box-shadow: 0 0 var(--s) var(--c, #fff);
+  content: '';
+}
+.avatar-frame-fx--prism {
+  --s: max(5px, 8cqi);
+}
+.avatar-frame-fx--prism::before {
+  border: 1px solid #fff;
+  border-radius: 2px;
+  background: conic-gradient(#61e5d1, #b784ff, #ff83bc, #ffe78a, #61e5d1);
+  box-shadow: 0 0 var(--s) #dc9fff;
+  transform: rotate(45deg);
+}
+.avatar-frame-fx--spark {
+  z-index: 4;
+  top: var(--y);
+  left: var(--x);
+  color: var(--c, #fff4b8);
+  font-size: max(7px, var(--ss, 17cqi));
+  line-height: 1;
+  text-shadow: 0 0 0.5em var(--g, #f3c24f);
+  animation: af-twinkle 1.3s ease-in-out infinite;
+  animation-delay: var(--dl, 0s);
+}
+.avatar-frame-fx--spark::before {
+  content: '✦';
+}
+.avatar-frame-fx--ember {
+  z-index: 4;
+  bottom: 12%;
+  left: var(--x);
+  width: max(3px, 6cqi);
+  height: max(4px, 9cqi);
+  border-radius: 70% 20% 60% 30%;
+  background: linear-gradient(#ffe27a, #ff6a2b);
+  box-shadow: 0 0 max(3px, 8cqi) #ff7a3b;
+  opacity: 0;
+  animation: af-rise 2s ease-in infinite;
+  animation-delay: var(--dl, 0s);
+}
+.avatar-frame-fx--wave {
+  inset: -10cqi;
+  z-index: 0;
+  border: max(1px, 1.2cqi) solid #d9b8ff;
+  border-radius: 50%;
+  animation: af-wave 3s ease-out infinite;
+  animation-delay: var(--dl, 0s);
+}
+
+/* ───────── Petites tailles (profil 32 px, stats 54 px) ───────── */
+.avatar-frame--compact::after,
+.avatar-frame--compact .avatar-frame-fx:not(.avatar-frame-fx--glow) {
+  display: none;
+}
+.avatar-frame--compact .avatar-frame-fx--glow {
+  --gr: 8cqi;
+  animation: none;
+}
+
+/* ───────── Mouvements ───────── */
+@keyframes af-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes af-fade {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes af-twinkle {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+}
+@keyframes af-ripple {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes af-glow {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+@keyframes af-flicker {
+  0%,
+  50%,
+  93%,
+  100% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.55;
+  }
+  90% {
+    opacity: 0.7;
+  }
+}
+@keyframes af-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70cqi) scale(0.4);
+  }
+}
+@keyframes af-wave {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar-frame::before,
+  .avatar-frame::after,
+  .avatar-frame-fx {
+    animation: none !important;
+  }
+}

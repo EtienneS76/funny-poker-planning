@@ -1,4 +1,6 @@
-.react-router
-build
+.git
+.convex
+.env*
+dist
 node_modules
 README.md
