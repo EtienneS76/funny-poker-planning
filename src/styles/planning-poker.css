@@ -42,23 +42,32 @@
 .pp-topbar {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 28px 56px;
 }
+.pp-topbar-invite {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
 .pp-topbar-actions {
+  grid-column: 3;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  margin-left: auto;
+  justify-self: end;
 }
 
 .pp-brand {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
   color: inherit;
   text-decoration: none;
   font-family: 'Bricolage Grotesque', sans-serif;
@@ -127,11 +136,35 @@
   font-size: 15px;
 }
 .pp-auth-feedback {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
+  grid-row: 2;
   margin: 0;
   text-align: right;
   font-size: 14px;
   color: #9b2335;
+}
+.pp-report-bug {
+  position: fixed;
+  z-index: 10;
+  right: 24px;
+  bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border: 1px solid var(--pp-ink);
+  border-radius: 999px;
+  background: var(--pp-paper);
+  box-shadow: 0 4px 16px #39454124;
+  color: var(--pp-ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.pp-report-bug:hover {
+  background: var(--pp-cream);
 }
 .account-loading {
   min-height: 44px;
@@ -1340,11 +1373,33 @@
 
 @media (max-width: 600px) {
   .pp-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 20px;
     gap: 14px;
   }
   .pp-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .pp-topbar-actions {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 8px;
+  }
+  .pp-topbar-invite {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
+  .pp-auth-feedback {
+    grid-row: 3;
+  }
+  .pp-brand {
     font-size: 20px;
+  }
+  .pp-report-bug {
+    right: 16px;
+    bottom: 16px;
   }
   .pp-button--github {
     padding: 0.6rem 1rem;

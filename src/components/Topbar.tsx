@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import Account from '../features/auth/Account'
 import type { AccountState } from '../features/auth/useAccount'
-import { Store, UserRoundPlus } from 'lucide-react'
+import { Bug, Store, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router'
 import { api } from '../../convex/_generated/api'
 import ModalShop from './ModalShop'
@@ -21,16 +21,16 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
       <Link className='pp-brand' to='/'>
         Funny Poker Planning
       </Link>
+      {onInvitePlayers && (
+        <button
+          className='pp-button pp-button--invite pp-topbar-invite'
+          type='button'
+          onClick={onInvitePlayers}
+        >
+          <UserRoundPlus size={17} aria-hidden='true' /> Inviter à participer
+        </button>
+      )}
       <div className='pp-topbar-actions'>
-        {onInvitePlayers && (
-          <button
-            className='pp-button pp-button--invite'
-            type='button'
-            onClick={onInvitePlayers}
-          >
-            <UserRoundPlus size={17} aria-hidden='true' /> Invitation
-          </button>
-        )}
         <button
           className='pp-button pp-button--secondary pp-button--shop-nav'
           type='button'
@@ -61,6 +61,14 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
           onClose={() => setShopOpen(false)}
         />
       )}
+      <a
+        className='pp-report-bug'
+        href='https://github.com/EtienneS76/funny-poker-planning/issues/new'
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        <Bug size={17} aria-hidden='true' /> Signaler un bug
+      </a>
     </header>
   )
 }
