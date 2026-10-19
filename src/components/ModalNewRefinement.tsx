@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Check, GitBranch, Link, X } from 'lucide-react'
 import type { AccountState } from '../features/auth/useAccount'
 import {
+  availableThemes,
   parseIssueUrl,
   sizings,
   upcomingThemes,
@@ -21,6 +22,8 @@ export default function ModalNewRefinement({
 }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [guestName, setGuestName] = useState(account.guestName)
+  const [universe, setUniverse] =
+    useState<RefinementDraft['universe']>('default')
   const [sizing, setSizing] = useState<RefinementDraft['sizing']>('fib')
   const [issueInput, setIssueInput] = useState('')
   const [issue, setIssue] = useState<ReturnType<typeof parseIssueUrl>>(null)
@@ -65,6 +68,7 @@ export default function ModalNewRefinement({
     }
     onSubmit(
       {
+        universe,
         sizing,
         issueUrl: account.isAuthenticated ? (issue?.url ?? null) : null,
         funInteractionsEnabled,
@@ -112,29 +116,34 @@ export default function ModalNewRefinement({
         )}
 
         <fieldset className='pp-fieldset'>
-          <legend>Mode de jeu</legend>
-          <div className='universe-grid universe-grid--classic'>
-            <label className='universe-option universe-option--classic'>
-              <input
-                type='radio'
-                name='universe'
-                value='classic'
-                checked
-                readOnly
-              />
-              <span className='universe-swatches' aria-hidden='true'>
-                <span />
-                <span />
-              </span>
-              <span>Poker planning classique</span>
-              <Check className='universe-check' size={16} aria-hidden='true' />
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset className='pp-fieldset'>
-          <legend>Thèmes</legend>
+          <legend>Thème de la salle</legend>
           <div className='universe-grid'>
+            {availableThemes.map((theme) => (
+              <label
+                key={theme.id}
+                className={`universe-option universe-option--${theme.id === 'default' ? 'classic' : theme.id}`}
+              >
+                <input
+                  type='radio'
+                  name='universe'
+                  value={theme.id}
+                  checked={universe === theme.id}
+                  onChange={() => setUniverse(theme.id)}
+                />
+                <span className='universe-swatches' aria-hidden='true'>
+                  <span />
+                  <span />
+                </span>
+                <span>{theme.label}</span>
+                {universe === theme.id && (
+                  <Check
+                    className='universe-check'
+                    size={16}
+                    aria-hidden='true'
+                  />
+                )}
+              </label>
+            ))}
             {upcomingThemes.map((theme) => (
               <label
                 key={theme.id}

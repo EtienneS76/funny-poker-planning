@@ -1,0 +1,74 @@
+/* L'arène Pokémon habille la table sans masquer le reste de la salle. */
+.multivers[data-theme='pk'] {
+  --pp-cream: #f3f9ec;
+  --pp-pink: #d9f2c9;
+  --pp-ink: #23402f;
+  --pp-paper: #fdfdf8;
+  --pp-line: #cfe0c4;
+  --pp-border: #8fb08a;
+  --pp-muted: #4e6a57;
+  --pk-red: #e3350d;
+  background:
+    radial-gradient(ellipse at 12% 8%, var(--pp-pink), transparent 46%),
+    radial-gradient(ellipse at 92% 96%, #cfe8ff, transparent 52%),
+    var(--pp-cream);
+}
+
+.multivers[data-theme='pk'] .pp-table-area {
+  --seat-cy: 52.3%;
+  --seat-rx: 29%;
+  --seat-ry: 31%;
+  --land-rx: 15%;
+  width: min(100%, max(360px, calc((100svh - 240px) * 1.79)));
+  aspect-ratio: 2000 / 1116;
+  background: url('/themes/pokemon/arena.webp') center / 100% 100% no-repeat;
+  border-radius: 24px;
+  box-shadow:
+    0 0 0 4px var(--pp-paper),
+    0 0 0 6px var(--pk-red),
+    0 24px 48px #23402f40;
+}
+
+.multivers[data-theme='pk'] .pp-seat--me .seat-name {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* L'arène de l'image est la table : on aligne la zone de résultat dessus */
+.multivers[data-theme='pk'] .pp-table {
+  inset: 31.6% 26.7% 27%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.multivers[data-theme='pk'] .room-thrown-card {
+  --reveal-ry: 11%;
+}
+
+/* Lisibilité du compteur et des résultats sur le sol de l'arène */
+.multivers[data-theme='pk'] :is(.pp-table-count, .room-results) {
+  padding: 8px 20px;
+  border-radius: 18px;
+  background: #fdfdf8e6;
+  box-shadow: 0 6px 18px #23402f33;
+}
+
+@media (max-width: 600px) {
+  /* Sur mobile : cadrage carré centré sur l'arène. */
+  .multivers[data-theme='pk'] .pp-table-area {
+    --seat-rx: 41%;
+    --seat-ry: 34%;
+    --land-rx: 26%;
+    width: min(100%, 360px);
+    aspect-ratio: 1;
+    background-size: auto 100%;
+    background-position: 50% 50%;
+  }
+  .multivers[data-theme='pk'] .pp-table {
+    inset: 31.6% 8.3% 27%;
+  }
+}

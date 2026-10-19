@@ -172,6 +172,16 @@ export default function Account({ account }: { account: AccountState }) {
                 <Backpack size={17} aria-hidden='true' />
                 Inventaire
               </button>
+              <button
+                className='profile-signout'
+                onClick={() => {
+                  if (menu.current) menu.current.open = false
+                  setStatisticsOpen(true)
+                }}
+              >
+                <BarChart3 size={17} aria-hidden='true' />
+                Statistiques
+              </button>
               {editingDisplayName ? (
                 <form
                   className='profile-edit-form'
@@ -224,16 +234,6 @@ export default function Account({ account }: { account: AccountState }) {
                   Changer mon pseudo
                 </button>
               )}
-              <button
-                className='profile-signout'
-                onClick={() => {
-                  if (menu.current) menu.current.open = false
-                  setStatisticsOpen(true)
-                }}
-              >
-                <BarChart3 size={17} aria-hidden='true' />
-                Statistiques
-              </button>
             </div>
           </details>
           <button

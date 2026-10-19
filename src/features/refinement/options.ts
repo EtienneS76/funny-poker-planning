@@ -1,5 +1,9 @@
-export const upcomingThemes = [
+export const availableThemes = [
+  { id: 'default', label: 'Poker planning classique' },
   { id: 'pk', label: 'Pokémon' },
+] as const
+
+export const upcomingThemes = [
   { id: 'sw', label: 'Star Wars' },
 ] as const
 
@@ -18,6 +22,7 @@ export const sizings = [
 ] as const
 
 export type RefinementDraft = {
+  universe: (typeof availableThemes)[number]['id']
   sizing: (typeof sizings)[number]['id']
   issueUrl: string | null
   funInteractionsEnabled: boolean

@@ -28,6 +28,7 @@ export default function Home() {
       const refinementSlug = await createRefinement({
         guestId: account.guestId,
         guestName: creatorName,
+        universe: configuration.universe,
         sizing: configuration.sizing,
         issueUrl: configuration.issueUrl,
         funInteractionsEnabled: configuration.funInteractionsEnabled,
@@ -47,6 +48,7 @@ export default function Home() {
   function startQuickRefinement() {
     void onSubmitNewRefinement(
       {
+        universe: 'default',
         sizing: 'fib',
         issueUrl: null,
         funInteractionsEnabled: true,
