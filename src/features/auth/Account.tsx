@@ -7,10 +7,11 @@ import {
   GitBranch,
   LogOut,
   Pencil,
+  Settings,
 } from 'lucide-react'
-import { useAppSnackbar } from '../../components/AppSnackbar'
 import { AccountStatisticsModal } from './AccountStatisticsModal'
-import ModalInventory from '../../components/ModalInventory'
+import { AccountSettingsModal } from './AccountSettingsModal'
+import ModalPokemonCollection from '../../components/ModalPokemonCollection'
 import { AvatarFrame } from '../avatar/AvatarFrame'
 import type { AccountState } from './useAccount'
 
@@ -18,11 +19,9 @@ export default function Account({ account }: { account: AccountState }) {
   const menu = useRef<HTMLDetailsElement>(null)
   const [editingGuestName, setEditingGuestName] = useState(false)
   const [guestNameDraft, setGuestNameDraft] = useState(account.guestName)
-  const [editingDisplayName, setEditingDisplayName] = useState(false)
-  const [displayNameDraft, setDisplayNameDraft] = useState('')
   const [statisticsOpen, setStatisticsOpen] = useState(false)
-  const [inventoryOpen, setInventoryOpen] = useState(false)
-  const snackbar = useAppSnackbar()
+  const [collectionOpen, setCollectionOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     function closeOutside(event: PointerEvent) {
@@ -166,11 +165,11 @@ export default function Account({ account }: { account: AccountState }) {
                 className='profile-signout'
                 onClick={() => {
                   if (menu.current) menu.current.open = false
-                  setInventoryOpen(true)
+                  setCollectionOpen(true)
                 }}
               >
                 <Backpack size={17} aria-hidden='true' />
-                Inventaire
+                Collection
               </button>
               <button
                 className='profile-signout'
@@ -182,58 +181,16 @@ export default function Account({ account }: { account: AccountState }) {
                 <BarChart3 size={17} aria-hidden='true' />
                 Statistiques
               </button>
-              {editingDisplayName ? (
-                <form
-                  className='profile-edit-form'
-                  onSubmit={async (event: FormEvent<HTMLFormElement>) => {
-                    event.preventDefault()
-                    const name = displayNameDraft.trim()
-                    if (!name) return
-                    try {
-                      await account.updateDisplayName(name)
-                      setEditingDisplayName(false)
-                      snackbar.success(
-                        'Pseudo mis à jour',
-                        'Il sera conservé à chaque connexion.',
-                      )
-                    } catch (updateError) {
-                      snackbar.error(
-                        'Pseudo non sauvegardé',
-                        updateError instanceof Error
-                          ? updateError.message
-                          : 'Réessaie dans un instant.',
-                      )
-                    }
-                  }}
-                >
-                  <label htmlFor='github-display-name'>Pseudo affiché</label>
-                  <input
-                    id='github-display-name'
-                    autoFocus
-                    required
-                    maxLength={36}
-                    value={displayNameDraft}
-                    onChange={(event) =>
-                      setDisplayNameDraft(event.target.value)
-                    }
-                  />
-                  <button className='profile-signout' type='submit'>
-                    <Check size={17} aria-hidden='true' />
-                    Enregistrer
-                  </button>
-                </form>
-              ) : (
-                <button
-                  className='profile-signout'
-                  onClick={() => {
-                    setDisplayNameDraft(displayName)
-                    setEditingDisplayName(true)
-                  }}
-                >
-                  <Pencil size={17} aria-hidden='true' />
-                  Changer mon pseudo
-                </button>
-              )}
+              <button
+                className='profile-signout'
+                onClick={() => {
+                  if (menu.current) menu.current.open = false
+                  setSettingsOpen(true)
+                }}
+              >
+                <Settings size={17} aria-hidden='true' />
+                Paramètres
+              </button>
             </div>
           </details>
           <button
@@ -255,10 +212,19 @@ export default function Account({ account }: { account: AccountState }) {
         firstConnectedAt={account.profile?.firstConnectedAt ?? Date.now()}
         refinementCount={statistics?.refinementCount ?? 0}
         roundCount={statistics?.roundCount ?? 0}
+        mysteryPokeBallOpenCount={
+          statistics?.mysteryPokeBallOpenCount ?? 0
+        }
         onClose={() => setStatisticsOpen(false)}
       />
-      {inventoryOpen && (
-        <ModalInventory onClose={() => setInventoryOpen(false)} />
+      {collectionOpen && (
+        <ModalPokemonCollection onClose={() => setCollectionOpen(false)} />
+      )}
+      {settingsOpen && (
+        <AccountSettingsModal
+          account={account}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
     </>
   )

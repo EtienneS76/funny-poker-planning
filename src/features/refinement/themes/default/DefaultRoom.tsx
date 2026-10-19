@@ -1,6 +1,12 @@
 import type { CSSProperties } from 'react'
 import { Eye, Shirt } from 'lucide-react'
 import { AvatarFrame } from '../../../avatar/AvatarFrame'
+import {
+  getPokemonById,
+  getPokemonImageUrl,
+  type PokemonRarity,
+  type PokemonType,
+} from '../../../pokemon/functions/GeneratePokemon'
 import Topbar from '../../../../components/Topbar'
 import { RefinementRoomControls } from '../../RefinementRoomControls'
 import { RefinementIssue } from '../../RefinementIssue'
@@ -122,83 +128,134 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
             </ul>
           )}
           <ul className='pp-seats'>
-            {seats.map((seat, index) => (
-              <li
-                key={seat.id}
-                data-seat-id={seat.id}
-                className={`pp-seat${seat.isMe ? ' pp-seat--me' : ''}${seat.isSpectator ? ' pp-seat--spectator' : ''}`}
-                style={seatStyle(index, seats.length)}
-              >
-                <span className='seat-portrait'>
-                  <AvatarFrame
-                    frameId={seat.avatarFrameId}
-                    className='seat-avatar-frame'
-                  >
-                    <button
-                      className={`seat-avatar${reactions.dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
-                      type='button'
-                      disabled={seat.isMe || !reactions.enabled}
-                      aria-label={
-                        seat.isMe
-                          ? `Ton profil : ${seat.name}`
-                          : `Réagir à ${seat.name}`
-                      }
-                      aria-expanded={
-                        seat.isMe ? undefined : reactions.targetId === seat.id
-                      }
-                      aria-controls={
-                        seat.isMe || reactions.targetId !== seat.id
-                          ? undefined
-                          : 'room-reaction-menu'
-                      }
-                      onClick={(event) =>
-                        reactions.toggleMenu(seat.id, event.currentTarget)
-                      }
+            {seats.map((seat, index) => {
+              const pokemon =
+                themeId === 'pk' && seat.pokemonId !== null
+                  ? getPokemonById(seat.pokemonId)
+                  : null
+              return (
+                <li
+                  key={seat.id}
+                  data-seat-id={seat.id}
+                  className={`pp-seat${seat.isMe ? ' pp-seat--me' : ''}${seat.isSpectator ? ' pp-seat--spectator' : ''}`}
+                  style={seatStyle(index, seats.length)}
+                >
+                  <span className='seat-portrait'>
+                    <AvatarFrame
+                      frameId={seat.avatarFrameId}
+                      className='seat-avatar-frame'
                     >
-                      <span aria-hidden='true'>
-                        {seat.name.slice(0, 1).toUpperCase()}
-                      </span>
-                      {seat.avatarUrl && (
+                      <button
+                        className={`seat-avatar${themeId === 'pk' && seat.pokemonGifUrl ? ' seat-avatar--pokemon' : ''}${reactions.dodging[seat.id] ? ' seat-avatar--dodging' : ''}`}
+                        type='button'
+                        disabled={seat.isMe || !reactions.enabled}
+                        aria-label={
+                          seat.isMe
+                            ? `Ton profil : ${seat.name}`
+                            : `Réagir à ${seat.name}`
+                        }
+                        aria-expanded={
+                          seat.isMe
+                            ? undefined
+                            : reactions.targetId === seat.id
+                        }
+                        aria-controls={
+                          seat.isMe || reactions.targetId !== seat.id
+                            ? undefined
+                            : 'room-reaction-menu'
+                        }
+                        onClick={(event) =>
+                          reactions.toggleMenu(seat.id, event.currentTarget)
+                        }
+                      >
+                        <span aria-hidden='true'>
+                          {seat.name.slice(0, 1).toUpperCase()}
+                        </span>
+                        {themeId === 'pk' && seat.pokemonGifUrl ? (
+                          <img
+                            src={getPokemonImageUrl(
+                              seat.pokemonId ?? 0,
+                              seat.showPokemon3d,
+                            )}
+                            alt=''
+                            width={56}
+                            height={56}
+                          />
+                        ) : seat.avatarUrl ? (
+                          <img
+                            src={seat.avatarUrl}
+                            alt=''
+                            width={56}
+                            height={56}
+                            onError={(event) => {
+                              event.currentTarget.hidden = true
+                            }}
+                          />
+                        ) : null}
+                      </button>
+                    </AvatarFrame>
+                    {pokemon && (
+                      <article
+                        className={`pokemon-seat-tooltip pokemon-seat-tooltip--${pokemon.rarity}`}
+                        aria-hidden='true'
+                      >
                         <img
-                          src={seat.avatarUrl}
+                          className='pokemon-seat-tooltip-art'
+                          src={getPokemonImageUrl(
+                            pokemon.id,
+                            seat.showPokemon3d,
+                          )}
                           alt=''
-                          width={56}
-                          height={56}
-                          onError={(event) => {
-                            event.currentTarget.hidden = true
-                          }}
                         />
-                      )}
-                    </button>
-                  </AvatarFrame>
-                  {seat.isSpectator ? (
-                    <span
-                      className='seat-spectator-icon'
-                      role='img'
-                      aria-label='Spectateur'
-                    >
-                      <Eye size={15} aria-hidden='true' />
-                    </span>
-                  ) : (
-                    <span
-                      className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
-                      role='img'
-                      aria-label={
-                        seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
-                      }
-                    />
-                  )}
-                </span>
-                <span className='seat-name'>
-                  {seat.name}
-                  {seat.isSpectator && (
-                    <small className='seat-spectator'>
-                      <Eye size={11} aria-hidden='true' /> Spectateur
-                    </small>
-                  )}
-                </span>
-              </li>
-            ))}
+                        <div className='pokemon-seat-tooltip-info'>
+                          <strong>{pokemon.name}</strong>
+                          <span
+                            className={`pokemon-seat-tooltip-rarity pokemon-seat-tooltip-rarity--${pokemon.rarity}`}
+                          >
+                            {rarityLabel(pokemon.rarity)}
+                          </span>
+                          <span className='pokemon-seat-tooltip-types'>
+                            {pokemon.types.map((type) => (
+                              <span
+                                className={`pokemon-type pokemon-type--${type}`}
+                                key={type}
+                              >
+                                {typeLabel(type)}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      </article>
+                    )}
+                    {seat.isSpectator ? (
+                      <span
+                        className='seat-spectator-icon'
+                        role='img'
+                        aria-label='Spectateur'
+                      >
+                        <Eye size={15} aria-hidden='true' />
+                      </span>
+                    ) : (
+                      <span
+                        className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
+                        role='img'
+                        aria-label={
+                          seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
+                        }
+                      />
+                    )}
+                  </span>
+                  <span className='seat-name'>
+                    {seat.name}
+                    {seat.isSpectator && (
+                      <small className='seat-spectator'>
+                        <Eye size={11} aria-hidden='true' /> Spectateur
+                      </small>
+                    )}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
           {reactions.enabled && (
             <RefinementRoomReactions
@@ -279,4 +336,39 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
       )}
     </div>
   )
+}
+
+function rarityLabel(rarity: PokemonRarity) {
+  const labels: Record<PokemonRarity, string> = {
+    commun: 'Commune',
+    rare: 'Rare',
+    epique: 'Épique',
+    legendaire: 'Légendaire',
+    ultime: 'Ultime',
+  }
+  return labels[rarity]
+}
+
+function typeLabel(type: PokemonType) {
+  const labels: Record<PokemonType, string> = {
+    normal: 'Normal',
+    combat: 'Combat',
+    vol: 'Vol',
+    poison: 'Poison',
+    sol: 'Sol',
+    roche: 'Roche',
+    insecte: 'Insecte',
+    spectre: 'Spectre',
+    acier: 'Acier',
+    feu: 'Feu',
+    eau: 'Eau',
+    plante: 'Plante',
+    electrik: 'Électrik',
+    psy: 'Psy',
+    glace: 'Glace',
+    dragon: 'Dragon',
+    tenebres: 'Ténèbres',
+    fee: 'Fée',
+  }
+  return labels[type]
 }

@@ -5,7 +5,6 @@ import {
   availableThemes,
   parseIssueUrl,
   sizings,
-  upcomingThemes,
   type RefinementDraft,
 } from '../features/refinement/options'
 
@@ -142,21 +141,6 @@ export default function ModalNewRefinement({
                     aria-hidden='true'
                   />
                 )}
-              </label>
-            ))}
-            {upcomingThemes.map((theme) => (
-              <label
-                key={theme.id}
-                className={`universe-option universe-option--${theme.id} universe-option--upcoming`}
-                aria-disabled='true'
-              >
-                <input type='radio' name='universe' value={theme.id} disabled />
-                <span className='universe-swatches' aria-hidden='true'>
-                  <span />
-                  <span />
-                </span>
-                <span>{theme.label}</span>
-                <span className='universe-coming-soon'>Prochainement</span>
               </label>
             ))}
           </div>

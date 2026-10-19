@@ -5,6 +5,7 @@ export const statisticsTable = defineTable({
   userId: v.id('users'),
   refinementCount: v.number(),
   roundCount: v.number(),
+  mysteryPokeBallOpenCount: v.optional(v.number()),
   firstConnectedAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
 }).index('by_user', ['userId'])

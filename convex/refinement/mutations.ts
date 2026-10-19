@@ -550,12 +550,7 @@ export const reveal = mutation({
     }
 
     if (activePlayers.length >= 3 && activeAuthenticatedIds.size >= 2) {
-      const activeAuthenticatedVoterIds = new Set(
-        currentVotes
-          .map((vote) => vote.userId)
-          .filter((userId) => activeAuthenticatedIds.has(userId)),
-      )
-      for (const userId of activeAuthenticatedVoterIds) {
+      for (const userId of activeAuthenticatedIds) {
         const wallet = await context.db
           .query('pokisouWallets')
           .withIndex('by_user_id', (query) => query.eq('userId', userId))

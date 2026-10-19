@@ -9,5 +9,10 @@ export function RefinementRoom() {
   const vm = useRoomViewModel(refinementSlug)
   // ?theme=pk permet de prévisualiser un thème avant que l'univers soit stocké à la création
   const theme = getTheme(searchParams.get('theme') ?? vm.universe)
-  return <theme.Room vm={vm} themeId={theme.id} />
+  return (
+    <>
+      <theme.Room vm={vm} themeId={theme.id} />
+      {theme.Layer && <theme.Layer vm={vm} themeId={theme.id} />}
+    </>
+  )
 }

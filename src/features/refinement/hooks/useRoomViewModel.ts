@@ -4,6 +4,7 @@ import { api } from '../../../../convex/_generated/api'
 import { useAccount } from '../../auth/useAccount'
 import { useAppSnackbar } from '../../../components/AppSnackbar'
 import { sizings } from '../options'
+import { getPokemonById } from '../../pokemon/functions/GeneratePokemon'
 import type { ReactionKind, RoomViewModel, Seat } from '../themes/types'
 import { useRefinementRoom } from './useRefinementRoom'
 
@@ -137,23 +138,38 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     room,
   ])
 
-  const realSeats: Seat[] = (room?.participants ?? []).map((participant) => ({
-    id: participant.userId,
-    name: participant.name,
-    avatarUrl: participant.avatarUrl,
-    avatarFrameId: participant.avatarFrameId,
-    isSpectator: participant.isSpectator,
-    vote: participant.isSpectator ? null : participant.vote,
-    hasVoted: !participant.isSpectator && participant.hasVoted,
-    isMe: participant.userId === currentUserId,
-  }))
+  const showPokemon3d = account.profile?.showPokemon3d ?? false
+  const realSeats: Seat[] = (room?.participants ?? []).map((participant) => {
+    const assignedPokemon = getPokemonById(participant.assignedPokemonId ?? -1)
+    return {
+      id: participant.userId,
+      name: participant.name,
+      avatarUrl: participant.avatarUrl,
+      avatarFrameId: participant.avatarFrameId,
+      pokemonGifUrl: assignedPokemon?.gifUrl ?? null,
+      pokemonName: assignedPokemon?.name ?? null,
+      pokemonId: assignedPokemon?.id ?? null,
+      showPokemon3d,
+      isSpectator: participant.isSpectator,
+      vote: participant.isSpectator ? null : participant.vote,
+      hasVoted: !participant.isSpectator && participant.hasVoted,
+      isMe: participant.userId === currentUserId,
+    }
+  })
 
   if (!realSeats.some((seat) => seat.isMe)) {
+    const assignedPokemon = getPokemonById(
+      account.profile?.assignedPokemonId ?? -1,
+    )
     realSeats.push({
       id: currentUserId ?? `guest:${account.guestId}`,
       name: account.user?.username ?? account.guestName,
       avatarUrl: account.user?.avatarUrl ?? null,
       avatarFrameId: account.profile?.avatarFrameId ?? null,
+      pokemonGifUrl: assignedPokemon?.gifUrl ?? null,
+      pokemonName: assignedPokemon?.name ?? null,
+      pokemonId: assignedPokemon?.id ?? null,
+      showPokemon3d,
       isSpectator: false,
       vote: selectedCard,
       hasVoted: selectedCard !== null,

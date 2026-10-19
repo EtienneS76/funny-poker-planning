@@ -35,7 +35,6 @@ export default function Home() {
       })
 
       setModalOpen(false)
-      snackbar.success('Partie créée', 'La salle est prête à rejoindre.')
       navigate(`/refinement/${refinementSlug}`)
     } catch (error) {
       snackbar.error(
@@ -81,7 +80,7 @@ export default function Home() {
             className='pp-button pp-button--secondary pp-button--quick'
             onClick={startQuickRefinement}
           >
-            <Zap size={19} aria-hidden='true' /> Refinement rapide
+            <Zap size={19} aria-hidden='true' /> Refinement classique
           </button>
         </div>
       </main>

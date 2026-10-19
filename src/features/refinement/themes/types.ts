@@ -8,6 +8,10 @@ export type Seat = {
   name: string
   avatarUrl: string | null
   avatarFrameId: string | null
+  pokemonGifUrl: string | null
+  pokemonName: string | null
+  pokemonId: number | null
+  showPokemon3d: boolean
   isSpectator: boolean
   vote: string | null
   hasVoted: boolean
@@ -69,5 +73,7 @@ export type Theme = {
   id: string
   /** Niveau 3 : la mise en page complète. Les thèmes simples réutilisent celle du thème par défaut. */
   Room: ComponentType<RoomProps>
+  /** Couche décorative ou interactive affichée au-dessus de la salle. */
+  Layer?: ComponentType<RoomProps>
   // Plus tard : vocabulary (niveau 2), slots partiels (Table, Reveal, Background…)
 }

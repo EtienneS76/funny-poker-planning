@@ -1,10 +1,6 @@
 export const availableThemes = [
-  { id: 'default', label: 'Poker planning classique' },
+  { id: 'default', label: 'Classique' },
   { id: 'pk', label: 'Pokémon' },
-] as const
-
-export const upcomingThemes = [
-  { id: 'sw', label: 'Star Wars' },
 ] as const
 
 export const sizings = [
