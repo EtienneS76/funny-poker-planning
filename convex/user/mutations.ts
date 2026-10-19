@@ -264,6 +264,7 @@ export const throwCaptureBall = mutation({
     captured: v.boolean(),
     captureChance: v.number(),
     pokemonId: v.number(),
+    ballsLeft: v.number(),
   }),
   handler: async (context, { consumableId }) => {
     const user = await requireAuthenticatedUser(context)
@@ -307,8 +308,16 @@ export const throwCaptureBall = mutation({
     }
 
     const captured = Math.random() * 100 < captureChance
+    const captureBallIds = ['poke-ball', 'hyper-ball', 'master-ball']
+    const remainingConsumables = await context.db
+      .query('userConsumables')
+      .withIndex('by_user', (query) => query.eq('userId', user._id))
+      .collect()
+    const ballsLeft = remainingConsumables
+      .filter((item) => captureBallIds.includes(item.consumableId))
+      .reduce((total, item) => total + item.quantity, 0)
     await context.db.patch(encounter._id, {
-      status: captured ? 'captured' : 'escaped',
+      status: captured ? 'captured' : ballsLeft > 0 ? 'active' : 'escaped',
     })
     if (captured) {
       await context.db.insert('userPokemons', {
@@ -322,6 +331,7 @@ export const throwCaptureBall = mutation({
       captured,
       captureChance,
       pokemonId: encounter.pokemonId,
+      ballsLeft,
     }
   },
 })
