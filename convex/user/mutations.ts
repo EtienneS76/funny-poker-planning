@@ -202,7 +202,9 @@ export const startPokemonEncounter = mutation({
       return { pokemonId: existing.pokemonId }
     }
 
-    const pokemonId = drawMysteryPokemonId()
+    const pokemonId = drawMysteryPokemonId(
+      existing?.status === 'escaped' ? existing.pokemonId : undefined,
+    )
     if (existing) {
       await context.db.patch(existing._id, {
         pokemonId,
@@ -218,6 +220,22 @@ export const startPokemonEncounter = mutation({
       })
     }
     return { pokemonId }
+  },
+})
+
+export const endPokemonEncounter = mutation({
+  args: { guestId: v.string() },
+  returns: v.null(),
+  handler: async (context, { guestId }) => {
+    const ownerKey = await pokemonEncounterOwnerKey(context, guestId)
+    const encounter = await context.db
+      .query('pokemonEncounters')
+      .withIndex('by_owner', (query) => query.eq('ownerKey', ownerKey))
+      .unique()
+    if (encounter?.status === 'active') {
+      await context.db.patch(encounter._id, { status: 'escaped' })
+    }
+    return null
   },
 })
 
@@ -309,7 +327,7 @@ export const throwCaptureBall = mutation({
       .filter((item) => captureBallIds.includes(item.consumableId))
       .reduce((total, item) => total + item.quantity, 0)
     await context.db.patch(encounter._id, {
-      status: captured ? 'captured' : ballsLeft > 0 ? 'active' : 'escaped',
+      status: captured ? 'captured' : 'escaped',
     })
     if (captured) {
       await context.db.insert('userPokemons', {

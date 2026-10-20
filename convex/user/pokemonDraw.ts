@@ -28,7 +28,7 @@ const pokemonByRarity = {
   },
 } as const
 
-export function drawMysteryPokemonId() {
+export function drawMysteryPokemonId(excludePokemonId?: number) {
   const rarities = Object.values(pokemonByRarity)
   const totalWeight = rarities.reduce((total, rarity) => total + rarity.weight, 0)
   let roll = Math.random() * totalWeight
@@ -42,7 +42,10 @@ export function drawMysteryPokemonId() {
     roll -= rarity.weight
   }
 
-  return selected.ids[Math.floor(Math.random() * selected.ids.length)]
+  const candidates = excludePokemonId
+    ? selected.ids.filter((pokemonId) => pokemonId !== excludePokemonId)
+    : selected.ids
+  return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
 export function drawPokemonIdByRarity(

@@ -33,6 +33,7 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
   const snackbar = useAppSnackbar()
   const inventory = useQuery(api.user.queries.shopData, {})
   const startEncounter = useMutation(api.user.mutations.startPokemonEncounter)
+  const endEncounter = useMutation(api.user.mutations.endPokemonEncounter)
   const throwCaptureBall = useMutation(api.user.mutations.throwCaptureBall)
   const hasCaptureBall =
     inventory?.consumableInventory.some(
@@ -41,8 +42,8 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
         item.quantity > 0,
     ) ?? false
 
-  async function findPokemon() {
-    if (!hasCaptureBall || busy || encounter) return
+  async function findPokemon(forceNew = false) {
+    if (!hasCaptureBall || busy || (encounter && !forceNew)) return
     setBusy(true)
     try {
       const result = await startEncounter({ guestId: account.guestId })
@@ -50,6 +51,22 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
     } catch (error) {
       snackbar.error(
         'Rencontre impossible',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function closeEncounter() {
+    if (!encounter || busy) return
+    setBusy(true)
+    try {
+      await endEncounter({ guestId: account.guestId })
+      setEncounter(null)
+    } catch (error) {
+      snackbar.error(
+        'Rencontre impossible à fermer',
         error instanceof Error ? error.message : 'Réessaie dans un instant.',
       )
     } finally {
@@ -93,6 +110,7 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
           isAuthenticated={account.isAuthenticated}
           signInPending={account.pending}
           onSignIn={() => void account.signIn()}
+          onRetry={() => void findPokemon(true)}
           onThrow={async (ballId) => {
             setBusy(true)
             try {
@@ -102,10 +120,7 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
             }
           }}
           onFinish={() => setBusy(false)}
-          onClose={() => {
-            setEncounter(null)
-            setBusy(false)
-          }}
+          onClose={() => void closeEncounter()}
         />
       )}
 
@@ -115,7 +130,11 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
           intervalMs={10000}
           size={112}
           onFound={() => {
-            if (Math.random() < encounterChance) void findPokemon()
+            if (Math.random() < encounterChance) {
+              void findPokemon()
+            } else {
+              snackbar.info('Le Pokémon s’est échappé')
+            }
           }}
         />
       </div>
