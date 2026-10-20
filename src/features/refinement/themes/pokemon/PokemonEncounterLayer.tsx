@@ -42,8 +42,8 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
         item.quantity > 0,
     ) ?? false
 
-  async function findPokemon(forceNew = false) {
-    if (!hasCaptureBall || busy || (encounter && !forceNew)) return
+  async function findPokemon() {
+    if (!hasCaptureBall || busy || encounter) return
     setBusy(true)
     try {
       const result = await startEncounter({ guestId: account.guestId })
@@ -110,7 +110,6 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
           isAuthenticated={account.isAuthenticated}
           signInPending={account.pending}
           onSignIn={() => void account.signIn()}
-          onRetry={() => void findPokemon(true)}
           onThrow={async (ballId) => {
             setBusy(true)
             try {

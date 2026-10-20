@@ -327,7 +327,7 @@ export const throwCaptureBall = mutation({
       .filter((item) => captureBallIds.includes(item.consumableId))
       .reduce((total, item) => total + item.quantity, 0)
     await context.db.patch(encounter._id, {
-      status: captured ? 'captured' : 'escaped',
+      status: captured ? 'captured' : 'active',
     })
     if (captured) {
       await context.db.insert('userPokemons', {

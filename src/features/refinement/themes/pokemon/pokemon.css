@@ -837,7 +837,7 @@
 }
 
 .pokemon-capture-ball-position.is-held {
-  transform: translate(-10px, -260px) scale(0.5);
+  transform: translateY(-260px) scale(0.5);
 }
 
 .pokemon-capture-ball-position.is-drop {
@@ -845,14 +845,14 @@
 }
 
 .pokemon-capture-ball-position.is-ground {
-  transform: translate(-10px, -20px) scale(0.9);
+  transform: translateY(-20px) scale(0.9);
 }
 
 .pokemon-capture-ball {
   position: relative;
   width: 110px;
   height: 110px;
-  transform-origin: 50% 92%;
+  transform-origin: 50% 50%;
   filter: drop-shadow(0 12px 10px #000a);
 }
 
@@ -1268,25 +1268,25 @@
     transform: translate(0, 0) scale(1);
   }
   72% {
-    transform: translate(-14px, -290px) rotate(520deg) scale(0.55);
+    transform: translate(-10px, -290px) rotate(520deg) scale(0.55);
   }
   to {
-    transform: translate(-10px, -260px) rotate(720deg) scale(0.5);
+    transform: translateY(-260px) rotate(720deg) scale(0.5);
   }
 }
 
 @keyframes pokemon-capture-drop {
   0% {
-    transform: translate(-10px, -260px) scale(0.5);
+    transform: translateY(-260px) scale(0.5);
   }
   55% {
-    transform: translate(-10px, -6px) scale(0.95);
+    transform: translateY(-6px) scale(0.95);
   }
   72% {
-    transform: translate(-10px, -52px) scale(0.92);
+    transform: translateY(-52px) scale(0.92);
   }
   100% {
-    transform: translate(-10px, -20px) scale(0.9);
+    transform: translateY(-20px) scale(0.9);
   }
 }
 
