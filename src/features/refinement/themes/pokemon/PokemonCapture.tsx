@@ -29,7 +29,6 @@ type Props = {
   signInPending: boolean
   onSignIn: () => void
   onThrow: (ballId: CaptureBall['id']) => Promise<CaptureResult>
-  onRetry: () => void
   onClose: () => void
   onFinish: () => void
 }
@@ -66,7 +65,6 @@ export function PokemonCapture({
   signInPending,
   onSignIn,
   onThrow,
-  onRetry,
   onClose,
   onFinish,
 }: Props) {
@@ -479,10 +477,14 @@ export function PokemonCapture({
                   <button
                     className='pokemon-capture-primary'
                     type='button'
-                    onClick={onRetry}
+                    onClick={() => {
+                      setSelectedBallId(null)
+                      setShakeCount(0)
+                      setChoosingBall(true)
+                      setPhase('ready')
+                    }}
                   >
-                    Nouvelle rencontre ({ballsLeft} Poké Ball
-                    {ballsLeft > 1 ? 's' : ''})
+                    Réessayer ({ballsLeft} restante{ballsLeft > 1 ? 's' : ''})
                   </button>
                 )}
                 <button
