@@ -9,6 +9,7 @@ export const userTable = defineTable({
   avatarFrameId: v.optional(v.string()),
   assignedPokemonId: v.optional(v.number()),
   showPokemon3d: v.optional(v.boolean()),
+  starterCaptureBallsGiftedAt: v.optional(v.number()),
   createdAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
 }).index('by_auth_user', ['authUserId'])

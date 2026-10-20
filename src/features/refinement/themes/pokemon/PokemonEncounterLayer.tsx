@@ -18,6 +18,7 @@ const captureBallIds: CaptureBallId[] = [
   'hyper-ball',
   'master-ball',
 ]
+const encounterChance = 0.5
 
 const ballColors: Record<CaptureBallId, { top: string; bottom: string }> = {
   'poke-ball': { top: '#ef4a3c', bottom: '#f4f4f6' },
@@ -33,9 +34,15 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
   const inventory = useQuery(api.user.queries.shopData, {})
   const startEncounter = useMutation(api.user.mutations.startPokemonEncounter)
   const throwCaptureBall = useMutation(api.user.mutations.throwCaptureBall)
+  const hasCaptureBall =
+    inventory?.consumableInventory.some(
+      (item) =>
+        captureBallIds.includes(item.consumableId as CaptureBallId) &&
+        item.quantity > 0,
+    ) ?? false
 
   async function findPokemon() {
-    if (busy || encounter) return
+    if (!hasCaptureBall || busy || encounter) return
     setBusy(true)
     try {
       const result = await startEncounter({ guestId: account.guestId })
@@ -104,18 +111,13 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
 
       <div className='pokemon-encounter-grass'>
         <TallGrass
-          active={!encounter && !busy}
-          intervalMs={5200}
+          active={hasCaptureBall && !encounter && !busy}
+          intervalMs={10000}
           size={112}
-          onFound={() => void findPokemon()}
+          onFound={() => {
+            if (Math.random() < encounterChance) void findPokemon()
+          }}
         />
-        <span className='pokemon-encounter-hint' aria-live='polite'>
-          {busy && !encounter
-            ? 'Quelque chose approche…'
-            : encounter
-              ? 'Une rencontre sauvage !'
-              : 'Clique quand l’herbe frémit'}
-        </span>
       </div>
     </div>
   )

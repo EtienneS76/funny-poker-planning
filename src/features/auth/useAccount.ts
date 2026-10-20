@@ -3,7 +3,6 @@ import {
   createElement,
   useContext,
   useEffect,
-  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -60,11 +59,6 @@ function loadGuestIdentity(): GuestIdentity {
 
 function useAccountState() {
   const { isAuthenticated, isLoading } = useConvexAuth()
-  const hasOAuthCallback = useRef(
-    new URLSearchParams(window.location.search).has('ott'),
-  ).current
-  const callbackLogged = useRef(false)
-  const sessionLogged = useRef(false)
   const configured = useQuery(api.auth.auth.isConfigured)
   const user = useQuery(
     api.auth.auth.currentUser,
@@ -82,17 +76,14 @@ function useAccountState() {
   const oauthError = new URLSearchParams(window.location.search).has('error')
 
   useEffect(() => {
-    if (
-      !isAuthenticated ||
-      !user ||
-      profile === undefined
-    ) {
+    if (!isAuthenticated || !user || profile === undefined) {
       return
     }
     const needsProfileMigration =
       profile === null ||
       profile.createdAt !== undefined ||
       profile.updatedAt !== undefined ||
+      profile.starterCaptureBallsGiftedAt === undefined ||
       profile.statistics === null ||
       profile.statistics?.firstConnectedAt !== undefined ||
       profile.statistics?.updatedAt !== undefined
@@ -106,17 +97,6 @@ function useAccountState() {
       )
     })
   }, [isAuthenticated, profile, syncCurrentUser, user])
-
-  useEffect(() => {
-    if (hasOAuthCallback && !callbackLogged.current) {
-      callbackLogged.current = true
-      console.info('[auth] GitHub callback received')
-    }
-    if (hasOAuthCallback && isAuthenticated && !sessionLogged.current) {
-      sessionLogged.current = true
-      console.info('[auth] Convex session restored after GitHub callback')
-    }
-  }, [hasOAuthCallback, isAuthenticated])
 
   async function signIn() {
     setPending(true)

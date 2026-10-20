@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-} from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 
 /**
  * Touffe d'herbe haute (style Pokémon), dessinée en SVG.
@@ -13,7 +7,7 @@ import {
  *  - active      : true si au moins un joueur est actif → l'herbe bouge toutes les `intervalMs`
  *  - intervalMs  : délai entre deux frémissements (défaut 4000)
  *  - size        : largeur en px (défaut 120)
- *  - onFound     : callback optionnel au clic (en plus du console.log)
+ *  - onFound     : callback optionnel au clic
  *
  * Usage :
  *   <TallGrass active={players.some(p => p.isActive)} intervalMs={5000} />

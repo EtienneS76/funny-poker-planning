@@ -605,13 +605,6 @@
   align-items: center;
   gap: 10px;
 }
-.pp-shop-debug {
-  min-height: 40px;
-  gap: 6px;
-  padding: 7px 10px;
-  font-size: 12px;
-  white-space: nowrap;
-}
 .pp-shop-help {
   position: relative;
   flex: 0 0 auto;
@@ -917,8 +910,7 @@
   padding: 12px;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse at 50% 40%, #e6bfdc52, transparent 70%),
-    #30213c45;
+    radial-gradient(ellipse at 50% 40%, #e6bfdc52, transparent 70%), #30213c45;
   backdrop-filter: blur(10px) saturate(0.86);
 }
 .pp-pokeball-opening-close {
@@ -951,29 +943,6 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--pp-border) transparent;
-}
-.pp-consumable-debug {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px dashed var(--pp-line);
-  border-radius: 12px;
-  background: var(--pp-paper);
-  color: var(--pp-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.pp-consumable-debug > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.pp-consumable-debug .pp-button {
-  min-height: 30px;
-  padding: 5px 10px;
-  font-size: 11px;
 }
 .pp-consumable-inventory-list::-webkit-scrollbar {
   width: 8px;
@@ -1438,34 +1407,106 @@
   background: #e8ece8;
   color: #34433a;
 }
-.pokemon-type--normal { background: #e7e3d6; color: #554b39; }
-.pokemon-type--combat { background: #eee0c5; color: #695027; }
-.pokemon-type--vol { background: #e0dff3; color: #4d4980; }
-.pokemon-type--poison { background: #eadcf0; color: #69417a; }
-.pokemon-type--sol { background: #f2e3c7; color: #70542b; }
-.pokemon-type--roche { background: #e6dfcc; color: #5f5438; }
-.pokemon-type--insecte { background: #e3ebc7; color: #53652a; }
-.pokemon-type--spectre { background: #ded9eb; color: #514570; }
-.pokemon-type--acier { background: #dce5e8; color: #465860; }
-.pokemon-type--feu { background: #f4e4c7; color: #79551e; }
-.pokemon-type--eau { background: #d8e9f5; color: #315d7d; }
-.pokemon-type--plante { background: #dcebd4; color: #42653a; }
-.pokemon-type--electrik { background: #f5edc8; color: #74601e; }
-.pokemon-type--psy { background: #f1d8e1; color: #81455b; }
-.pokemon-type--glace { background: #d9efef; color: #3d6e72; }
-.pokemon-type--dragon { background: #e0d9f2; color: #56447b; }
-.pokemon-type--tenebres { background: #ded9d5; color: #51443b; }
-.pokemon-type--fee { background: #f3dce8; color: #804d67; }
+.pokemon-type--normal {
+  background: #e7e3d6;
+  color: #554b39;
+}
+.pokemon-type--combat {
+  background: #eee0c5;
+  color: #695027;
+}
+.pokemon-type--vol {
+  background: #e0dff3;
+  color: #4d4980;
+}
+.pokemon-type--poison {
+  background: #eadcf0;
+  color: #69417a;
+}
+.pokemon-type--sol {
+  background: #f2e3c7;
+  color: #70542b;
+}
+.pokemon-type--roche {
+  background: #e6dfcc;
+  color: #5f5438;
+}
+.pokemon-type--insecte {
+  background: #e3ebc7;
+  color: #53652a;
+}
+.pokemon-type--spectre {
+  background: #ded9eb;
+  color: #514570;
+}
+.pokemon-type--acier {
+  background: #dce5e8;
+  color: #465860;
+}
+.pokemon-type--feu {
+  background: #f4e4c7;
+  color: #79551e;
+}
+.pokemon-type--eau {
+  background: #d8e9f5;
+  color: #315d7d;
+}
+.pokemon-type--plante {
+  background: #dcebd4;
+  color: #42653a;
+}
+.pokemon-type--electrik {
+  background: #f5edc8;
+  color: #74601e;
+}
+.pokemon-type--psy {
+  background: #f1d8e1;
+  color: #81455b;
+}
+.pokemon-type--glace {
+  background: #d9efef;
+  color: #3d6e72;
+}
+.pokemon-type--dragon {
+  background: #e0d9f2;
+  color: #56447b;
+}
+.pokemon-type--tenebres {
+  background: #ded9d5;
+  color: #51443b;
+}
+.pokemon-type--fee {
+  background: #f3dce8;
+  color: #804d67;
+}
 .pokemon-rarity {
   border-color: var(--pp-border);
   background: var(--pp-paper);
   color: var(--pp-ink);
 }
-.pokemon-rarity--commun { border-color: #b7c2b6; }
-.pokemon-rarity--rare { border-color: #7eabd0; background: #e5f1fa; color: #315b79; }
-.pokemon-rarity--epique { border-color: #ae8aca; background: #f0e6f7; color: #664481; }
-.pokemon-rarity--legendaire { border-color: #d3a752; background: #fbf0d5; color: #78591b; }
-.pokemon-rarity--ultime { border-color: #88a97e; background: #e3eedc; color: #365c37; }
+.pokemon-rarity--commun {
+  border-color: #b7c2b6;
+}
+.pokemon-rarity--rare {
+  border-color: #7eabd0;
+  background: #e5f1fa;
+  color: #315b79;
+}
+.pokemon-rarity--epique {
+  border-color: #ae8aca;
+  background: #f0e6f7;
+  color: #664481;
+}
+.pokemon-rarity--legendaire {
+  border-color: #d3a752;
+  background: #fbf0d5;
+  color: #78591b;
+}
+.pokemon-rarity--ultime {
+  border-color: #88a97e;
+  background: #e3eedc;
+  color: #365c37;
+}
 .pokemon-collection-card .pokemon-collection-assigned {
   display: inline-flex;
   align-items: center;

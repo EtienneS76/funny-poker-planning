@@ -3,13 +3,7 @@ import type { CSSProperties } from 'react'
 import type { PokemonRarity } from '../../../pokemon/functions/GeneratePokemon'
 
 type CapturePhase =
-  | 'ready'
-  | 'throw'
-  | 'absorb'
-  | 'drop'
-  | 'shake'
-  | 'caught'
-  | 'escaped'
+  'ready' | 'throw' | 'absorb' | 'drop' | 'shake' | 'caught' | 'escaped'
 
 type CaptureBall = {
   id: 'poke-ball' | 'hyper-ball' | 'master-ball'
@@ -46,8 +40,16 @@ const rarityAccents: Record<PokemonRarity, string> = {
   legendaire: '#e0a413',
   ultime: '#e0a413',
 }
-const confettiColors = ['#ffd54a', '#ff6b6b', '#5ee0a0', '#6ab7ff', '#c58bff', '#fff']
-const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms))
+const confettiColors = [
+  '#ffd54a',
+  '#ff6b6b',
+  '#5ee0a0',
+  '#6ab7ff',
+  '#c58bff',
+  '#fff',
+]
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, ms))
 
 function captureVars(values: Record<string, string>): CSSProperties {
   return values as CSSProperties
@@ -71,8 +73,9 @@ export function PokemonCapture({
   const [ballsLeft, setBallsLeft] = useState(0)
   const [throwPending, setThrowPending] = useState(false)
   const [choosingBall, setChoosingBall] = useState(false)
-  const [selectedBallId, setSelectedBallId] =
-    useState<CaptureBall['id'] | null>(null)
+  const [selectedBallId, setSelectedBallId] = useState<
+    CaptureBall['id'] | null
+  >(null)
   const [muted, setMuted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [image, setImage] = useState(imageSrc)
@@ -148,6 +151,7 @@ export function PokemonCapture({
 
   async function launch(ballId: CaptureBall['id']) {
     if (phase !== 'ready' || !selectedBall) return
+    setShakeCount(0)
     setError(null)
     setThrowPending(true)
     let result: CaptureResult
@@ -279,7 +283,7 @@ export function PokemonCapture({
           {phase === 'caught' && (
             <>
               <div className='pokemon-capture-rays' />
-              {confettiColors.map((color, index) => (
+              {confettiColors.map((color, index) =>
                 Array.from({ length: 7 }, (_, item) => {
                   const confettiIndex = index * 7 + item
                   return (
@@ -294,36 +298,40 @@ export function PokemonCapture({
                       })}
                     />
                   )
-                })
-              ))}
+                }),
+              )}
             </>
           )}
 
-          <div className={`pokemon-capture-ball-position is-${ballPosition}`}>
-            <div
-              key={shakeCount}
-              className={`pokemon-capture-ball${phase === 'ready' ? ' is-idle' : ''}${phase === 'shake' && shakeCount ? ' is-shaking' : ''}${phase === 'throw' ? ' is-spinning' : ''}${phase === 'escaped' ? ' is-open' : ''}${phase === 'caught' ? ' is-done' : ''}`}
-            >
-              <i className='pokemon-capture-ball-half is-top' />
-              <i className='pokemon-capture-ball-half is-bottom' />
-              <i className='pokemon-capture-ball-shade' />
-              <i className='pokemon-capture-ball-gloss' />
-              <i className='pokemon-capture-ball-seam' />
-              <i className='pokemon-capture-ball-button'>
-                <b />
-              </i>
+          {(selectedBall || phase !== 'ready') && (
+            <div className={`pokemon-capture-ball-position is-${ballPosition}`}>
+              <div
+                key={shakeCount}
+                className={`pokemon-capture-ball${phase === 'ready' ? ' is-idle' : ''}${phase === 'shake' && shakeCount ? ' is-shaking' : ''}${phase === 'throw' ? ' is-spinning' : ''}${phase === 'escaped' ? ' is-open' : ''}${phase === 'caught' ? ' is-done' : ''}`}
+              >
+                <i className='pokemon-capture-ball-half is-top' />
+                <i className='pokemon-capture-ball-half is-bottom' />
+                <i className='pokemon-capture-ball-shade' />
+                <i className='pokemon-capture-ball-gloss' />
+                <i className='pokemon-capture-ball-seam' />
+                <i className='pokemon-capture-ball-button'>
+                  <b />
+                </i>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className='pokemon-capture-dots' aria-hidden='true'>
-          {[1, 2, 3].map((number) => (
-            <span
-              key={number}
-              className={`${shakeCount >= number ? 'is-lit' : ''}${shakeCount >= number && phase === 'escaped' ? ' is-failed' : ''}`}
-            />
-          ))}
-        </div>
+        {busy && (
+          <div className='pokemon-capture-dots' aria-hidden='true'>
+            {[1, 2, 3].map((number) => (
+              <span
+                key={number}
+                className={`${shakeCount >= number ? 'is-lit' : ''}${shakeCount >= number && phase === 'escaped' ? ' is-failed' : ''}`}
+              />
+            ))}
+          </div>
+        )}
 
         <div className='pokemon-capture-copy' aria-live='polite'>
           {phase === 'ready' && !choosingBall && (
@@ -340,18 +348,18 @@ export function PokemonCapture({
               {selectedBall ? (
                 <div className='pokemon-capture-actions'>
                   <button
-                    className='pokemon-capture-secondary'
-                    type='button'
-                    onClick={() => setChoosingBall(true)}
-                  >
-                    Changer de Poké Ball
-                  </button>
-                  <button
                     className='pokemon-capture-primary'
                     type='button'
                     onClick={() => void launch(selectedBall.id)}
                   >
                     Lancer !
+                  </button>
+                  <button
+                    className='pokemon-capture-secondary'
+                    type='button'
+                    onClick={() => setChoosingBall(true)}
+                  >
+                    Changer de Poké Ball
                   </button>
                 </div>
               ) : (
@@ -377,43 +385,43 @@ export function PokemonCapture({
                     disabled={signInPending}
                     onClick={onSignIn}
                   >
-                    {signInPending
-                      ? 'Connexion…'
-                      : 'Se connecter avec GitHub'}
+                    {signInPending ? 'Connexion…' : 'Se connecter avec GitHub'}
                   </button>
                 </>
               ) : balls === undefined ? (
                 <p>Chargement de tes Poké Balls…</p>
               ) : (
                 <div className='pokemon-capture-ball-list'>
-                  {balls.filter((item) => item.quantity > 0).map((item) => (
-                    <button
-                      className='pokemon-capture-ball-option'
-                      type='button'
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedBallId(item.id)
-                        setChoosingBall(false)
-                        setError(null)
-                      }}
-                    >
-                      <span
-                        className={`pokemon-capture-ball-option-icon is-${item.id}`}
-                        style={captureVars({
-                          '--option-ball-top': item.top,
-                          '--option-ball-bottom': item.bottom,
-                        })}
-                        aria-hidden='true'
-                      />
-                      <span className='pokemon-capture-ball-option-copy'>
-                        <strong>{item.name}</strong>
-                        <small>{item.chance}% de chance</small>
-                      </span>
-                      <span className='pokemon-capture-ball-option-quantity'>
-                        ×{item.quantity}
-                      </span>
-                    </button>
-                  ))}
+                  {balls
+                    .filter((item) => item.quantity > 0)
+                    .map((item) => (
+                      <button
+                        className='pokemon-capture-ball-option'
+                        type='button'
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedBallId(item.id)
+                          setChoosingBall(false)
+                          setError(null)
+                        }}
+                      >
+                        <span
+                          className={`pokemon-capture-ball-option-icon is-${item.id}`}
+                          style={captureVars({
+                            '--option-ball-top': item.top,
+                            '--option-ball-bottom': item.bottom,
+                          })}
+                          aria-hidden='true'
+                        />
+                        <span className='pokemon-capture-ball-option-copy'>
+                          <strong>{item.name}</strong>
+                          <small>{item.chance}% de chance</small>
+                        </span>
+                        <span className='pokemon-capture-ball-option-quantity'>
+                          ×{item.quantity}
+                        </span>
+                      </button>
+                    ))}
                   {balls.every((item) => item.quantity < 1) && (
                     <p className='pokemon-capture-error'>
                       Tu n’as plus de Poké Ball.
@@ -432,7 +440,11 @@ export function PokemonCapture({
           )}
           {busy && (
             <h3 id='pokemon-capture-title' className='is-dim'>
-              {phase === 'shake' ? 'Ça bouge…' : phase === 'drop' ? '…' : 'Lancé !'}
+              {phase === 'shake'
+                ? 'Ça bouge…'
+                : phase === 'drop'
+                  ? '…'
+                  : 'Lancé !'}
             </h3>
           )}
           {phase === 'caught' && (
@@ -467,6 +479,7 @@ export function PokemonCapture({
                     type='button'
                     onClick={() => {
                       setSelectedBallId(null)
+                      setShakeCount(0)
                       setChoosingBall(true)
                       setPhase('ready')
                     }}

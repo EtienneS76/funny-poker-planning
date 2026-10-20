@@ -85,12 +85,17 @@
 
 .pokemon-encounter-grass {
   position: absolute;
-  bottom: max(24px, 5vh);
+  bottom: 0;
   left: clamp(12px, 3vw, 44px);
   display: grid;
   justify-items: center;
   gap: 0;
   pointer-events: auto;
+}
+
+.pokemon-encounter-grass--right {
+  right: clamp(12px, 3vw, 44px);
+  left: auto;
 }
 
 .pokemon-encounter-grass .tg {
@@ -312,7 +317,8 @@
 .pokemon-encounter-sparkle {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 30% 30%, #fff9 0 1px, transparent 2px),
+  background:
+    radial-gradient(circle at 30% 30%, #fff9 0 1px, transparent 2px),
     radial-gradient(circle at 70% 25%, #fff9 0 1px, transparent 2px),
     radial-gradient(circle at 75% 70%, #fff9 0 1px, transparent 2px);
   mix-blend-mode: color-dodge;
@@ -695,8 +701,7 @@
   padding: 16px;
   overflow: hidden;
   pointer-events: auto;
-  background:
-    radial-gradient(ellipse at 50% 40%, #245b36e8, #071b10f5);
+  background: radial-gradient(ellipse at 50% 40%, #245b36e8, #071b10f5);
   backdrop-filter: blur(8px);
   color: #fff;
   animation: pokemon-capture-fade 300ms both;
@@ -797,7 +802,7 @@
 }
 
 .pokemon-capture-pokemon.is-back {
-  animation: pokemon-capture-pop 500ms cubic-bezier(.2, 1.4, .4, 1) both;
+  animation: pokemon-capture-pop 500ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 
 .pokemon-capture-flash {
@@ -827,11 +832,12 @@
 }
 
 .pokemon-capture-ball-position.is-throw {
-  animation: pokemon-capture-throw 900ms cubic-bezier(.2, .75, .4, 1) forwards;
+  animation: pokemon-capture-throw 900ms cubic-bezier(0.2, 0.75, 0.4, 1)
+    forwards;
 }
 
 .pokemon-capture-ball-position.is-held {
-  transform: translateY(-260px) scale(.5);
+  transform: translate(-10px, -260px) scale(0.5);
 }
 
 .pokemon-capture-ball-position.is-drop {
@@ -839,7 +845,7 @@
 }
 
 .pokemon-capture-ball-position.is-ground {
-  transform: translateY(-20px) scale(.9);
+  transform: translate(-10px, -20px) scale(0.9);
 }
 
 .pokemon-capture-ball {
@@ -859,7 +865,7 @@
 }
 
 .pokemon-capture-ball.is-shaking {
-  animation: pokemon-capture-shake 950ms cubic-bezier(.36, .07, .19, .97);
+  animation: pokemon-capture-shake 950ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 .pokemon-capture-ball.is-shaking .pokemon-capture-ball-button b {
@@ -880,7 +886,7 @@
   inset: 0;
   border-radius: 50%;
   transition:
-    transform 500ms cubic-bezier(.3, .8, .2, 1),
+    transform 500ms cubic-bezier(0.3, 0.8, 0.2, 1),
     opacity 500ms;
 }
 
@@ -908,7 +914,9 @@
 .pokemon-capture-ball-shade {
   inset: 0;
   border-radius: 50%;
-  box-shadow: inset -7px -9px 18px #000a, inset 4px 5px 11px #ffffff40;
+  box-shadow:
+    inset -7px -9px 18px #000a,
+    inset 4px 5px 11px #ffffff40;
 }
 
 .pokemon-capture-ball-gloss {
@@ -982,7 +990,7 @@
   margin: -280px 0 0 -280px;
   pointer-events: none;
   background: repeating-conic-gradient(#ffd54a 0 7deg, #0000 7deg 20deg);
-  opacity: .3;
+  opacity: 0.3;
   animation: pokemon-capture-spin 18s linear infinite;
   -webkit-mask: radial-gradient(circle, #000, #0000 66%);
   mask: radial-gradient(circle, #000, #0000 66%);
@@ -997,14 +1005,15 @@
   border-radius: 2px;
   background: var(--confetti-color);
   pointer-events: none;
-  animation: pokemon-capture-confetti 1.6s var(--confetti-delay) cubic-bezier(.2, .7, .3, 1) both;
+  animation: pokemon-capture-confetti 1.6s var(--confetti-delay)
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
 
 .pokemon-capture-dots {
   display: flex;
   height: 18px;
-  gap: 12px;
-  margin: -4px 0 6px;
+  gap: 16px;
+  margin: 12px 0 18px;
 }
 
 .pokemon-capture-dots span {
@@ -1040,11 +1049,11 @@
   margin: 0;
   font-size: 28px;
   font-weight: 900;
-  letter-spacing: -.01em;
+  letter-spacing: -0.01em;
 }
 
 .pokemon-capture-copy h3.is-dim {
-  opacity: .7;
+  opacity: 0.7;
   animation: pokemon-capture-pulse 1s infinite;
 }
 
@@ -1060,7 +1069,7 @@
 
 .pokemon-capture-copy p {
   margin: 0;
-  opacity: .8;
+  opacity: 0.8;
   font-weight: 700;
 }
 
@@ -1071,10 +1080,9 @@
 }
 
 .pokemon-capture-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+  display: grid;
+  width: min(280px, 100%);
+  gap: 8px;
   margin-top: 6px;
 }
 
@@ -1089,21 +1097,44 @@
   cursor: pointer;
 }
 
+.pokemon-capture-actions .pokemon-capture-primary,
+.pokemon-capture-actions .pokemon-capture-secondary {
+  width: 100%;
+  margin-top: 0;
+}
+
 .pokemon-capture-primary {
-  border: 0;
-  background: linear-gradient(#ffe27a, #ffb300);
-  box-shadow: 0 0 0 3px #fff3, 0 10px 26px -6px #ffb300;
+  border: 1px solid #fff9;
+  background: linear-gradient(180deg, #fff0a8, #ffc33f 62%, #efaa24);
+  box-shadow:
+    inset 0 1px 0 #fff9,
+    0 4px 0 #9e690c,
+    0 8px 18px #ffb30055;
   color: #1a1200;
   font-size: 17px;
-  transition: transform 150ms;
+  transition:
+    transform 150ms,
+    box-shadow 150ms;
 }
 
 .pokemon-capture-primary:hover {
-  transform: scale(1.04);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 5px 0 #9e690c,
+    0 12px 22px #ffb30066;
 }
 
 .pokemon-capture-primary:active {
-  transform: scale(.96);
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 #fff8,
+    0 2px 0 #9e690c;
+}
+
+.pokemon-capture-primary:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
 }
 
 .pokemon-capture-secondary {
@@ -1134,7 +1165,9 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
 }
 
 .pokemon-capture-ball-option:hover {
@@ -1157,7 +1190,9 @@
     #24262a 48% 55%,
     var(--option-ball-bottom) 55% 100%
   );
-  box-shadow: inset -3px -4px 5px #0005, inset 2px 3px 5px #ffffff55;
+  box-shadow:
+    inset -3px -4px 5px #0005,
+    inset 2px 3px 5px #ffffff55;
 }
 
 .pokemon-capture-ball-option-icon::after {
@@ -1199,70 +1234,137 @@
 }
 
 @keyframes pokemon-capture-fade {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes pokemon-capture-pulse {
-  50% { opacity: .55; }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 @keyframes pokemon-capture-float {
-  50% { transform: translateY(-8px); }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes pokemon-capture-bob {
-  50% { transform: translateY(-10px) rotate(3deg); }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
 }
 
 @keyframes pokemon-capture-spin {
-  to { transform: rotate(720deg); }
+  to {
+    transform: rotate(720deg);
+  }
 }
 
 @keyframes pokemon-capture-throw {
-  to { transform: translateY(-260px) scale(.5); }
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  72% {
+    transform: translate(-14px, -290px) rotate(520deg) scale(0.55);
+  }
+  to {
+    transform: translate(-10px, -260px) rotate(720deg) scale(0.5);
+  }
 }
 
 @keyframes pokemon-capture-drop {
-  0% { transform: translateY(-260px) scale(.5); }
-  55% { transform: translateY(-6px) scale(.95); }
-  72% { transform: translateY(-52px) scale(.92); }
-  100% { transform: translateY(-20px) scale(.9); }
+  0% {
+    transform: translate(-10px, -260px) scale(0.5);
+  }
+  55% {
+    transform: translate(-10px, -6px) scale(0.95);
+  }
+  72% {
+    transform: translate(-10px, -52px) scale(0.92);
+  }
+  100% {
+    transform: translate(-10px, -20px) scale(0.9);
+  }
 }
 
 @keyframes pokemon-capture-absorb {
-  0% { filter: drop-shadow(0 0 0 #0000); }
-  45% { transform: scale(.8); filter: brightness(9) saturate(0); }
-  100% { transform: scale(0) translateY(60px); filter: brightness(12); opacity: 0; }
+  0% {
+    filter: drop-shadow(0 0 0 #0000);
+  }
+  45% {
+    transform: scale(0.8);
+    filter: brightness(9) saturate(0);
+  }
+  100% {
+    transform: scale(0) translateY(60px);
+    filter: brightness(12);
+    opacity: 0;
+  }
 }
 
 @keyframes pokemon-capture-pop {
-  from { transform: scale(.1); opacity: 0; }
+  from {
+    transform: scale(0.1);
+    opacity: 0;
+  }
 }
 
 @keyframes pokemon-capture-burst {
-  from { transform: scale(.2); opacity: 1; }
-  to { transform: scale(1.5); opacity: 0; }
+  from {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 @keyframes pokemon-capture-shake {
-  0%, 100% { transform: rotate(0); }
-  20% { transform: rotate(-30deg); }
-  42% { transform: rotate(26deg); }
-  62% { transform: rotate(-14deg); }
-  80% { transform: rotate(7deg); }
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-30deg);
+  }
+  42% {
+    transform: rotate(26deg);
+  }
+  62% {
+    transform: rotate(-14deg);
+  }
+  80% {
+    transform: rotate(7deg);
+  }
 }
 
 @keyframes pokemon-capture-led {
-  40% { background: #ffe27a; box-shadow: 0 0 16px 8px #fff; }
+  40% {
+    background: #ffe27a;
+    box-shadow: 0 0 16px 8px #fff;
+  }
 }
 
 @keyframes pokemon-capture-confetti {
-  from { transform: translate(0, 0) rotate(0); opacity: 1; }
-  to { transform: translate(var(--confetti-x), 360px) rotate(var(--confetti-rotation)); opacity: 0; }
+  from {
+    transform: translate(0, 0) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--confetti-x), -360px)
+      rotate(var(--confetti-rotation));
+    opacity: 0;
+  }
 }
 
 @keyframes pokemon-capture-shimmer {
-  to { background-position: -200% 0; }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1289,7 +1391,7 @@
   .pokemon-capture-confetti,
   .pokemon-capture-copy h3,
   .pokemon-capture-primary {
-    animation-duration: .01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
 
@@ -1340,69 +1442,6 @@
 
 .pokemon-room-layer-tuft .tg {
   pointer-events: auto;
-}
-
-.pokemon-debug {
-  position: fixed;
-  z-index: 10;
-  top: 84px;
-  right: 16px;
-  width: min(280px, calc(100vw - 32px));
-  pointer-events: auto;
-}
-
-.pokemon-debug-toggle,
-.pokemon-debug-form {
-  border: 1px solid #ffffff8c;
-  border-radius: 14px;
-  background: #fdfdf8e8;
-  box-shadow: 0 8px 24px #23402f30;
-  color: #23402f;
-  backdrop-filter: blur(12px);
-}
-
-.pokemon-debug-toggle {
-  min-height: 38px;
-  padding: 8px 12px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.pokemon-debug-form {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 12px;
-}
-
-.pokemon-debug-form label {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.pokemon-debug-form > div {
-  display: flex;
-  gap: 8px;
-}
-
-.pokemon-debug-form input {
-  min-width: 0;
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #8fb08a;
-  border-radius: 8px;
-}
-
-.pokemon-debug-form button {
-  flex-shrink: 0;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--pk-accent);
-  color: white;
-  font: inherit;
-  font-weight: 700;
 }
 
 .pokemon-room-layer-tuft--bottom-left {
@@ -1465,10 +1504,16 @@
 
 @media (max-width: 600px) {
   .pokemon-encounter-grass {
-    bottom: max(16px, 3vh);
+    bottom: 0;
     left: 4px;
-    transform: scale(.82);
+    transform: scale(0.82);
     transform-origin: bottom left;
+  }
+
+  .pokemon-encounter-grass--right {
+    right: 4px;
+    left: auto;
+    transform-origin: bottom right;
   }
 
   .pokemon-encounter-menu {

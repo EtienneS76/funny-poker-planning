@@ -5,12 +5,7 @@ import { api } from '../../convex/_generated/api'
 import PokeballOpening from './PokeballOpening'
 import { useAccount } from '../features/auth/useAccount'
 import { useAppSnackbar } from './AppSnackbar'
-import {
-  getPokemonById,
-  type PokemonRarity,
-} from '../features/pokemon/functions/GeneratePokemon'
-
-type DebugRarity = Exclude<PokemonRarity, 'ultime'>
+import { getPokemonById } from '../features/pokemon/functions/GeneratePokemon'
 
 type Props = {
   onClose: () => void
@@ -23,13 +18,6 @@ const rarityLabels = [
   ['legendaire', 'Légendaire'],
   ['ultime', 'Ultime'],
 ] as const
-const debugRarities = [
-  ['commun', 'Commun'],
-  ['rare', 'Rare'],
-  ['epique', 'Épique'],
-  ['legendaire', 'Légendaire'],
-] as const satisfies readonly (readonly [DebugRarity, string])[]
-
 export default function ModalConsumableInventory({ onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [openingPokemonId, setOpeningPokemonId] = useState<number | null>(null)
@@ -49,10 +37,6 @@ export default function ModalConsumableInventory({ onClose }: Props) {
   const claimWelcomePokemon = useMutation(
     api.user.mutations.claimStarterPokemon,
   )
-  const debugOpenPokemonByRarity = useMutation(
-    api.user.mutations.debugOpenPokemonByRarity,
-  )
-  const [debugRarity, setDebugRarity] = useState<DebugRarity | null>(null)
   const ownedItems =
     data?.consumableInventory.flatMap((ownedItem) => {
       const item = data.consumables.find(
@@ -78,7 +62,7 @@ export default function ModalConsumableInventory({ onClose }: Props) {
   }, [])
 
   async function openMysteryBall() {
-    if (openingBall || debugRarity) return
+    if (openingBall) return
     setOpeningBall(true)
     try {
       const result = await openMysteryPokeBall({})
@@ -140,22 +124,6 @@ export default function ModalConsumableInventory({ onClose }: Props) {
     setWelcomeRerollsRemaining(null)
   }
 
-  async function debugOpenByRarity(rarity: DebugRarity) {
-    if (debugRarity) return
-    setDebugRarity(rarity)
-    try {
-      const pokemonId = await debugOpenPokemonByRarity({ rarity })
-      setOpeningPokemonId(pokemonId)
-    } catch (error) {
-      snackbar.error(
-        'Ouverture de test impossible',
-        error instanceof Error ? error.message : 'Réessaie dans un instant.',
-      )
-    } finally {
-      setDebugRarity(null)
-    }
-  }
-
   return (
     <dialog
       className='pp-modal pp-consumable-inventory-modal'
@@ -204,24 +172,6 @@ export default function ModalConsumableInventory({ onClose }: Props) {
           role='tabpanel'
           aria-labelledby='consumable-inventory-tab-pokemon'
         >
-          {account.isAuthenticated && (
-            <div className='pp-consumable-debug'>
-              <span>Ouverture de test</span>
-              <div>
-                {debugRarities.map(([rarity, label]) => (
-                  <button
-                    className='pp-button pp-button--secondary'
-                    key={rarity}
-                    type='button'
-                    disabled={debugRarity !== null || openingBall}
-                    onClick={() => void debugOpenByRarity(rarity)}
-                  >
-                    {debugRarity === rarity ? 'Tirage…' : label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           {data === undefined ? (
             <p className='pp-inventory-empty' role='status'>
               Chargement de ton inventaire…
@@ -253,11 +203,7 @@ export default function ModalConsumableInventory({ onClose }: Props) {
                     <button
                       className='pp-button pp-consumable-open'
                       type='button'
-                      disabled={
-                        item.quantity < 1 ||
-                        openingBall ||
-                        debugRarity !== null
-                      }
+                      disabled={item.quantity < 1 || openingBall}
                       onClick={() => void openMysteryBall()}
                     >
                       {openingBall ? 'Ouverture…' : 'Ouvrir'}

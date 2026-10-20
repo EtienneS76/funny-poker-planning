@@ -3,11 +3,7 @@ import { mutation, type MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 import { avatarFrameCatalog } from './avatarFrames'
 import { pokemonConsumableCatalog } from './consumables'
-import {
-  drawMysteryPokemonId,
-  drawPokemonIdByRarity,
-  getPokemonRarityById,
-} from './pokemonDraw'
+import { drawMysteryPokemonId, getPokemonRarityById } from './pokemonDraw'
 import { syncAuthenticatedUser } from './profile'
 
 async function requireAuthenticatedUser(context: MutationCtx) {
@@ -181,10 +177,7 @@ function validateGuestId(guestId: string) {
   }
 }
 
-async function pokemonEncounterOwnerKey(
-  context: MutationCtx,
-  guestId: string,
-) {
+async function pokemonEncounterOwnerKey(context: MutationCtx, guestId: string) {
   const identity = await context.auth.getUserIdentity()
   if (identity) {
     const user = await syncAuthenticatedUser(context)
@@ -291,9 +284,8 @@ export const throwCaptureBall = mutation({
     const ball = pokemonConsumableCatalog.find(
       (item) => item.id === consumableId,
     )
-    const captureChance = rarity && ball && 'catchRates' in ball
-      ? ball.catchRates[rarity]
-      : null
+    const captureChance =
+      rarity && ball && 'catchRates' in ball ? ball.catchRates[rarity] : null
     if (captureChance === null || captureChance === undefined) {
       throw new ConvexError('Impossible de déterminer les chances de capture.')
     }
@@ -369,8 +361,7 @@ async function incrementMysteryPokeBallOpenCount(
     .unique()
   if (statistics) {
     await context.db.patch(statistics._id, {
-      mysteryPokeBallOpenCount:
-        (statistics.mysteryPokeBallOpenCount ?? 0) + 1,
+      mysteryPokeBallOpenCount: (statistics.mysteryPokeBallOpenCount ?? 0) + 1,
     })
   }
 }
@@ -495,53 +486,6 @@ export const claimStarterPokemon = mutation({
   },
 })
 
-export const debugOpenPokemonByRarity = mutation({
-  args: {
-    rarity: v.union(
-      v.literal('commun'),
-      v.literal('rare'),
-      v.literal('epique'),
-      v.literal('legendaire'),
-    ),
-  },
-  returns: v.number(),
-  handler: async (context, { rarity }) => {
-    const user = await requireAuthenticatedUser(context)
-    const pokemonId = drawPokemonIdByRarity(rarity)
-    await context.db.insert('userPokemons', {
-      userId: user._id,
-      pokemonId,
-      unlockedAt: Date.now(),
-    })
-    return pokemonId
-  },
-})
-
-export const debugAddPokisous = mutation({
-  args: {},
-  returns: v.null(),
-  handler: async (context) => {
-    const user = await requireAuthenticatedUser(context)
-    const userId = String(user._id)
-    const wallet = await context.db
-      .query('pokisouWallets')
-      .withIndex('by_user_id', (query) => query.eq('userId', userId))
-      .unique()
-
-    if (wallet) {
-      await context.db.patch(wallet._id, {
-        balance: wallet.balance + 1_000,
-      })
-    } else {
-      await context.db.insert('pokisouWallets', {
-        userId,
-        balance: 1_000,
-      })
-    }
-    return null
-  },
-})
-
 export const syncCurrent = mutation({
   args: {},
   returns: v.id('users'),
@@ -635,32 +579,6 @@ export const equipAvatarFrame = mutation({
   },
 })
 
-export const debugUnlockPokemon = mutation({
-  args: { pokemonId: v.number() },
-  returns: v.boolean(),
-  handler: async (context, { pokemonId }) => {
-    if (!Number.isInteger(pokemonId) || pokemonId < 1 || pokemonId > 151) {
-      throw new ConvexError('L’ID du Pokémon doit être compris entre 1 et 151.')
-    }
-
-    const user = await requireAuthenticatedUser(context)
-    const existing = await context.db
-      .query('userPokemons')
-      .withIndex('by_user_pokemon', (query) =>
-        query.eq('userId', user._id).eq('pokemonId', pokemonId),
-      )
-      .unique()
-    if (existing) return false
-
-    await context.db.insert('userPokemons', {
-      userId: user._id,
-      pokemonId,
-      unlockedAt: Date.now(),
-    })
-    return true
-  },
-})
-
 export const assignPokemon = mutation({
   args: { pokemonId: v.union(v.number(), v.null()) },
   returns: v.null(),
@@ -668,7 +586,9 @@ export const assignPokemon = mutation({
     const user = await requireAuthenticatedUser(context)
     if (pokemonId !== null) {
       if (!Number.isInteger(pokemonId) || pokemonId < 1 || pokemonId > 151) {
-        throw new ConvexError('L’ID du Pokémon doit être compris entre 1 et 151.')
+        throw new ConvexError(
+          'L’ID du Pokémon doit être compris entre 1 et 151.',
+        )
       }
       const ownedPokemon = await context.db
         .query('userPokemons')

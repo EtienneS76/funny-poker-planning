@@ -33,7 +33,7 @@ export const pokemonConsumableCatalog = [
     id: 'master-ball',
     name: 'Master Ball',
     description: 'La balle ultime : elle garantit la capture.',
-    price: 500,
+    price: 200,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
     catchRates: {
