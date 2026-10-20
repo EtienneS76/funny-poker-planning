@@ -2,10 +2,7 @@ import { authComponent } from '../auth/auth'
 import type { MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 
-async function ensureStatistics(
-  context: MutationCtx,
-  userId: Id<'users'>,
-) {
+async function ensureStatistics(context: MutationCtx, userId: Id<'users'>) {
   const existing = await context.db
     .query('statistics')
     .withIndex('by_user', (query) => query.eq('userId', userId))
@@ -26,6 +23,38 @@ async function ensureStatistics(
       updatedAt: undefined,
     })
   }
+}
+
+async function ensureStarterCaptureBalls(
+  context: MutationCtx,
+  userId: Id<'users'>,
+  giftedAt: number | undefined,
+) {
+  if (giftedAt !== undefined) return
+
+  const now = Date.now()
+  const ownedBalls = await context.db
+    .query('userConsumables')
+    .withIndex('by_user_consumable', (query) =>
+      query.eq('userId', userId).eq('consumableId', 'poke-ball'),
+    )
+    .unique()
+
+  if (ownedBalls) {
+    await context.db.patch(ownedBalls._id, {
+      quantity: ownedBalls.quantity + 3,
+      updatedAt: now,
+    })
+  } else {
+    await context.db.insert('userConsumables', {
+      userId,
+      consumableId: 'poke-ball',
+      quantity: 3,
+      updatedAt: now,
+    })
+  }
+
+  await context.db.patch(userId, { starterCaptureBallsGiftedAt: now })
 }
 
 export async function syncAuthenticatedUser(context: MutationCtx) {
@@ -55,9 +84,19 @@ export async function syncAuthenticatedUser(context: MutationCtx) {
       }
       await context.db.patch(existing._id, updatedProfile)
       await ensureStatistics(context, existing._id)
+      await ensureStarterCaptureBalls(
+        context,
+        existing._id,
+        existing.starterCaptureBallsGiftedAt,
+      )
       return { ...existing, ...updatedProfile }
     }
     await ensureStatistics(context, existing._id)
+    await ensureStarterCaptureBalls(
+      context,
+      existing._id,
+      existing.starterCaptureBallsGiftedAt,
+    )
     return existing
   }
 
@@ -65,5 +104,6 @@ export async function syncAuthenticatedUser(context: MutationCtx) {
     ...profile,
   })
   await ensureStatistics(context, userId)
+  await ensureStarterCaptureBalls(context, userId, undefined)
   return { _id: userId, ...profile }
 }

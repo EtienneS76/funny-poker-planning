@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CalendarDays, Layers3, Trophy, X } from 'lucide-react'
+import { CalendarDays, Layers3, Sparkles, Trophy, X } from 'lucide-react'
 import { AvatarFrame } from '../avatar/AvatarFrame'
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   firstConnectedAt: number
   refinementCount: number
   roundCount: number
+  mysteryPokeBallOpenCount: number
   onClose: () => void
 }
 
@@ -23,6 +24,7 @@ export function AccountStatisticsModal({
   firstConnectedAt,
   refinementCount,
   roundCount,
+  mysteryPokeBallOpenCount,
   onClose,
 }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -114,6 +116,13 @@ export function AccountStatisticsModal({
               <Trophy size={16} aria-hidden='true' /> Manches jouées
             </dt>
             <dd>{roundCount}</dd>
+          </div>
+          <div className='account-stat'>
+            <dt>
+              <Sparkles size={16} aria-hidden='true' /> Poké Balls mystères
+              ouvertes
+            </dt>
+            <dd>{mysteryPokeBallOpenCount}</dd>
           </div>
         </dl>
       </div>

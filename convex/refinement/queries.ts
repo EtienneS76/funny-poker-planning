@@ -96,6 +96,8 @@ export const getBySlug = query({
             'Invité',
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
           avatarFrameId: user?.avatarFrameId ?? null,
+          assignedPokemonId: user?.assignedPokemonId ?? null,
+          showPokemon3d: user?.showPokemon3d ?? false,
           isSpectator: participant.isSpectator ?? false,
           hasVoted: votesByUserId.has(participant.userId),
           vote:

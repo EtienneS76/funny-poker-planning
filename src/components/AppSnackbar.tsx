@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -43,6 +44,7 @@ const icons = {
 }
 export function AppSnackbarProvider({ children }: { children: ReactNode }) {
   const [notices, setNotices] = useState<SnackbarNotice[]>([])
+  const stack = useRef<HTMLDivElement>(null)
   const nextId = useRef(0)
   const timers = useRef(new Map<number, number>())
 
@@ -101,6 +103,14 @@ export function AppSnackbarProvider({ children }: { children: ReactNode }) {
     [notify, playerJoined, playerLeft, success, error, info],
   )
 
+  useLayoutEffect(() => {
+    const snackbarStack = stack.current
+    if (!snackbarStack) return
+    const isOpen = snackbarStack.matches(':popover-open')
+    if (isOpen) snackbarStack.hidePopover()
+    if (notices.length > 0) snackbarStack.showPopover()
+  }, [notices])
+
   useEffect(
     () => () => {
       for (const timer of timers.current.values()) window.clearTimeout(timer)
@@ -112,7 +122,13 @@ export function AppSnackbarProvider({ children }: { children: ReactNode }) {
   return (
     <SnackbarContext.Provider value={api}>
       {children}
-      <div className='app-snackbar-stack' aria-live='polite' aria-relevant='additions'>
+      <div
+        className='app-snackbar-stack'
+        ref={stack}
+        popover='manual'
+        aria-live='polite'
+        aria-relevant='additions'
+      >
         {notices.map((notice) => {
           const Icon = icons[notice.tone]
           return (

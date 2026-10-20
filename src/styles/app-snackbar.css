@@ -1,9 +1,17 @@
 .app-snackbar-stack {
   position: fixed;
-  z-index: 1000;
+  inset: auto;
+  margin: 0;
   right: 24px;
   bottom: max(24px, env(safe-area-inset-bottom));
   width: min(400px, calc(100vw - 32px));
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: inherit;
   display: flex;
   flex-direction: column;
   gap: 10px;

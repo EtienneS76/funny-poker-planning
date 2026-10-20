@@ -198,7 +198,6 @@ async function getOrCreateCurrentRound(
 
   if (
     refinement.name !== undefined ||
-    refinement.universe !== undefined ||
     refinement.savedAt !== undefined ||
     refinement.roundNumber !== undefined ||
     refinement.revealedAt !== undefined ||
@@ -207,7 +206,6 @@ async function getOrCreateCurrentRound(
   ) {
     await context.db.patch(refinement._id, {
       name: undefined,
-      universe: undefined,
       savedAt: undefined,
       roundNumber: undefined,
       revealedAt: undefined,
@@ -225,6 +223,7 @@ export const create = mutation({
   args: {
     guestId: v.string(),
     guestName: v.string(),
+    universe: v.union(v.literal('default'), v.literal('pk')),
     sizing: v.string(),
     issueUrl: v.union(v.string(), v.null()),
     funInteractionsEnabled: v.boolean(),
@@ -232,7 +231,7 @@ export const create = mutation({
   returns: v.string(),
   handler: async (
     context,
-    { guestId, guestName, sizing, issueUrl, funInteractionsEnabled },
+    { guestId, guestName, universe, sizing, issueUrl, funInteractionsEnabled },
   ) => {
     const slug = generateSlug()
     const identity = await context.auth.getUserIdentity()
@@ -249,6 +248,7 @@ export const create = mutation({
 
     const refinementId = await context.db.insert('refinements', {
       slug,
+      ...(universe === 'default' ? {} : { universe }),
       sizing,
       issueUrl,
       funInteractionsEnabled,
@@ -550,12 +550,7 @@ export const reveal = mutation({
     }
 
     if (activePlayers.length >= 3 && activeAuthenticatedIds.size >= 2) {
-      const activeAuthenticatedVoterIds = new Set(
-        currentVotes
-          .map((vote) => vote.userId)
-          .filter((userId) => activeAuthenticatedIds.has(userId)),
-      )
-      for (const userId of activeAuthenticatedVoterIds) {
+      for (const userId of activeAuthenticatedIds) {
         const wallet = await context.db
           .query('pokisouWallets')
           .withIndex('by_user_id', (query) => query.eq('userId', userId))
@@ -951,7 +946,6 @@ export const cleanupInactiveRooms = internalMutation({
         await getOrCreateCurrentRound(context, refinement)
         if (
           refinement.name !== undefined ||
-          refinement.universe !== undefined ||
           refinement.savedAt !== undefined ||
           refinement.roundNumber !== undefined ||
           refinement.revealedAt !== undefined ||
@@ -960,7 +954,6 @@ export const cleanupInactiveRooms = internalMutation({
         ) {
           await context.db.patch(refinement._id, {
             name: undefined,
-            universe: undefined,
             savedAt: undefined,
             roundNumber: undefined,
             revealedAt: undefined,

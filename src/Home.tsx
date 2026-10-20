@@ -28,13 +28,13 @@ export default function Home() {
       const refinementSlug = await createRefinement({
         guestId: account.guestId,
         guestName: creatorName,
+        universe: configuration.universe,
         sizing: configuration.sizing,
         issueUrl: configuration.issueUrl,
         funInteractionsEnabled: configuration.funInteractionsEnabled,
       })
 
       setModalOpen(false)
-      snackbar.success('Partie créée', 'La salle est prête à rejoindre.')
       navigate(`/refinement/${refinementSlug}`)
     } catch (error) {
       snackbar.error(
@@ -47,6 +47,7 @@ export default function Home() {
   function startQuickRefinement() {
     void onSubmitNewRefinement(
       {
+        universe: 'default',
         sizing: 'fib',
         issueUrl: null,
         funInteractionsEnabled: true,
@@ -79,7 +80,7 @@ export default function Home() {
             className='pp-button pp-button--secondary pp-button--quick'
             onClick={startQuickRefinement}
           >
-            <Zap size={19} aria-hidden='true' /> Refinement rapide
+            <Zap size={19} aria-hidden='true' /> Refinement classique
           </button>
         </div>
       </main>

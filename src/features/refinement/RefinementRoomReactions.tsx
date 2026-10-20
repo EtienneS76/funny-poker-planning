@@ -138,10 +138,16 @@ export function RefinementRoomReactions({
       }
 
       const table = event.hatched
-        ? menu.current?.closest('.pp-table-area')?.getBoundingClientRect()
+        ? document.querySelector('.pp-table-area')
         : null
+      const targetAvatar = table
+        ? Array.from(table.querySelectorAll<HTMLElement>('.pp-seat')).find(
+            (seat) => seat.dataset.seatId === event.targetUserId,
+          )?.querySelector<HTMLElement>('.seat-avatar')
+        : null
+      const targetAvatarRect = targetAvatar?.getBoundingClientRect()
       const escapeAngle = event.escapeAngle ?? 0
-      const escapeDistance = table
+      const escapeDistance = targetAvatarRect
         ? Math.hypot(window.innerWidth, window.innerHeight) + 96
         : 0
       const item: Throw = {
@@ -152,16 +158,10 @@ export function RefinementRoomReactions({
         reaction,
         hatched: event.hatched,
         dodged: event.dodged,
-        escapeOrigin: table
+        escapeOrigin: targetAvatarRect
           ? {
-              x:
-                table.left +
-                (table.width * Number.parseFloat(String(target.position.left))) /
-                  100,
-              y:
-                table.top +
-                (table.height * Number.parseFloat(String(target.position.top))) /
-                  100,
+              x: targetAvatarRect.left + targetAvatarRect.width / 2,
+              y: targetAvatarRect.top + targetAvatarRect.height / 2,
               travelX: Math.cos(escapeAngle) * escapeDistance,
               travelY: Math.sin(escapeAngle) * escapeDistance,
               angle: escapeAngle,

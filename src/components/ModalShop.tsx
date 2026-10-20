@@ -3,6 +3,7 @@ import { useMutation } from 'convex/react'
 import { Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
+import { useAppSnackbar } from './AppSnackbar'
 
 type Props = {
   balance: number
@@ -14,6 +15,24 @@ type Props = {
     price: number
   }>
   ownedIds: string[]
+  consumables: Array<{
+    id: string
+    name: string
+    description: string
+    price: number
+    sprite: string
+    catchRates?: {
+      commun: number
+      rare: number
+      epique: number
+      legendaire: number
+      ultime: number
+    }
+  }>
+  consumableInventory: Array<{
+    consumableId: string
+    quantity: number
+  }>
   isAuthenticated: boolean
   canSignIn: boolean
   onSignIn: () => void
@@ -22,8 +41,7 @@ type Props = {
 
 const shopTabs = [
   { id: 'decorations', label: 'Décorations' },
-  { id: 'pokemon', label: 'Pokémon', upcoming: true },
-  { id: 'star-wars', label: 'Star Wars', upcoming: true },
+  { id: 'pokemon', label: 'Pokémon' },
 ] as const
 
 type ShopTabId = (typeof shopTabs)[number]['id']
@@ -39,6 +57,8 @@ export default function ModalShop({
   balance,
   catalog,
   ownedIds,
+  consumables,
+  consumableInventory,
   isAuthenticated,
   canSignIn,
   onSignIn,
@@ -47,9 +67,12 @@ export default function ModalShop({
   const dialog = useRef<HTMLDialogElement>(null)
   const [activeTab, setActiveTab] = useState<ShopTabId>('decorations')
   const [buyingFrame, setBuyingFrame] = useState<string | null>(null)
+  const [buyingConsumable, setBuyingConsumable] = useState<string | null>(null)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const formattedBalance = new Intl.NumberFormat('fr-FR').format(balance)
   const buyAvatarFrame = useMutation(api.user.mutations.buyAvatarFrame)
+  const buyConsumable = useMutation(api.user.mutations.buyConsumable)
+  const snackbar = useAppSnackbar()
 
   useEffect(() => {
     const element = dialog.current!
@@ -100,6 +123,26 @@ export default function ModalShop({
     }
   }
 
+  async function purchaseConsumable(consumableId: string) {
+    setBuyingConsumable(consumableId)
+    setPurchaseError(null)
+    try {
+      await buyConsumable({ consumableId })
+      const itemName =
+        consumables.find((item) => item.id === consumableId)?.name ??
+        'Consommable'
+      snackbar.success('Achat effectué', `${itemName} ajouté à ton inventaire.`)
+    } catch (error) {
+      setPurchaseError(
+        error instanceof Error
+          ? error.message
+          : 'Achat impossible pour le moment.',
+      )
+    } finally {
+      setBuyingConsumable(null)
+    }
+  }
+
   return (
     <dialog
       className='pp-modal pp-shop-modal'
@@ -135,9 +178,9 @@ export default function ModalShop({
               <div className='pp-shop-help-panel' role='note'>
                 <strong>Gagner des Pokisous</strong>
                 <p>
-                  Une manche révélée rapporte des Pokisous aux joueurs connectés
-                  qui ont voté. Il faut au moins 3 joueurs actifs, dont 2
-                  comptes connectés.
+                  Une manche révélée rapporte des Pokisous à tous les joueurs
+                  connectés actifs, même s’ils n’ont pas voté. Il faut au moins
+                  3 joueurs actifs, dont 2 comptes connectés.
                 </p>
                 <ul>
                   <li>10 Pokisous par joueur si les votes diffèrent.</li>
@@ -176,14 +219,11 @@ export default function ModalShop({
               onClick={() => setActiveTab(tab.id)}
             >
               <span>{tab.label}</span>
-              {'upcoming' in tab && tab.upcoming && (
-                <span className='pp-shop-tab-status'>Prochainement</span>
-              )}
             </button>
           ))}
         </div>
         <div
-          className={`pp-shop-panel${activeTab === 'decorations' ? ' pp-shop-panel--frames' : ''}`}
+          className={`pp-shop-panel${activeTab === 'decorations' ? ' pp-shop-panel--frames' : activeTab === 'pokemon' ? ' pp-shop-panel--pokemon' : ''}`}
           id='shop-panel'
           role='tabpanel'
           aria-labelledby={`shop-tab-${activeTab}`}
@@ -269,16 +309,109 @@ export default function ModalShop({
                   </section>
                 )
               })}
-              {purchaseError && (
-                <p className='pp-form-error pp-frame-error' role='alert'>
-                  {purchaseError}
-                </p>
-              )}
             </div>
-          ) : (
-            <p className='pp-shop-coming'>
-              Les articles {activeTab === 'pokemon' ? 'Pokémon' : 'Star Wars'}{' '}
-              seront bientôt disponibles.
+          ) : activeTab === 'pokemon' ? (
+            <div className='pp-consumable-shop'>
+              <div className='pp-consumable-shop-heading'>
+                <h3>Objets Pokémon</h3>
+                <p>
+                  Achète des objets de capture ou garde une Poké Ball mystère
+                  dans ton inventaire pour plus tard.
+                </p>
+              </div>
+              <div className='pp-consumable-grid'>
+                {consumables.map((item) => {
+                  const canAfford = balance >= item.price
+                  const quantity =
+                    consumableInventory.find(
+                      (ownedItem) => ownedItem.consumableId === item.id,
+                    )?.quantity ?? 0
+                  return (
+                    <article
+                      className='pp-consumable-card'
+                      key={item.id}
+                      data-consumable={item.id}
+                    >
+                      <div className='pp-consumable-art'>
+                        <img
+                          src={item.sprite}
+                          alt=''
+                          width={96}
+                          height={96}
+                          loading='lazy'
+                        />
+                      </div>
+                      <div className='pp-consumable-copy'>
+                        <div className='pp-consumable-title'>
+                          <h4>{item.name}</h4>
+                          {quantity > 0 && (
+                            <span className='pp-consumable-owned'>
+                              En stock : {quantity}
+                            </span>
+                          )}
+                        </div>
+                        <p>{item.description}</p>
+                        {item.catchRates && item.id !== 'master-ball' ? (
+                          <dl className='pp-consumable-rates'>
+                            <div>
+                              <dt>Commun</dt>
+                              <dd>{item.catchRates.commun}%</dd>
+                            </div>
+                            <div>
+                              <dt>Rare</dt>
+                              <dd>{item.catchRates.rare}%</dd>
+                            </div>
+                            <div>
+                              <dt>Épique</dt>
+                              <dd>{item.catchRates.epique}%</dd>
+                            </div>
+                            <div>
+                              <dt>Légendaire</dt>
+                              <dd>{item.catchRates.legendaire}%</dd>
+                            </div>
+                            <div>
+                              <dt>Ultime</dt>
+                              <dd>{item.catchRates.ultime}%</dd>
+                            </div>
+                          </dl>
+                        ) : null}
+                        <span className='pp-consumable-price'>
+                          {item.price} Pokisous
+                        </span>
+                      </div>
+                      <button
+                        className='pp-button pp-consumable-action'
+                        type='button'
+                        disabled={
+                          (isAuthenticated && !canAfford) ||
+                          (!isAuthenticated && !canSignIn) ||
+                          buyingConsumable !== null
+                        }
+                        onClick={() => {
+                          if (isAuthenticated) {
+                            void purchaseConsumable(item.id)
+                          } else {
+                            onSignIn()
+                          }
+                        }}
+                      >
+                        {buyingConsumable === item.id
+                          ? 'Achat…'
+                          : isAuthenticated
+                            ? canAfford
+                              ? 'Acheter'
+                              : 'Solde insuffisant'
+                            : 'Connexion requise'}
+                      </button>
+                    </article>
+                  )
+                })}
+              </div>
+            </div>
+          ) : null}
+          {purchaseError && (
+            <p className='pp-form-error pp-frame-error' role='alert'>
+              {purchaseError}
             </p>
           )}
         </div>

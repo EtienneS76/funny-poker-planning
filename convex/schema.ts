@@ -4,6 +4,11 @@ import { participantTable } from './participant/schema'
 import {
   pokisouWalletTable,
   userAvatarFramesTable,
+  userPokemonsTable,
+  starterPokemonOpeningTable,
+  pokemonEncounterTable,
+  consumableCatalogTable,
+  userConsumablesTable,
   userTable,
 } from './user/schema'
 import {
@@ -21,6 +26,11 @@ export default defineSchema({
   users: userTable,
   pokisouWallets: pokisouWalletTable,
   userAvatarFrames: userAvatarFramesTable,
+  userPokemons: userPokemonsTable,
+  starterPokemonOpenings: starterPokemonOpeningTable,
+  pokemonEncounters: pokemonEncounterTable,
+  consumableCatalog: consumableCatalogTable,
+  userConsumables: userConsumablesTable,
   statistics: statisticsTable,
   userRoundParticipations: userRoundParticipationTable,
   presences: presenceTable,
