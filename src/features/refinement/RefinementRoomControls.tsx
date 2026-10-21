@@ -27,7 +27,7 @@ export function RefinementRoomControls({
   onReveal,
   onReset,
 }: Props) {
-  const canReveal = !isSpectator && !revealed && voteCount >= 2
+  const canReveal = !revealed && voteCount >= 2
 
   return (
     <section className='room-controls' aria-label='Actions de la manche'>
@@ -97,7 +97,7 @@ export function RefinementRoomControls({
         <button
           type='button'
           className='pp-button pp-button--secondary'
-          disabled={isSpectator || (!revealed && voteCount === 0)}
+          disabled={!revealed && voteCount === 0}
           onClick={onReset}
         >
           <RotateCcw size={18} aria-hidden='true' />

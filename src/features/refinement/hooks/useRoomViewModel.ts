@@ -82,7 +82,10 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
   }, [currentRoundId, remoteSelectedCard, voteOverride])
 
   useEffect(() => {
-    if (!funInteractionsEnabled) setReactionTarget(null)
+    if (!funInteractionsEnabled) {
+      setReactionTarget(null)
+      setDodging({})
+    }
   }, [funInteractionsEnabled])
 
   const previousParticipants = useRef<Map<string, string> | null>(null)
@@ -254,7 +257,7 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
   }
 
   function revealCards() {
-    if (isSpectator || revealed || votedCount < 2) return
+    if (revealed || votedCount < 2) return
     void revealVotes({
       slug: refinementSlug,
       guestId: account.guestId,

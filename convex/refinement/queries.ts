@@ -3,6 +3,8 @@ import type { Id } from '../_generated/dataModel'
 import { query } from '../_generated/server'
 import { authComponent } from '../auth/auth'
 
+const PRESENCE_TIMEOUT_MS = 10 * 60_000
+
 export const getBySlug = query({
   args: { slug: v.string(), guestId: v.string() },
   handler: async (context, { slug, guestId }) => {
@@ -61,7 +63,7 @@ export const getBySlug = query({
         .map((vote) => [vote.userId, vote.card]),
     )
     const revealed = currentRound?.revealedAt !== undefined
-    const activeBefore = Date.now() - 30_000
+    const activeBefore = Date.now() - PRESENCE_TIMEOUT_MS
     const enrichedParticipants = await Promise.all(
       participants.map(async (participant) => {
         const presence = await context.db
