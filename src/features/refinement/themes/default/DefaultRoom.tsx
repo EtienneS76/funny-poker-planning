@@ -41,8 +41,25 @@ const seatStyle = (index: number, total: number) =>
 
 /** Thème par défaut : l'affichage actuel de la salle, branché sur le view model. */
 export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
-  const { account, seats, table, hand, controls, reactions, issue, copyInviteLink } = vm
-  const { revealed, consensus, votedCount, playerCount, isTshirtSizing, average, tshirtSummary } = table
+  const {
+    account,
+    seats,
+    table,
+    hand,
+    controls,
+    reactions,
+    issue,
+    copyInviteLink,
+  } = vm
+  const {
+    revealed,
+    consensus,
+    votedCount,
+    playerCount,
+    isTshirtSizing,
+    average,
+    tshirtSummary,
+  } = table
   const { cards, selectedCard, isSpectator, canVote, onSelect } = hand
 
   return (
@@ -155,9 +172,7 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                             : `Réagir à ${seat.name}`
                         }
                         aria-expanded={
-                          seat.isMe
-                            ? undefined
-                            : reactions.targetId === seat.id
+                          seat.isMe ? undefined : reactions.targetId === seat.id
                         }
                         aria-controls={
                           seat.isMe || reactions.targetId !== seat.id
@@ -247,7 +262,7 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                   </span>
                   <span className='seat-name'>
                     {seat.name}
-                    {seat.isSpectator && (
+                    {seat.isSpectator && !seat.isMe && (
                       <small className='seat-spectator'>
                         <Eye size={11} aria-hidden='true' /> Spectateur
                       </small>

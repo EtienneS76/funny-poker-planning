@@ -9,6 +9,8 @@ import { generateSlug } from './slug'
 import { syncAuthenticatedUser } from '../user/profile'
 import { reactionKind } from './reactionSchema'
 
+const PRESENCE_TIMEOUT_MS = 10 * 60_000
+
 function normalizeIssueUrl(value: string) {
   let url: URL
   try {
@@ -340,6 +342,17 @@ export const setFunInteractionsEnabled = mutation({
     }
 
     await context.db.patch(refinement._id, { funInteractionsEnabled: enabled })
+    if (!enabled) {
+      const reactions = await context.db
+        .query('roomReactions')
+        .withIndex('by_refinement_created', (query) =>
+          query.eq('refinementId', refinement._id),
+        )
+        .collect()
+      for (const reaction of reactions) {
+        await context.db.delete(reaction._id)
+      }
+    }
     return null
   },
 })
@@ -485,9 +498,6 @@ export const reveal = mutation({
       .unique()
     if (!participant)
       throw new ConvexError('Rejoins la salle avant de révéler les votes.')
-    if (participant.isSpectator) {
-      throw new ConvexError('Les spectateurs ne peuvent pas révéler les votes.')
-    }
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
     if (currentRound.revealedAt !== undefined) return null
@@ -524,7 +534,7 @@ export const reveal = mutation({
     const reward = hasConsensus ? 25 : 10
 
     await context.db.patch(currentRound._id, { revealedAt: Date.now() })
-    const activeBefore = Date.now() - 30_000
+    const activeBefore = Date.now() - PRESENCE_TIMEOUT_MS
     const activePlayers: Doc<'participants'>[] = []
     for (const player of players) {
       const presence = await context.db
@@ -597,10 +607,6 @@ export const startNewRound = mutation({
       .unique()
     if (!participant)
       throw new ConvexError('Rejoins la salle avant de continuer.')
-    if (participant.isSpectator) {
-      throw new ConvexError('Les spectateurs ne peuvent pas lancer une manche.')
-    }
-
     const currentRound = await getOrCreateCurrentRound(context, refinement)
     if (!currentRound) throw new ConvexError('Manche introuvable.')
     await context.db.insert('refinementRounds', {
@@ -897,7 +903,7 @@ export const sendReaction = mutation({
 export const cleanupInactiveRooms = internalMutation({
   args: {},
   handler: async (context) => {
-    const cutoff = Date.now() - 30_000
+    const cutoff = Date.now() - PRESENCE_TIMEOUT_MS
     const expiredReactions = await context.db
       .query('roomReactions')
       .withIndex('by_created', (query) =>
