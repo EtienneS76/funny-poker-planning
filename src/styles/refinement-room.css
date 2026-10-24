@@ -846,8 +846,21 @@
     padding: 12px 0;
   }
   .room-controls-actions {
-    display: flex;
-    width: auto;
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'settings settings'
+      'reveal reset';
+  }
+  .room-settings {
+    grid-area: settings;
+  }
+  .room-controls-reveal {
+    grid-area: reveal;
+  }
+  .room-controls-reset {
+    grid-area: reset;
   }
   .pp-hand-area {
     grid-column: 1 / -1;
@@ -901,9 +914,25 @@
     gap: 8px;
   }
   .room-controls-actions {
+    display: grid;
     width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'settings settings'
+      'reveal reset';
+  }
+  .room-settings {
+    grid-area: settings;
+  }
+  .room-controls-reveal {
+    grid-area: reveal;
+  }
+  .room-controls-reset {
+    grid-area: reset;
   }
   .room-controls-actions .pp-button {
+    width: 100%;
+    min-width: 0;
     padding: 10px;
     font-size: 13px;
   }

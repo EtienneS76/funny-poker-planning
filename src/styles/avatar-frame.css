@@ -2,7 +2,7 @@
  * Cadres d'avatar — 13 cadres, 4 raretés.
  * Tout est exprimé en `cqi` (1cqi = 1 % de la largeur du cadre) : les anneaux,
  * halos et orbites s'adaptent seuls à 32 px (profil), 54 px (stats), 56 px
- * (boutique / inventaire) ou à la taille d'un siège.
+ * (boutique / consommable) ou à la taille d'un siège.
  * Les variantes `.avatar-frame--compact` coupent les effets secondaires.
  */
 .avatar-frame {

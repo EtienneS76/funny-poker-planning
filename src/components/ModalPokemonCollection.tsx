@@ -23,7 +23,9 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const account = useAccount()
   const snackbar = useAppSnackbar()
-  const [activeTab, setActiveTab] = useState<'frames' | 'pokemon'>('frames')
+  const [activeTab, setActiveTab] = useState<
+    'frames' | 'pokemon' | 'star-wars'
+  >('frames')
   const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
     null,
   )
@@ -31,6 +33,7 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const [saving3d, setSaving3d] = useState(false)
   const [search, setSearch] = useState('')
   const collection = useQuery(api.user.queries.pokemonCollection, {})
+  const starWarsCollection = useQuery(api.user.queries.starWarsCollection, {})
   const inventory = useQuery(api.user.queries.shopData, {})
   const assignPokemon = useMutation(api.user.mutations.assignPokemon)
   const equipAvatarFrame = useMutation(api.user.mutations.equipAvatarFrame)
@@ -98,6 +101,14 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const unlockedCount = pokedex.filter(
     (pokemon) => pokemon.unlockedAt !== undefined,
   ).length
+  const pokemonCompletion = Math.round((unlockedCount / 151) * 100)
+  const sortedStarWarsCollection = [...(starWarsCollection ?? [])].sort(
+    (first, second) => second.openedAt - first.openedAt,
+  )
+  const uniqueStarWarsCharacters = new Set(
+    sortedStarWarsCollection.map(({ characterId }) => characterId),
+  ).size
+  const starWarsCompletion = Math.round((uniqueStarWarsCharacters / 100) * 100)
   const assignedPokemonId = account.profile?.assignedPokemonId ?? null
   const [pendingFrame, setPendingFrame] = useState<string | null>(null)
 
@@ -174,7 +185,6 @@ export default function ModalPokemonCollection({ onClose }: Props) {
       <div className='pp-modal-content pp-pokemon-collection-content'>
         <div className='pp-modal-heading'>
           <div>
-            <span className='pp-inventory-kicker'>TON PROFIL</span>
             <h2 id='pokemon-collection-title'>Collection</h2>
           </div>
           <button
@@ -213,7 +223,28 @@ export default function ModalPokemonCollection({ onClose }: Props) {
             aria-controls='collection-panel-pokemon'
             onClick={() => setActiveTab('pokemon')}
           >
-            Pokémon
+            Pokémon{' '}
+            <span className='pokemon-collection-tab-progress'>
+              ({collection === undefined ? '…' : `${pokemonCompletion}%`})
+            </span>
+          </button>
+          <button
+            id='collection-tab-star-wars'
+            className='pokemon-collection-tab'
+            type='button'
+            role='tab'
+            aria-selected={activeTab === 'star-wars'}
+            aria-controls='collection-panel-star-wars'
+            onClick={() => setActiveTab('star-wars')}
+          >
+            Star Wars{' '}
+            <span className='pokemon-collection-tab-progress'>
+              (
+              {starWarsCollection === undefined
+                ? '…'
+                : `${starWarsCompletion}%`}
+              )
+            </span>
           </button>
         </div>
 
@@ -245,7 +276,7 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   className='pokemon-collection-3d-switch'
                   title='Afficher tous les Pokémon de la salle en animé'
                 >
-                  <span>Pokémons animés dans la salle</span>
+                  <span>Pokémons animés</span>
                   <input
                     type='checkbox'
                     role='switch'
@@ -258,7 +289,7 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   />
                 </label>
                 <span className='pokedex-progress pokemon-collection-progress'>
-                  <strong>{unlockedCount}</strong> / 151 capturés
+                  <strong>{unlockedCount}</strong> / 151 obtenus
                 </span>
               </div>
               <div className='pokemon-collection-grid' aria-label='Pokédex'>
@@ -356,7 +387,7 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                         <dd>{rarityLabel(selectedPokemon.rarity)}</dd>
                       </div>
                       <div>
-                        <dt>Débloqué le</dt>
+                        <dt>Récupéré le</dt>
                         <dd>
                           {selectedPokemon.unlockedAt === undefined
                             ? 'Pas encore capturé'
@@ -402,6 +433,63 @@ export default function ModalPokemonCollection({ onClose }: Props) {
           )}
         </section>
         <section
+          id='collection-panel-star-wars'
+          className='pokemon-collection-panel star-wars-collection-panel'
+          role='tabpanel'
+          aria-labelledby='collection-tab-star-wars'
+          hidden={activeTab !== 'star-wars'}
+        >
+          {starWarsCollection === undefined ? (
+            <p className='pp-inventory-empty' role='status'>
+              Chargement de ta collection Star Wars…
+            </p>
+          ) : starWarsCollection.length === 0 ? (
+            <p className='pp-inventory-empty'>
+              Aucune carte pour le moment. Ouvre un Holocron depuis tes
+              consommables pour en obtenir une.
+            </p>
+          ) : (
+            <>
+              <div className='pokedex-toolbar'>
+                <span className='pokedex-progress'>
+                  <strong>{starWarsCollection.length}</strong> / 100{' '}
+                  {starWarsCollection.length === 1 ? 'carte' : 'cartes'} obtenue
+                  {starWarsCollection.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div
+                className='pokemon-collection-grid star-wars-collection-grid'
+                role='list'
+                aria-label='Collection Star Wars'
+              >
+                {sortedStarWarsCollection.map((character) => (
+                  <article
+                    className='pokemon-collection-card star-wars-collection-card'
+                    key={character.recordId}
+                    role='listitem'
+                  >
+                    <img
+                      src={character.imageUrl}
+                      alt=''
+                      width={80}
+                      height={80}
+                      loading='lazy'
+                    />
+                    <strong>{character.name}</strong>
+                    <span className='pokemon-collection-number'>
+                      Obtenu le{' '}
+                      {new Date(character.openedAt).toLocaleDateString(
+                        'fr-FR',
+                        { day: 'numeric', month: 'long', year: 'numeric' },
+                      )}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+        <section
           id='collection-panel-frames'
           className='pokemon-collection-panel pokemon-frame-panel'
           role='tabpanel'
@@ -414,9 +502,6 @@ export default function ModalPokemonCollection({ onClose }: Props) {
             </p>
           ) : ownedFrames?.length ? (
             <>
-              <p className='pokemon-frame-intro'>
-                Cadres disponibles pour ton avatar
-              </p>
               <div className='pp-frame-grid'>
                 {ownedFrames.map((frame) => {
                   const isEquipped = inventory.equippedId === frame.id

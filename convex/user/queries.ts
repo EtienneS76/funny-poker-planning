@@ -183,7 +183,52 @@ export const pokemonCollection = query({
       .query('userPokemons')
       .withIndex('by_user', (query) => query.eq('userId', user._id))
       .collect()
-    return entries.map(({ pokemonId, unlockedAt }) => ({ pokemonId, unlockedAt }))
+    return entries.map(({ pokemonId, unlockedAt }) => ({
+      pokemonId,
+      unlockedAt,
+    }))
+  },
+})
+
+export const starWarsCollection = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      recordId: v.id('userStarWarsCharacters'),
+      characterId: v.string(),
+      name: v.string(),
+      imageUrl: v.string(),
+      description: v.optional(v.string()),
+      openedAt: v.number(),
+    }),
+  ),
+  handler: async (context) => {
+    const identity = await context.auth.getUserIdentity()
+    if (!identity) return []
+
+    const authUser = await authComponent.getAuthUser(context)
+    const user = await context.db
+      .query('users')
+      .withIndex('by_auth_user', (query) =>
+        query.eq('authUserId', String(authUser._id)),
+      )
+      .unique()
+    if (!user) return []
+
+    const characters = await context.db
+      .query('userStarWarsCharacters')
+      .withIndex('by_user', (query) => query.eq('userId', user._id))
+      .collect()
+    return characters.map(
+      ({ _id, characterId, name, imageUrl, description, openedAt }) => ({
+        recordId: _id,
+        characterId,
+        name,
+        imageUrl,
+        ...(description ? { description } : {}),
+        openedAt,
+      }),
+    )
   },
 })
 

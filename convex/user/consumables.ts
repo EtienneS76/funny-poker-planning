@@ -52,4 +52,12 @@ export const pokemonConsumableCatalog = [
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/dream-ball.png',
   },
+  {
+    id: 'holocron',
+    name: 'Holocron',
+    description:
+      'Un artefact ancien contenant une carte de personnage Star Wars.',
+    price: 150,
+    sprite: 'holocron',
+  },
 ] as const

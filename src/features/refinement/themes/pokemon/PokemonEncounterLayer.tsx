@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import { useAppSnackbar } from '../../../../components/AppSnackbar'
@@ -18,8 +18,6 @@ const captureBallIds: CaptureBallId[] = [
   'hyper-ball',
   'master-ball',
 ]
-const encounterChance = 0.5
-
 const ballColors: Record<CaptureBallId, { top: string; bottom: string }> = {
   'poke-ball': { top: '#ef4a3c', bottom: '#f4f4f6' },
   'hyper-ball': { top: '#2d2d34', bottom: '#f2c230' },
@@ -30,6 +28,7 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
   const { account } = vm
   const [encounter, setEncounter] = useState<Encounter | null>(null)
   const [busy, setBusy] = useState(false)
+  const encounterOutcomes = useRef<boolean[]>([])
   const snackbar = useAppSnackbar()
   const inventory = useQuery(api.user.queries.shopData, {})
   const startEncounter = useMutation(api.user.mutations.startPokemonEncounter)
@@ -55,6 +54,20 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
       )
     } finally {
       setBusy(false)
+    }
+  }
+
+  function onGrassFound() {
+    if (!hasCaptureBall || busy || encounter) return
+    if (encounterOutcomes.current.length === 0) {
+      const firstOutcomeIsFound = Math.random() < 0.5
+      encounterOutcomes.current = [firstOutcomeIsFound, !firstOutcomeIsFound]
+    }
+
+    if (encounterOutcomes.current.shift()) {
+      void findPokemon()
+    } else {
+      snackbar.info('Le Pokémon s’est échappé')
     }
   }
 
@@ -128,13 +141,7 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
           active={hasCaptureBall && !encounter && !busy}
           intervalMs={10000}
           size={112}
-          onFound={() => {
-            if (Math.random() < encounterChance) {
-              void findPokemon()
-            } else {
-              snackbar.info('Le Pokémon s’est échappé')
-            }
-          }}
+          onFound={onGrassFound}
         />
       </div>
     </div>

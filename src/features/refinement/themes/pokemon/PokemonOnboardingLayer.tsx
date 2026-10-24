@@ -36,7 +36,7 @@ export function PokemonOnboardingLayer({ vm }: RoomProps) {
         if (granted) {
           snackbar.success(
             'Poké Ball mystère reçue !',
-            'Va dans ton inventaire pour l’ouvrir et découvrir ton Pokémon.',
+            "Va dans t'es consommables pour l’ouvrir et découvrir ton Pokémon.",
           )
         }
       })
@@ -44,9 +44,7 @@ export function PokemonOnboardingLayer({ vm }: RoomProps) {
         giftAttempted.current = false
         snackbar.error(
           'Poké Ball de bienvenue indisponible',
-          error instanceof Error
-            ? error.message
-            : 'Réessaie dans un instant.',
+          error instanceof Error ? error.message : 'Réessaie dans un instant.',
         )
       })
   }, [
@@ -109,8 +107,8 @@ function GuestPokemonPrompt({
         <span className='pp-pokemon-starter-kicker'>MODE INVITÉ</span>
         <h2 id='pokemon-guest-title'>Joue avec un Pokémon</h2>
         <p className='pp-pokemon-starter-description'>
-          Tu joues en invité. Connecte-toi avec GitHub pour recevoir et conserver
-          ta Poké Ball mystère de bienvenue.
+          Tu joues en invité. Connecte-toi avec GitHub pour recevoir et
+          conserver ta Poké Ball mystère de bienvenue.
         </p>
         <div className='pp-pokemon-starter-actions'>
           <button

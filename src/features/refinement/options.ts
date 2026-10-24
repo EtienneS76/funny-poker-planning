@@ -1,6 +1,7 @@
 export const availableThemes = [
   { id: 'default', label: 'Classique' },
   { id: 'pk', label: 'Pokémon' },
+  { id: 'sw', label: 'Star Wars' },
 ] as const
 
 export const sizings = [

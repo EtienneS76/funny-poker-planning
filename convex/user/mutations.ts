@@ -5,10 +5,15 @@ import { avatarFrameCatalog } from './avatarFrames'
 import { pokemonConsumableCatalog } from './consumables'
 import { drawMysteryPokemonId, getPokemonRarityById } from './pokemonDraw'
 import { syncAuthenticatedUser } from './profile'
+import { STAR_WARS_CHARACTER_IDS } from './starWarsCharacterIds'
+
+const holocronCharacters = new Map<string, string>(
+  STAR_WARS_CHARACTER_IDS.map(({ id, name }) => [id, name] as const),
+)
 
 async function requireAuthenticatedUser(context: MutationCtx) {
   if (!(await context.auth.getUserIdentity())) {
-    throw new ConvexError('Connecte-toi pour gérer ton inventaire.')
+    throw new ConvexError('Connecte-toi pour gérer tes consommables.')
   }
   return syncAuthenticatedUser(context)
 }
@@ -168,6 +173,55 @@ export const openMysteryPokeBall = mutation({
     })
     await incrementMysteryPokeBallOpenCount(context, user._id)
     return { pokemonId, welcomeGift: false, rerollsRemaining: 0 }
+  },
+})
+
+export const openHolocron = mutation({
+  args: {
+    characterId: v.string(),
+    name: v.string(),
+    imageUrl: v.string(),
+    description: v.optional(v.string()),
+  },
+  returns: v.number(),
+  handler: async (context, character) => {
+    const user = await requireAuthenticatedUser(context)
+    if (holocronCharacters.get(character.characterId) !== character.name) {
+      throw new ConvexError('Personnage Star Wars invalide.')
+    }
+    if (
+      !character.name.trim() ||
+      character.name.length > 120 ||
+      !character.imageUrl.startsWith('https://')
+    ) {
+      throw new ConvexError('Données du personnage invalides.')
+    }
+
+    const holocron = await context.db
+      .query('userConsumables')
+      .withIndex('by_user_consumable', (query) =>
+        query.eq('userId', user._id).eq('consumableId', 'holocron'),
+      )
+      .unique()
+    if (!holocron || holocron.quantity < 1) {
+      throw new ConvexError('Tu ne possèdes pas de Holocron.')
+    }
+
+    const openedAt = Date.now()
+    if (holocron.quantity === 1) {
+      await context.db.delete(holocron._id)
+    } else {
+      await context.db.patch(holocron._id, {
+        quantity: holocron.quantity - 1,
+        updatedAt: openedAt,
+      })
+    }
+    await context.db.insert('userStarWarsCharacters', {
+      userId: user._id,
+      ...character,
+      openedAt,
+    })
+    return holocron.quantity - 1
   },
 })
 
