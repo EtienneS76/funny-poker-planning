@@ -179,7 +179,9 @@ export default function PokeballOpening({
               </div>
             </div>
             <p className='hint'>
-              {stage === 'idle' ? 'Touche la Poké Ball pour l’ouvrir' : '\u00A0'}
+              {stage === 'idle'
+                ? 'Touche la Poké Ball pour l’ouvrir'
+                : '\u00A0'}
             </p>
           </>
         )}
@@ -188,9 +190,7 @@ export default function PokeballOpening({
           <div className='reveal'>
             {(mon.rarity === 'epique' ||
               mon.rarity === 'legendaire' ||
-              mon.rarity === 'ultime') && (
-              <div className='rays' />
-            )}
+              mon.rarity === 'ultime') && <div className='rays' />}
             <div className='burst'>
               {Array.from({ length: 26 }, (_, i) => (
                 <i
@@ -279,9 +279,9 @@ export default function PokeballOpening({
                     : 'Ouverture…'
                   : rerollsRemaining !== null
                     ? `Renvoyer et essayer à nouveau (${rerollsRemaining} essai${rerollsRemaining > 1 ? 's' : ''} restant${rerollsRemaining > 1 ? 's' : ''})`
-                  : canOpenAnother
-                    ? 'Ouvrir une autre Poké Ball'
-                    : 'Aucune autre Poké Ball'}
+                    : canOpenAnother
+                      ? 'Ouvrir une autre Poké Ball'
+                      : 'Aucune autre Poké Ball'}
               </button>
               {onKeepWelcomePokemon ? (
                 <button
@@ -298,7 +298,7 @@ export default function PokeballOpening({
                   type='button'
                   onClick={onClose}
                 >
-                  Retour à l’inventaire
+                  Retour aux consommables
                 </button>
               )}
             </div>

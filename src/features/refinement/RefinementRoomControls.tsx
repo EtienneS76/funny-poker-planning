@@ -96,7 +96,7 @@ export function RefinementRoomControls({
         </button>
         <button
           type='button'
-          className='pp-button pp-button--secondary'
+          className='pp-button pp-button--secondary room-controls-reset'
           disabled={!revealed && voteCount === 0}
           onClick={onReset}
         >

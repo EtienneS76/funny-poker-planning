@@ -1,0 +1,198 @@
+/* Thème Star Wars (clair) : deux camps, pilotés par <html data-sw-faction>.
+   Les variables --sw-* sont définies sur :root pour être partagées par la barre
+   (Layer, hors de .multivers) et par la salle. */
+:root[data-sw-faction='alliance'] {
+  --sw-accent: #1f6fe0;
+  --sw-holo: #1790c4;
+  --sw-glow: #1f6fe038;
+  --sw-glow-bg: #cfe5ff;
+  --sw-bg: #eef6ff;
+  --sw-panel: #fbfdff;
+  --sw-line: #c9dcf0;
+  --sw-border: #8fb0d4;
+  --sw-surface-tint: #d8eaff;
+  --sw-ink: #0f2742;
+  --sw-muted: #4a6785;
+}
+:root[data-sw-faction='empire'] {
+  --sw-accent: #e5212e;
+  --sw-holo: #c8323c;
+  --sw-glow: #e5212e33;
+  --sw-glow-bg: #f9d3d6;
+  --sw-bg: #f7f2f2;
+  --sw-panel: #fffdfd;
+  --sw-line: #e3d0d2;
+  --sw-border: #b79a9e;
+  --sw-surface-tint: #fbdfe1;
+  --sw-ink: #24181b;
+  --sw-muted: #6a5559;
+}
+
+/* ---------- Salle ---------- */
+.multivers[data-theme='sw'] {
+  --pp-cream: var(--sw-bg);
+  --pp-pink: var(--sw-surface-tint);
+  --pp-ink: var(--sw-ink);
+  --pp-paper: var(--sw-panel);
+  --pp-line: var(--sw-line);
+  --pp-border: var(--sw-border);
+  --pp-muted: var(--sw-muted);
+  position: relative;
+  font-family: 'Rajdhani', 'DM Sans', sans-serif;
+  background:
+    linear-gradient(
+        color-mix(in srgb, var(--sw-accent) 7%, transparent) 1px,
+        transparent 1px
+      )
+      0 0 / 48px 48px,
+    linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--sw-accent) 7%, transparent) 1px,
+        transparent 1px
+      )
+      0 0 / 48px 48px,
+    radial-gradient(ellipse at 12% 8%, var(--sw-surface-tint), transparent 46%),
+    radial-gradient(900px 480px at 50% 42%, var(--sw-glow-bg), transparent 70%),
+    var(--sw-bg);
+}
+
+/* Table : holotable */
+.multivers[data-theme='sw'] .pp-table {
+  border-color: var(--sw-accent);
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    var(--pp-paper),
+    var(--sw-surface-tint)
+  );
+  box-shadow:
+    inset 0 0 0 10px var(--pp-paper),
+    inset 0 0 0 12px var(--pp-line),
+    0 0 48px var(--sw-glow);
+}
+.multivers[data-theme='sw'] .pp-table::after {
+  content: '';
+  position: absolute;
+  inset: 34px;
+  border: 1px dashed var(--sw-holo);
+  border-radius: 50%;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.multivers[data-theme='sw'] .pp-table-count strong {
+  color: var(--sw-accent);
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Joueurs */
+.multivers[data-theme='sw'] .seat-avatar {
+  border-color: var(--pp-paper);
+  box-shadow:
+    0 0 0 2px var(--sw-holo),
+    0 6px 16px var(--sw-glow);
+}
+.multivers[data-theme='sw'] .pp-seat--me .seat-avatar {
+  box-shadow:
+    0 0 0 3px var(--sw-accent),
+    0 6px 20px var(--sw-glow);
+}
+.multivers[data-theme='sw'] .pp-seat--me .seat-name {
+  border-color: var(--sw-accent);
+  background: var(--sw-accent);
+  color: #fff;
+}
+
+/* Cartes */
+.multivers[data-theme='sw'] .vote-card {
+  font-family: 'Orbitron', sans-serif;
+}
+.multivers[data-theme='sw'] .vote-card:not(:disabled):hover {
+  border-color: var(--sw-accent);
+  box-shadow: 0 8px 20px var(--sw-glow);
+}
+.multivers[data-theme='sw'] .vote-card--selected,
+.multivers[data-theme='sw'] .vote-card--selected:hover {
+  border-color: var(--sw-accent);
+  background: var(--sw-accent);
+  color: #fff;
+}
+
+/* ---------- Switch de camp (Layer) ---------- */
+.sw-faction-switch {
+  position: fixed;
+  z-index: 60;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--sw-line);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--sw-panel) 92%, transparent);
+  box-shadow: 0 8px 24px var(--sw-glow);
+  backdrop-filter: blur(8px);
+  color: var(--sw-ink);
+  font-family: 'Rajdhani', 'DM Sans', sans-serif;
+}
+.sw-faction-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sw-ink);
+  font:
+    700 13px 'Rajdhani',
+    'DM Sans',
+    sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+.sw-faction-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.sw-faction-button--alliance .sw-faction-dot {
+  background: #1f6fe0;
+  box-shadow: 0 0 8px #1f6fe099;
+}
+.sw-faction-button--empire .sw-faction-dot {
+  background: #e5212e;
+  box-shadow: 0 0 8px #e5212e99;
+}
+.sw-faction-button[aria-pressed='true'] {
+  background: var(--sw-accent);
+  color: #fff;
+}
+.sw-faction-button[aria-pressed='true'] .sw-faction-dot {
+  background: #fff;
+  box-shadow: none;
+}
+.sw-faction-button:focus-visible {
+  outline: 3px solid var(--sw-ink);
+  outline-offset: 2px;
+}
+
+/* Écrans étroits : plus de place à gauche, le switch passe en pilule en haut à gauche */
+@media (max-width: 899px) {
+  .multivers[data-theme='sw'] {
+    padding-top: 56px;
+  }
+  .sw-faction-switch {
+    top: 8px;
+    left: 8px;
+    transform: none;
+    flex-direction: row;
+    border-radius: 999px;
+  }
+  .sw-faction-button {
+    padding: 0 14px;
+  }
+}

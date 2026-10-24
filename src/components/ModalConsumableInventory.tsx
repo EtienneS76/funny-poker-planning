@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { Hexagon, Store, X } from 'lucide-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import PokeballOpening from './PokeballOpening'
+import StarWarsOpening from '../features/refinement/themes/star-wars/StarWarsOpening'
+import type { StarWarsCharacter } from '../features/refinement/themes/star-wars/getStarWarsAvatar'
+import { getRandomStarWarsAvatar } from '../features/refinement/themes/star-wars/getStarWarsAvatar'
 import { useAccount } from '../features/auth/useAccount'
 import { useAppSnackbar } from './AppSnackbar'
 import { getPokemonById } from '../features/pokemon/functions/GeneratePokemon'
 
 type Props = {
   onClose: () => void
+  onOpenShop: (tab: 'pokemon' | 'star-wars') => void
 }
 
 const rarityLabels = [
@@ -18,9 +22,16 @@ const rarityLabels = [
   ['legendaire', 'Légendaire'],
   ['ultime', 'Ultime'],
 ] as const
-export default function ModalConsumableInventory({ onClose }: Props) {
+export default function ModalConsumableInventory({
+  onClose,
+  onOpenShop,
+}: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [openingPokemonId, setOpeningPokemonId] = useState<number | null>(null)
+  const [openingCharacter, setOpeningCharacter] =
+    useState<StarWarsCharacter | null>(null)
+  const [openingRun, setOpeningRun] = useState(0)
+  const [openingHolocronsRemaining, setOpeningHolocronsRemaining] = useState(0)
   const [welcomeRerollsRemaining, setWelcomeRerollsRemaining] = useState<
     number | null
   >(null)
@@ -37,6 +48,7 @@ export default function ModalConsumableInventory({ onClose }: Props) {
   const claimWelcomePokemon = useMutation(
     api.user.mutations.claimStarterPokemon,
   )
+  const openHolocronMutation = useMutation(api.user.mutations.openHolocron)
   const ownedItems =
     data?.consumableInventory.flatMap((ownedItem) => {
       const item = data.consumables.find(
@@ -46,6 +58,67 @@ export default function ModalConsumableInventory({ onClose }: Props) {
     }) ?? []
   const mysteryBallQuantity =
     ownedItems.find((item) => item.id === 'mystery-poke-ball')?.quantity ?? 0
+  const holocronQuantity =
+    ownedItems.find((item) => item.id === 'holocron')?.quantity ?? 0
+  const pokemonItems = ownedItems.filter((item) => item.id !== 'holocron')
+  const starWarsItems = ownedItems.filter((item) => item.id === 'holocron')
+
+  function renderOwnedItem(item: (typeof ownedItems)[number]) {
+    return (
+      <article className='pp-consumable-owned-card' key={item.id}>
+        <div className='pp-consumable-owned-art'>
+          {item.id === 'holocron' ? (
+            <Hexagon
+              className='pp-consumable-holocron-icon'
+              size={52}
+              strokeWidth={1.5}
+              aria-hidden='true'
+            />
+          ) : (
+            <img src={item.sprite} alt='' width={80} height={80} />
+          )}
+        </div>
+        <div className='pp-consumable-owned-copy'>
+          <div className='pp-consumable-title'>
+            <h3>{item.name}</h3>
+            <span className='pp-consumable-owned'>
+              Quantité : {item.quantity}
+            </span>
+          </div>
+          <p>{item.description}</p>
+          {item.catchRates && item.id !== 'master-ball' ? (
+            <ul className='pp-consumable-owned-rates'>
+              {rarityLabels.map(([rarity, label]) => (
+                <li key={rarity}>
+                  {label} : {item.catchRates?.[rarity]}%
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {item.id === 'mystery-poke-ball' && (
+            <button
+              className='pp-button pp-consumable-open'
+              type='button'
+              disabled={item.quantity < 1 || openingBall}
+              onClick={() => void openMysteryBall()}
+            >
+              {openingBall ? 'Ouverture…' : 'Ouvrir'}
+            </button>
+          )}
+          {item.id === 'holocron' && (
+            <button
+              className='pp-button pp-consumable-open'
+              type='button'
+              disabled={item.quantity < 1 || openingBall}
+              onClick={() => void prepareHolocron()}
+            >
+              {openingBall ? 'Préparation…' : 'Ouvrir'}
+            </button>
+          )}
+        </div>
+      </article>
+    )
+  }
 
   useEffect(() => {
     const element = dialog.current
@@ -97,6 +170,66 @@ export default function ModalConsumableInventory({ onClose }: Props) {
     }
   }
 
+  async function prepareHolocron() {
+    if (openingBall) return
+    setOpeningBall(true)
+    try {
+      const character = await getRandomStarWarsAvatar()
+      setOpeningHolocronsRemaining(holocronQuantity)
+      setOpeningCharacter(character)
+      setOpeningRun((run) => run + 1)
+    } catch (error) {
+      snackbar.error(
+        'Préparation impossible',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setOpeningBall(false)
+    }
+  }
+
+  async function openPreparedHolocron() {
+    if (openingBall || !openingCharacter) return openingHolocronsRemaining
+    setOpeningBall(true)
+    try {
+      const remainingHolocrons = await openHolocronMutation({
+        characterId: openingCharacter.id,
+        name: openingCharacter.name,
+        imageUrl: openingCharacter.imageUrl,
+        ...(openingCharacter.description
+          ? { description: openingCharacter.description }
+          : {}),
+      })
+      setOpeningHolocronsRemaining(remainingHolocrons)
+      return remainingHolocrons
+    } catch (error) {
+      snackbar.error(
+        'Ouverture impossible',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+      throw error
+    } finally {
+      setOpeningBall(false)
+    }
+  }
+
+  async function prepareAnotherHolocron() {
+    if (openingBall || openingHolocronsRemaining < 1) return
+    setOpeningBall(true)
+    try {
+      const character = await getRandomStarWarsAvatar()
+      setOpeningCharacter(character)
+      setOpeningRun((run) => run + 1)
+    } catch (error) {
+      snackbar.error(
+        'Préparation impossible',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setOpeningBall(false)
+    }
+  }
+
   async function keepWelcomePokemon() {
     if (openingBall || welcomeRerollsRemaining === null) return
     setOpeningBall(true)
@@ -121,6 +254,8 @@ export default function ModalConsumableInventory({ onClose }: Props) {
 
   function closeOpening() {
     setOpeningPokemonId(null)
+    setOpeningCharacter(null)
+    setOpeningHolocronsRemaining(0)
     setWelcomeRerollsRemaining(null)
   }
 
@@ -137,88 +272,65 @@ export default function ModalConsumableInventory({ onClose }: Props) {
       <div className='pp-modal-content pp-consumable-inventory-content'>
         <div className='pp-modal-heading'>
           <div>
-            <span className='pp-inventory-kicker'>TES OBJETS</span>
-            <h2 id='consumable-inventory-title'>Inventaire</h2>
+            <h2 id='consumable-inventory-title'>Consommable</h2>
           </div>
           <button
             className='pp-icon-button'
             type='button'
-            aria-label='Fermer l’inventaire'
+            aria-label='Fermer les consommables'
             title='Fermer'
             onClick={onClose}
           >
             <X size={20} aria-hidden='true' />
           </button>
         </div>
-        <div
-          className='pp-consumable-inventory-tabs'
-          role='tablist'
-          aria-label='Catégorie d’inventaire'
-        >
-          <button
-            className='pokemon-collection-tab'
-            id='consumable-inventory-tab-pokemon'
-            type='button'
-            role='tab'
-            aria-selected='true'
-            aria-controls='consumable-inventory-panel-pokemon'
-          >
-            Pokémon
-          </button>
-        </div>
         <section
           className='pp-consumable-inventory-list'
-          id='consumable-inventory-panel-pokemon'
-          role='tabpanel'
-          aria-labelledby='consumable-inventory-tab-pokemon'
+          aria-label='Consommables'
         >
           {data === undefined ? (
             <p className='pp-inventory-empty' role='status'>
-              Chargement de ton inventaire…
+              Chargement de tes consommables...
             </p>
-          ) : ownedItems.length ? (
-            ownedItems.map((item) => (
-              <article className='pp-consumable-owned-card' key={item.id}>
-                <div className='pp-consumable-owned-art'>
-                  <img src={item.sprite} alt='' width={80} height={80} />
-                </div>
-                <div className='pp-consumable-owned-copy'>
-                  <div className='pp-consumable-title'>
-                    <h3>{item.name}</h3>
-                    <span className='pp-consumable-owned'>
-                      Quantité : {item.quantity}
-                    </span>
-                  </div>
-                  <p>{item.description}</p>
-                  {item.catchRates && item.id !== 'master-ball' ? (
-                    <ul className='pp-consumable-owned-rates'>
-                      {rarityLabels.map(([rarity, label]) => (
-                        <li key={rarity}>
-                          {label} : {item.catchRates?.[rarity]}%
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {item.id === 'mystery-poke-ball' && (
-                    <button
-                      className='pp-button pp-consumable-open'
-                      type='button'
-                      disabled={item.quantity < 1 || openingBall}
-                      onClick={() => void openMysteryBall()}
-                    >
-                      {openingBall ? 'Ouverture…' : 'Ouvrir'}
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))
           ) : (
-            <p className='pp-inventory-empty'>
-              Ton inventaire est vide. Tu trouveras des objets Pokémon dans la
-              boutique.
-            </p>
+            <>
+              <section
+                className='pp-consumable-inventory-section'
+                aria-labelledby='consumable-pokemon-title'
+              >
+                <h3 id='consumable-pokemon-title'>Pokémon</h3>
+                {pokemonItems.length ? (
+                  pokemonItems.map(renderOwnedItem)
+                ) : (
+                  <p className='pp-inventory-empty'>
+                    Aucun consommable disponible.
+                  </p>
+                )}
+              </section>
+              <section
+                className='pp-consumable-inventory-section pp-consumable-inventory-section--star-wars'
+                aria-labelledby='consumable-star-wars-title'
+              >
+                <h3 id='consumable-star-wars-title'>Star Wars</h3>
+                {starWarsItems.length ? (
+                  starWarsItems.map(renderOwnedItem)
+                ) : (
+                  <p className='pp-inventory-empty'>
+                    Aucun Holocron de disponible.
+                  </p>
+                )}
+              </section>
+            </>
           )}
         </section>
+        <button
+          className='pp-button pp-button--secondary pp-inventory-shop-link'
+          type='button'
+          onClick={() => onOpenShop('pokemon')}
+        >
+          <Store size={17} aria-hidden='true' />
+          Se rendre à la boutique
+        </button>
         {openingPokemonId !== null && (
           <div
             className='pp-pokeball-opening-overlay'
@@ -259,6 +371,34 @@ export default function ModalConsumableInventory({ onClose }: Props) {
                   ? keepWelcomePokemon
                   : undefined
               }
+            />
+          </div>
+        )}
+        {openingCharacter && (
+          <div
+            className='pp-star-wars-opening-overlay'
+            role='presentation'
+            onClick={(event) => {
+              if (event.target === event.currentTarget) closeOpening()
+            }}
+          >
+            <button
+              className='pp-icon-button pp-pokeball-opening-close'
+              type='button'
+              aria-label='Fermer la carte Star Wars'
+              title='Fermer'
+              onClick={closeOpening}
+            >
+              <X size={20} aria-hidden='true' />
+            </button>
+            <StarWarsOpening
+              key={openingRun}
+              character={openingCharacter}
+              remainingHolocrons={openingHolocronsRemaining}
+              openingAnother={openingBall}
+              onOpen={openPreparedHolocron}
+              onOpenAnother={() => void prepareAnotherHolocron()}
+              onReturnToInventory={closeOpening}
             />
           </div>
         )}

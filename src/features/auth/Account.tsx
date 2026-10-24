@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   BarChart3,
-  Backpack,
+  Bug,
   Check,
   ChevronDown,
   GitBranch,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { AccountStatisticsModal } from './AccountStatisticsModal'
 import { AccountSettingsModal } from './AccountSettingsModal'
-import ModalPokemonCollection from '../../components/ModalPokemonCollection'
 import { AvatarFrame } from '../avatar/AvatarFrame'
 import type { AccountState } from './useAccount'
 
@@ -20,7 +19,6 @@ export default function Account({ account }: { account: AccountState }) {
   const [editingGuestName, setEditingGuestName] = useState(false)
   const [guestNameDraft, setGuestNameDraft] = useState(account.guestName)
   const [statisticsOpen, setStatisticsOpen] = useState(false)
-  const [collectionOpen, setCollectionOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
@@ -107,6 +105,14 @@ export default function Account({ account }: { account: AccountState }) {
               Changer mon pseudo
             </button>
           )}
+          <a
+            className='profile-signout profile-report-bug'
+            href='https://github.com/EtienneS76/funny-poker-planning/issues/new'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <Bug size={17} aria-hidden='true' /> Signaler un bug
+          </a>
           <button
             className='profile-signout'
             disabled={account.pending || account.configured !== true}
@@ -155,44 +161,34 @@ export default function Account({ account }: { account: AccountState }) {
         <div className='profile-dropdown'>
           <span className='profile-caption'>Connecté avec GitHub</span>
           <strong className='profile-name'>@{displayName}</strong>
-          <details className='profile-submenu'>
-            <summary className='profile-submenu-trigger'>
-              <span>Mon profil</span>
-              <ChevronDown size={16} aria-hidden='true' />
-            </summary>
-            <div className='profile-submenu-content'>
-              <button
-                className='profile-signout'
-                onClick={() => {
-                  if (menu.current) menu.current.open = false
-                  setCollectionOpen(true)
-                }}
-              >
-                <Backpack size={17} aria-hidden='true' />
-                Collection
-              </button>
-              <button
-                className='profile-signout'
-                onClick={() => {
-                  if (menu.current) menu.current.open = false
-                  setStatisticsOpen(true)
-                }}
-              >
-                <BarChart3 size={17} aria-hidden='true' />
-                Statistiques
-              </button>
-              <button
-                className='profile-signout'
-                onClick={() => {
-                  if (menu.current) menu.current.open = false
-                  setSettingsOpen(true)
-                }}
-              >
-                <Settings size={17} aria-hidden='true' />
-                Paramètres
-              </button>
-            </div>
-          </details>
+          <button
+            className='profile-signout'
+            onClick={() => {
+              if (menu.current) menu.current.open = false
+              setStatisticsOpen(true)
+            }}
+          >
+            <BarChart3 size={17} aria-hidden='true' />
+            Statistiques
+          </button>
+          <button
+            className='profile-signout'
+            onClick={() => {
+              if (menu.current) menu.current.open = false
+              setSettingsOpen(true)
+            }}
+          >
+            <Settings size={17} aria-hidden='true' />
+            Paramètres
+          </button>
+          <a
+            className='profile-signout profile-report-bug'
+            href='https://github.com/EtienneS76/funny-poker-planning/issues/new'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <Bug size={17} aria-hidden='true' /> Signaler un bug
+          </a>
           <button
             className='profile-signout'
             disabled={account.pending}
@@ -212,14 +208,9 @@ export default function Account({ account }: { account: AccountState }) {
         firstConnectedAt={account.profile?.firstConnectedAt ?? Date.now()}
         refinementCount={statistics?.refinementCount ?? 0}
         roundCount={statistics?.roundCount ?? 0}
-        mysteryPokeBallOpenCount={
-          statistics?.mysteryPokeBallOpenCount ?? 0
-        }
+        mysteryPokeBallOpenCount={statistics?.mysteryPokeBallOpenCount ?? 0}
         onClose={() => setStatisticsOpen(false)}
       />
-      {collectionOpen && (
-        <ModalPokemonCollection onClose={() => setCollectionOpen(false)} />
-      )}
       {settingsOpen && (
         <AccountSettingsModal
           account={account}

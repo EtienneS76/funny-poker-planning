@@ -48,10 +48,8 @@
   gap: 1rem;
   padding: 28px 56px;
 }
-.pp-topbar-invite {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: center;
+.pp-topbar:has(.profile-menu[open]) {
+  z-index: 40;
 }
 .pp-topbar-actions {
   grid-column: 3;
@@ -110,6 +108,7 @@
   font-size: 14px;
   white-space: nowrap;
 }
+.pp-button--collection-nav,
 .pp-button--shop-nav,
 .pp-button--inventory-nav {
   min-height: 44px;
@@ -144,28 +143,21 @@
   font-size: 14px;
   color: #9b2335;
 }
-.pp-report-bug {
+.pp-floating-actions {
   position: fixed;
   z-index: 10;
   right: 24px;
   bottom: 24px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 44px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 16px;
-  border: 1px solid var(--pp-ink);
-  border-radius: 999px;
-  background: var(--pp-paper);
-  box-shadow: 0 4px 16px #39454124;
-  color: var(--pp-ink);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
 }
-.pp-report-bug:hover {
-  background: var(--pp-cream);
+.pp-floating-invite {
+  width: auto;
+  min-width: 44px;
+  height: 44px;
+  max-width: calc(100vw - 32px);
+  padding: 0 14px;
 }
 .account-loading {
   min-height: 44px;
@@ -294,6 +286,9 @@
 }
 .account-stats-modal {
   width: min(500px, calc(100% - 32px));
+  max-height: calc(100svh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .account-stats-content {
   gap: 20px;
@@ -383,6 +378,19 @@
   font-size: 18px;
   font-weight: 800;
 }
+.account-stat-connection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+.account-stat-connection small {
+  color: var(--pp-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+}
 .profile-edit-form {
   display: flex;
   flex-direction: column;
@@ -419,6 +427,9 @@
   text-align: left;
   font-size: 14px;
   cursor: pointer;
+}
+.profile-report-bug {
+  text-decoration: none;
 }
 .profile-signout:not(:disabled):hover {
   background: var(--pp-cream);
@@ -674,34 +685,6 @@
   font-size: 16px;
   font-weight: 800;
 }
-.pp-shop-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.pp-shop-tab {
-  display: flex;
-  min-width: 0;
-  min-height: 76px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 6px;
-  border: 1px solid var(--pp-line);
-  border-radius: 14px;
-  background: var(--pp-paper);
-  color: var(--pp-muted);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.pp-shop-tab[aria-selected='true'] {
-  border-color: var(--pp-ink);
-  background: var(--pp-ink);
-  color: var(--pp-paper);
-}
 .pp-shop-tab-status {
   color: inherit;
   font-size: 11px;
@@ -738,19 +721,29 @@
 }
 .pp-consumable-shop {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
-.pp-consumable-shop-heading h3 {
+.pp-avatar-shop-section,
+.pp-consumable-section {
+  display: grid;
+  gap: 10px;
+}
+.pp-shop-section-heading h3,
+.pp-consumable-section-heading h3 {
   margin: 0;
   color: var(--pp-ink);
   font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 20px;
+  font-size: 17px;
 }
-.pp-consumable-shop-heading p {
-  margin: 4px 0 0;
+.pp-consumable-section-heading p {
+  margin: 2px 0 0;
   color: var(--pp-muted);
   font-size: 13px;
   line-height: 1.45;
+}
+.pp-consumable-section + .pp-consumable-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--pp-line);
 }
 .pp-consumable-grid {
   display: grid;
@@ -783,6 +776,12 @@
     radial-gradient(circle at 16% 20%, #f0e6fb 0, transparent 50%),
     var(--pp-paper);
 }
+.pp-consumable-card[data-consumable='holocron'] {
+  border-color: #c3b8e7;
+  background:
+    radial-gradient(circle at 16% 20%, #e9e6fb 0, transparent 52%),
+    var(--pp-paper);
+}
 .pp-consumable-art,
 .pp-consumable-owned-art {
   display: grid;
@@ -799,6 +798,10 @@
   height: 68px;
   object-fit: contain;
   image-rendering: pixelated;
+}
+.pp-consumable-holocron-icon {
+  color: #6755a6;
+  filter: drop-shadow(0 3px 6px #6755a644);
 }
 .pp-consumable-copy {
   min-width: 0;
@@ -923,13 +926,26 @@
   background: #fff9;
   box-shadow: 0 3px 12px #39234130;
 }
-.pp-consumable-inventory-tabs {
-  flex: 0 0 auto;
-  border-bottom: 1px solid var(--pp-border);
+.pp-star-wars-opening-overlay {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 50% 40%, #4a8fd655, transparent 70%), #152a4266;
+  backdrop-filter: blur(10px) saturate(0.95);
 }
-.pp-consumable-inventory-tabs .pokemon-collection-tab {
-  border-bottom-color: var(--pk-accent, #527a50);
-  color: var(--pp-ink);
+.pp-star-wars-opening-overlay .sw-opening {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
+}
+.pp-star-wars-opening-overlay .pp-pokeball-opening-close {
+  color: #e6f3ff;
+  border-color: #e6f3ff80;
+  background: #07111bcc;
 }
 .pp-consumable-inventory-list {
   display: grid;
@@ -944,6 +960,21 @@
   scrollbar-width: thin;
   scrollbar-color: var(--pp-border) transparent;
 }
+.pp-consumable-inventory-section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.pp-consumable-inventory-section h3 {
+  margin: 0;
+  color: var(--pp-ink);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 17px;
+}
+.pp-consumable-inventory-section--star-wars {
+  padding-top: 16px;
+  border-top: 1px solid var(--pp-line);
+}
 .pp-consumable-inventory-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -952,6 +983,11 @@
   border-radius: 8px;
   background: var(--pp-border);
   background-clip: padding-box;
+}
+.pp-inventory-shop-link {
+  align-self: stretch;
+  min-height: 44px;
+  flex: 0 0 auto;
 }
 .pp-consumable-owned-card {
   display: grid;
@@ -973,6 +1009,10 @@
   height: 72px;
   object-fit: contain;
   image-rendering: pixelated;
+}
+.pp-consumable-owned-art .pp-consumable-holocron-icon {
+  color: #6755a6;
+  filter: drop-shadow(0 3px 6px #6755a644);
 }
 .pp-consumable-owned-copy {
   min-width: 0;
@@ -1176,6 +1216,13 @@
 .pokemon-collection-tab[aria-selected='true'] {
   border-bottom-color: var(--pk-accent, #527a50);
   color: var(--pp-ink);
+}
+.pokemon-collection-tab-progress {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+  white-space: nowrap;
 }
 .pokemon-collection-tab:disabled {
   cursor: not-allowed;
@@ -1531,7 +1578,15 @@
   flex: 0 0 auto;
   object-fit: contain;
   border-radius: 0;
-  background: transparent;
+  background:
+    radial-gradient(
+      ellipse at 50% 44%,
+      #9bc7ef45,
+      #91afd326 58%,
+      transparent 82%
+    ),
+    #718ba51c;
+  backdrop-filter: blur(10px) saturate(1.05);
 }
 .pokemon-collection-detail-copy {
   display: grid;
@@ -1570,6 +1625,24 @@
 .pokemon-collection-detail dd {
   margin: 0;
   font-weight: 700;
+}
+.star-wars-collection-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pp-border) transparent;
+}
+.star-wars-collection-grid .pokemon-collection-card img {
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e6edf5;
+}
+.star-wars-collection-card {
+  cursor: default;
+}
+.star-wars-collection-card:hover {
+  transform: none;
 }
 .pokemon-collection-assign {
   justify-self: start;
@@ -2269,8 +2342,11 @@
   .pp-topbar-actions {
     grid-column: 2;
     grid-row: 1;
+    justify-self: end;
+    flex-wrap: wrap;
     gap: 8px;
   }
+  .pp-button--collection-nav,
   .pp-button--shop-nav,
   .pp-button--inventory-nav {
     width: 44px;
@@ -2278,22 +2354,18 @@
     min-height: 44px;
     padding: 0;
   }
+  .pp-button--collection-nav span,
   .pp-button--shop-nav span,
   .pp-button--inventory-nav span {
     display: none;
-  }
-  .pp-topbar-invite {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: center;
   }
   .pp-auth-feedback {
     grid-row: 3;
   }
   .pp-brand {
-    font-size: 20px;
+    font-size: 19px;
   }
-  .pp-report-bug {
+  .pp-floating-actions {
     right: 16px;
     bottom: 16px;
   }
@@ -2372,6 +2444,7 @@
     font-size: 15px;
   }
 }
+
 
 @media (max-width: 380px) {
   .pp-topbar {

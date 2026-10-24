@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useMutation } from 'convex/react'
-import { Info, X } from 'lucide-react'
+import { Hexagon, Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
 import { useAppSnackbar } from './AppSnackbar'
 
 type Props = {
+  initialTab: 'decorations' | 'pokemon' | 'star-wars'
   balance: number
   catalog: Array<{
     id: string
@@ -36,12 +37,13 @@ type Props = {
   isAuthenticated: boolean
   canSignIn: boolean
   onSignIn: () => void
+  onOpenInventory?: () => void
   onClose: () => void
 }
 
 const shopTabs = [
-  { id: 'decorations', label: 'Décorations' },
-  { id: 'pokemon', label: 'Pokémon' },
+  { id: 'avatar', label: 'Avatar' },
+  { id: 'consumables', label: 'Consommable' },
 ] as const
 
 type ShopTabId = (typeof shopTabs)[number]['id']
@@ -54,6 +56,7 @@ const rarityTiers = [
 ] as const
 
 export default function ModalShop({
+  initialTab,
   balance,
   catalog,
   ownedIds,
@@ -65,11 +68,19 @@ export default function ModalShop({
   onClose,
 }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
-  const [activeTab, setActiveTab] = useState<ShopTabId>('decorations')
+  const [activeTab, setActiveTab] = useState<ShopTabId>(
+    initialTab === 'decorations' ? 'avatar' : 'consumables',
+  )
   const [buyingFrame, setBuyingFrame] = useState<string | null>(null)
   const [buyingConsumable, setBuyingConsumable] = useState<string | null>(null)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const formattedBalance = new Intl.NumberFormat('fr-FR').format(balance)
+  const pokemonConsumables = consumables.filter(
+    (item) => item.id !== 'holocron',
+  )
+  const starWarsConsumables = consumables.filter(
+    (item) => item.id === 'holocron',
+  )
   const buyAvatarFrame = useMutation(api.user.mutations.buyAvatarFrame)
   const buyConsumable = useMutation(api.user.mutations.buyConsumable)
   const snackbar = useAppSnackbar()
@@ -131,7 +142,10 @@ export default function ModalShop({
       const itemName =
         consumables.find((item) => item.id === consumableId)?.name ??
         'Consommable'
-      snackbar.success('Achat effectué', `${itemName} ajouté à ton inventaire.`)
+      snackbar.success(
+        'Achat effectué',
+        `${itemName} ajouté à t'es consommables.`,
+      )
     } catch (error) {
       setPurchaseError(
         error instanceof Error
@@ -141,6 +155,98 @@ export default function ModalShop({
     } finally {
       setBuyingConsumable(null)
     }
+  }
+
+  function renderConsumableCard(item: Props['consumables'][number]) {
+    const canAfford = balance >= item.price
+    const quantity =
+      consumableInventory.find(
+        (ownedItem) => ownedItem.consumableId === item.id,
+      )?.quantity ?? 0
+    return (
+      <article
+        className='pp-consumable-card'
+        key={item.id}
+        data-consumable={item.id}
+      >
+        <div className='pp-consumable-art'>
+          {item.id === 'holocron' ? (
+            <Hexagon
+              className='pp-consumable-holocron-icon'
+              size={56}
+              strokeWidth={1.5}
+              aria-hidden='true'
+            />
+          ) : (
+            <img
+              src={item.sprite}
+              alt=''
+              width={96}
+              height={96}
+              loading='lazy'
+            />
+          )}
+        </div>
+        <div className='pp-consumable-copy'>
+          <div className='pp-consumable-title'>
+            <h4>{item.name}</h4>
+            {quantity > 0 && (
+              <span className='pp-consumable-owned'>En stock : {quantity}</span>
+            )}
+          </div>
+          <p>{item.description}</p>
+          {item.catchRates && item.id !== 'master-ball' ? (
+            <dl className='pp-consumable-rates'>
+              <div>
+                <dt>Commun</dt>
+                <dd>{item.catchRates.commun}%</dd>
+              </div>
+              <div>
+                <dt>Rare</dt>
+                <dd>{item.catchRates.rare}%</dd>
+              </div>
+              <div>
+                <dt>Épique</dt>
+                <dd>{item.catchRates.epique}%</dd>
+              </div>
+              <div>
+                <dt>Légendaire</dt>
+                <dd>{item.catchRates.legendaire}%</dd>
+              </div>
+              <div>
+                <dt>Ultime</dt>
+                <dd>{item.catchRates.ultime}%</dd>
+              </div>
+            </dl>
+          ) : null}
+          <span className='pp-consumable-price'>{item.price} Pokisous</span>
+        </div>
+        <button
+          className='pp-button pp-consumable-action'
+          type='button'
+          disabled={
+            (isAuthenticated && !canAfford) ||
+            (!isAuthenticated && !canSignIn) ||
+            buyingConsumable !== null
+          }
+          onClick={() => {
+            if (isAuthenticated) {
+              void purchaseConsumable(item.id)
+            } else {
+              onSignIn()
+            }
+          }}
+        >
+          {buyingConsumable === item.id
+            ? 'Achat…'
+            : isAuthenticated
+              ? canAfford
+                ? 'Acheter'
+                : 'Solde insuffisant'
+              : 'Connexion requise'}
+        </button>
+      </article>
+    )
   }
 
   return (
@@ -201,15 +307,15 @@ export default function ModalShop({
           </div>
         </div>
         <div
-          className='pp-shop-tabs'
+          className='pokemon-collection-tabs'
           role='tablist'
-          aria-label='Catégories de la boutique'
+          aria-label='Sections de la boutique'
           onKeyDown={handleTabKeyDown}
         >
           {shopTabs.map((tab) => (
             <button
               key={tab.id}
-              className='pp-shop-tab'
+              className='pokemon-collection-tab'
               id={`shop-tab-${tab.id}`}
               type='button'
               role='tab'
@@ -223,192 +329,119 @@ export default function ModalShop({
           ))}
         </div>
         <div
-          className={`pp-shop-panel${activeTab === 'decorations' ? ' pp-shop-panel--frames' : activeTab === 'pokemon' ? ' pp-shop-panel--pokemon' : ''}`}
+          className={`pp-shop-panel${activeTab === 'avatar' ? ' pp-shop-panel--frames' : ' pp-shop-panel--pokemon'}`}
           id='shop-panel'
           role='tabpanel'
           aria-labelledby={`shop-tab-${activeTab}`}
           tabIndex={0}
         >
-          {activeTab === 'decorations' ? (
-            <div className='pp-frame-tiers'>
-              {rarityTiers.map((tier) => {
-                const tierFrames = catalog.filter(
-                  (frame) => frame.rarity === tier.id,
-                )
-                if (!tierFrames.length) return null
-
-                return (
-                  <section
-                    className={`pp-frame-tier pp-frame-tier--${tier.id}`}
-                    key={tier.id}
-                  >
-                    <div className='pp-frame-tier-heading'>
-                      <h3>{tier.label}</h3>
-                      <span>{tierFrames[0].price} Pokisous</span>
-                    </div>
-                    <div className='pp-frame-grid'>
-                      {tierFrames.map((frame) => {
-                        const isOwned = ownedIds.includes(frame.id)
-                        const canAfford = balance >= frame.price
-                        return (
-                          <article
-                            className={`pp-frame-card pp-frame-card--${frame.rarity}`}
-                            key={frame.id}
-                          >
-                            <div className='pp-frame-preview'>
-                              <AvatarFrame
-                                frameId={frame.id}
-                                className='pp-frame-avatar'
-                              >
-                                <span
-                                  className='pp-frame-avatar-initial'
-                                  aria-hidden='true'
-                                >
-                                  A
-                                </span>
-                              </AvatarFrame>
-                            </div>
-                            <div className='pp-frame-copy'>
-                              <strong>{frame.name}</strong>
-                              <p>{frame.description}</p>
-                              <span className='pp-frame-price'>
-                                {frame.price} Pokisous
-                              </span>
-                            </div>
-                            <button
-                              className='pp-button pp-frame-action'
-                              type='button'
-                              disabled={
-                                isOwned ||
-                                (isAuthenticated && !canAfford) ||
-                                (!isAuthenticated && !canSignIn) ||
-                                buyingFrame !== null
-                              }
-                              onClick={() => {
-                                if (isAuthenticated) {
-                                  void purchaseFrame(frame.id)
-                                } else {
-                                  onSignIn()
-                                }
-                              }}
-                            >
-                              {isOwned
-                                ? 'Possédé'
-                                : buyingFrame === frame.id
-                                  ? 'Achat...'
-                                  : isAuthenticated
-                                    ? canAfford
-                                      ? 'Acheter'
-                                      : 'Solde insuffisant'
-                                    : 'Connexion requise'}
-                            </button>
-                          </article>
-                        )
-                      })}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          ) : activeTab === 'pokemon' ? (
-            <div className='pp-consumable-shop'>
-              <div className='pp-consumable-shop-heading'>
-                <h3>Objets Pokémon</h3>
-                <p>
-                  Achète des objets de capture ou garde une Poké Ball mystère
-                  dans ton inventaire pour plus tard.
-                </p>
+          {activeTab === 'avatar' ? (
+            <div className='pp-avatar-shop-section'>
+              <div className='pp-shop-section-heading'>
+                <h3>Cadres</h3>
               </div>
-              <div className='pp-consumable-grid'>
-                {consumables.map((item) => {
-                  const canAfford = balance >= item.price
-                  const quantity =
-                    consumableInventory.find(
-                      (ownedItem) => ownedItem.consumableId === item.id,
-                    )?.quantity ?? 0
+              <div className='pp-frame-tiers'>
+                {rarityTiers.map((tier) => {
+                  const tierFrames = catalog.filter(
+                    (frame) => frame.rarity === tier.id,
+                  )
+                  if (!tierFrames.length) return null
+
                   return (
-                    <article
-                      className='pp-consumable-card'
-                      key={item.id}
-                      data-consumable={item.id}
+                    <section
+                      className={`pp-frame-tier pp-frame-tier--${tier.id}`}
+                      key={tier.id}
                     >
-                      <div className='pp-consumable-art'>
-                        <img
-                          src={item.sprite}
-                          alt=''
-                          width={96}
-                          height={96}
-                          loading='lazy'
-                        />
+                      <div className='pp-frame-tier-heading'>
+                        <h3>{tier.label}</h3>
                       </div>
-                      <div className='pp-consumable-copy'>
-                        <div className='pp-consumable-title'>
-                          <h4>{item.name}</h4>
-                          {quantity > 0 && (
-                            <span className='pp-consumable-owned'>
-                              En stock : {quantity}
-                            </span>
-                          )}
-                        </div>
-                        <p>{item.description}</p>
-                        {item.catchRates && item.id !== 'master-ball' ? (
-                          <dl className='pp-consumable-rates'>
-                            <div>
-                              <dt>Commun</dt>
-                              <dd>{item.catchRates.commun}%</dd>
-                            </div>
-                            <div>
-                              <dt>Rare</dt>
-                              <dd>{item.catchRates.rare}%</dd>
-                            </div>
-                            <div>
-                              <dt>Épique</dt>
-                              <dd>{item.catchRates.epique}%</dd>
-                            </div>
-                            <div>
-                              <dt>Légendaire</dt>
-                              <dd>{item.catchRates.legendaire}%</dd>
-                            </div>
-                            <div>
-                              <dt>Ultime</dt>
-                              <dd>{item.catchRates.ultime}%</dd>
-                            </div>
-                          </dl>
-                        ) : null}
-                        <span className='pp-consumable-price'>
-                          {item.price} Pokisous
-                        </span>
+                      <div className='pp-frame-grid'>
+                        {tierFrames.map((frame) => {
+                          const isOwned = ownedIds.includes(frame.id)
+                          const canAfford = balance >= frame.price
+                          return (
+                            <article
+                              className={`pp-frame-card pp-frame-card--${frame.rarity}`}
+                              key={frame.id}
+                            >
+                              <div className='pp-frame-preview'>
+                                <AvatarFrame
+                                  frameId={frame.id}
+                                  className='pp-frame-avatar'
+                                >
+                                  <span
+                                    className='pp-frame-avatar-initial'
+                                    aria-hidden='true'
+                                  >
+                                    A
+                                  </span>
+                                </AvatarFrame>
+                              </div>
+                              <div className='pp-frame-copy'>
+                                <strong>{frame.name}</strong>
+                                <p>{frame.description}</p>
+                                <span className='pp-frame-price'>
+                                  {frame.price} Pokisous
+                                </span>
+                              </div>
+                              <button
+                                className='pp-button pp-frame-action'
+                                type='button'
+                                disabled={
+                                  isOwned ||
+                                  (isAuthenticated && !canAfford) ||
+                                  (!isAuthenticated && !canSignIn) ||
+                                  buyingFrame !== null
+                                }
+                                onClick={() => {
+                                  if (isAuthenticated) {
+                                    void purchaseFrame(frame.id)
+                                  } else {
+                                    onSignIn()
+                                  }
+                                }}
+                              >
+                                {isOwned
+                                  ? 'Possédé'
+                                  : buyingFrame === frame.id
+                                    ? 'Achat...'
+                                    : isAuthenticated
+                                      ? canAfford
+                                        ? 'Acheter'
+                                        : 'Solde insuffisant'
+                                      : 'Connexion requise'}
+                              </button>
+                            </article>
+                          )
+                        })}
                       </div>
-                      <button
-                        className='pp-button pp-consumable-action'
-                        type='button'
-                        disabled={
-                          (isAuthenticated && !canAfford) ||
-                          (!isAuthenticated && !canSignIn) ||
-                          buyingConsumable !== null
-                        }
-                        onClick={() => {
-                          if (isAuthenticated) {
-                            void purchaseConsumable(item.id)
-                          } else {
-                            onSignIn()
-                          }
-                        }}
-                      >
-                        {buyingConsumable === item.id
-                          ? 'Achat…'
-                          : isAuthenticated
-                            ? canAfford
-                              ? 'Acheter'
-                              : 'Solde insuffisant'
-                            : 'Connexion requise'}
-                      </button>
-                    </article>
+                    </section>
                   )
                 })}
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className='pp-consumable-shop'>
+              <section className='pp-consumable-section'>
+                <div className='pp-consumable-section-heading'>
+                  <h3>Pokémon</h3>
+                  <p>Objets de capture et Poké Balls mystères</p>
+                </div>
+                <div className='pp-consumable-grid'>
+                  {pokemonConsumables.map(renderConsumableCard)}
+                </div>
+              </section>
+              <section className='pp-consumable-section'>
+                <div className='pp-consumable-section-heading'>
+                  <h3>Star Wars</h3>
+                  <p>Holocrons de personnages</p>
+                </div>
+                <div className='pp-consumable-grid'>
+                  {starWarsConsumables.map(renderConsumableCard)}
+                </div>
+              </section>
+            </div>
+          )}
           {purchaseError && (
             <p className='pp-form-error pp-frame-error' role='alert'>
               {purchaseError}

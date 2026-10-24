@@ -23,6 +23,7 @@ import type * as user_mutations from "../user/mutations.js";
 import type * as user_pokemonDraw from "../user/pokemonDraw.js";
 import type * as user_profile from "../user/profile.js";
 import type * as user_queries from "../user/queries.js";
+import type * as user_starWarsCharacterIds from "../user/starWarsCharacterIds.js";
 
 import type {
   ApiFromModules,
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "user/pokemonDraw": typeof user_pokemonDraw;
   "user/profile": typeof user_profile;
   "user/queries": typeof user_queries;
+  "user/starWarsCharacterIds": typeof user_starWarsCharacterIds;
 }>;
 
 /**

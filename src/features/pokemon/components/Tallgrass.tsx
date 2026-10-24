@@ -86,10 +86,6 @@ const CSS = `
   70%{transform:rotate(calc(var(--dir) * 2deg))}
   100%{transform:rotate(0)}
 }
-@keyframes tg-wiggle{
-  0%,100%{transform:rotate(calc(var(--dir) * -3deg))}
-  50%{transform:rotate(calc(var(--dir) * 3deg))}
-}
 @keyframes tg-pop{
   0%{transform:scale(1)}
   40%{transform:scale(.92,1.06)}
@@ -97,10 +93,9 @@ const CSS = `
 }
 
 .tg-rustle .tg-blade{animation:tg-rustle 1.4s ease-in-out var(--d) 1 both}
-.tg:hover .tg-blade{animation:tg-wiggle .55s ease-in-out var(--d) infinite}
-.tg:active svg{animation:tg-pop .25s ease-out}
+.tg--rustling:active svg{animation:tg-pop .25s ease-out}
 @media (prefers-reduced-motion:reduce){
-  .tg-rustle .tg-blade,.tg:hover .tg-blade,.tg:active svg{animation:none}
+  .tg-rustle .tg-blade,.tg--rustling:active svg{animation:none}
 }
 `
 

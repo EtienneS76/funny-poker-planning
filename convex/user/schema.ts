@@ -35,6 +35,17 @@ export const userPokemonsTable = defineTable({
   .index('by_user', ['userId'])
   .index('by_user_pokemon', ['userId', 'pokemonId'])
 
+export const userStarWarsCharactersTable = defineTable({
+  userId: v.id('users'),
+  characterId: v.string(),
+  name: v.string(),
+  imageUrl: v.string(),
+  description: v.optional(v.string()),
+  openedAt: v.number(),
+})
+  .index('by_user', ['userId'])
+  .index('by_user_character', ['userId', 'characterId'])
+
 export const starterPokemonOpeningTable = defineTable({
   userId: v.id('users'),
   pokemonId: v.optional(v.number()),

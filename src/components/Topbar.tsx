@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import Account from '../features/auth/Account'
 import type { AccountState } from '../features/auth/useAccount'
-import { Bug, PackageOpen, Store, UserRoundPlus } from 'lucide-react'
+import { Backpack, PackageOpen, Store, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router'
 import { api } from '../../convex/_generated/api'
 import ModalShop from './ModalShop'
 import ModalConsumableInventory from './ModalConsumableInventory'
+import ModalPokemonCollection from './ModalPokemonCollection'
 import { useAppSnackbar } from './AppSnackbar'
 
 type Props = {
@@ -14,14 +15,29 @@ type Props = {
   onInvitePlayers?: () => void
 }
 
+type ShopTabId = 'decorations' | 'pokemon' | 'star-wars'
+
 export default function Topbar({ account, onInvitePlayers }: Props) {
   const [shopOpen, setShopOpen] = useState(false)
+  const [shopInitialTab, setShopInitialTab] = useState<ShopTabId>('decorations')
   const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [collectionOpen, setCollectionOpen] = useState(false)
   const shopData = useQuery(api.user.queries.shopData, {})
   const ensureConsumableCatalog = useMutation(
     api.user.mutations.ensureConsumableCatalog,
   )
   const snackbar = useAppSnackbar()
+
+  function openShop(tab: ShopTabId) {
+    setShopInitialTab(tab)
+    setInventoryOpen(false)
+    setShopOpen(true)
+  }
+
+  function openInventory() {
+    setShopOpen(false)
+    setInventoryOpen(true)
+  }
 
   useEffect(() => {
     void ensureConsumableCatalog({}).catch((error: unknown) => {
@@ -39,36 +55,49 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
       <Link className='pp-brand' to='/'>
         Funny Poker Planning
       </Link>
-      {onInvitePlayers && (
-        <button
-          className='pp-button pp-button--invite pp-topbar-invite'
-          type='button'
-          onClick={onInvitePlayers}
-        >
-          <UserRoundPlus size={17} aria-hidden='true' /> Inviter à participer
-        </button>
-      )}
       <div className='pp-topbar-actions'>
+        {account.isAuthenticated && (
+          <button
+            className='pp-button pp-button--secondary pp-button--collection-nav'
+            type='button'
+            aria-label='Ouvrir la collection'
+            title='Ouvrir la collection'
+            onClick={() => setCollectionOpen(true)}
+          >
+            <Backpack size={17} aria-hidden='true' />
+            <span>Collection</span>
+          </button>
+        )}
         <button
           className='pp-button pp-button--secondary pp-button--inventory-nav'
           type='button'
-          aria-label='Ouvrir l’inventaire'
-          title='Ouvrir l’inventaire'
+          aria-label='Ouvrir les consommables'
+          title='Ouvrir les consommables'
           onClick={() => setInventoryOpen(true)}
         >
           <PackageOpen size={17} aria-hidden='true' />
-          <span>Inventaire</span>
+          <span>Consommable</span>
         </button>
         <button
-          className='pp-button pp-button--secondary pp-button--shop-nav'
+          className='pp-button pp-button--invite pp-floating-invite'
           type='button'
           aria-label='Ouvrir la boutique'
           title='Ouvrir la boutique'
-          onClick={() => setShopOpen(true)}
+          onClick={() => openShop('decorations')}
         >
           <Store size={17} aria-hidden='true' />
-          <span>Boutique</span>
         </button>
+        {onInvitePlayers && (
+          <button
+            className='pp-button pp-button--invite pp-floating-invite'
+            type='button'
+            aria-label='Inviter à participer'
+            title='Inviter à participer'
+            onClick={onInvitePlayers}
+          >
+            <UserRoundPlus size={17} aria-hidden='true' />
+          </button>
+        )}
         <Account account={account} />
       </div>
       {(account.error || account.configured === false) && (
@@ -81,6 +110,7 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
       )}
       {shopOpen && (
         <ModalShop
+          initialTab={shopInitialTab}
           balance={shopData?.balance ?? 0}
           catalog={shopData?.catalog ?? []}
           ownedIds={shopData?.ownedIds ?? []}
@@ -91,20 +121,19 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
             account.configured === true && !account.loading && !account.pending
           }
           onSignIn={() => void account.signIn()}
+          onOpenInventory={openInventory}
           onClose={() => setShopOpen(false)}
         />
       )}
       {inventoryOpen && (
-        <ModalConsumableInventory onClose={() => setInventoryOpen(false)} />
+        <ModalConsumableInventory
+          onClose={() => setInventoryOpen(false)}
+          onOpenShop={openShop}
+        />
       )}
-      <a
-        className='pp-report-bug'
-        href='https://github.com/EtienneS76/funny-poker-planning/issues/new'
-        target='_blank'
-        rel='noopener noreferrer'
-      >
-        <Bug size={17} aria-hidden='true' /> Signaler un bug
-      </a>
+      {collectionOpen && (
+        <ModalPokemonCollection onClose={() => setCollectionOpen(false)} />
+      )}
     </header>
   )
 }
