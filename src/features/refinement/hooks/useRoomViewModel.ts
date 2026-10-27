@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useAccount } from '../../auth/useAccount'
@@ -7,6 +8,7 @@ import { sizings } from '../options'
 import { getPokemonById } from '../../pokemon/functions/GeneratePokemon'
 import type { ReactionKind, RoomViewModel, Seat } from '../themes/types'
 import { useRefinementRoom } from './useRefinementRoom'
+import { useAmongUsSync } from './useAmongUsSync'
 
 /**
  * Toute la logique de la salle (vote, révélation, manches, réactions, présence).
@@ -16,6 +18,14 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
   const account = useAccount()
   const { playerJoined, playerLeft, success, error } = useAppSnackbar()
   const room = useRefinementRoom(refinementSlug)
+  const [searchParams] = useSearchParams()
+  const amongUsActive =
+    (searchParams.get('theme') ?? room?.refinement.universe) === 'au'
+  const amongUsSync = useAmongUsSync({
+    slug: refinementSlug,
+    guestId: account.guestId,
+    active: amongUsActive,
+  })
   const recordVote = useMutation(api.refinement.mutations.recordVote)
   const sendReactionMutation = useMutation(
     api.refinement.mutations.sendReaction,
@@ -478,6 +488,13 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
       eligible: skirmishEligible,
       progress: skirmishProgress,
       recordDestroyedShip,
+    },
+    amongUs: {
+      active: amongUsActive,
+      pushEnabled: funInteractionsEnabled,
+      players: amongUsSync.players,
+      move: amongUsSync.move,
+      push: amongUsSync.push,
     },
     copyInviteLink,
   }

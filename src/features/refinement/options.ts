@@ -2,6 +2,7 @@ export const availableThemes = [
   { id: 'default', label: 'Classique' },
   { id: 'pk', label: 'Pokémon' },
   { id: 'sw', label: 'Star Wars' },
+  { id: 'au', label: 'Among Us' },
 ] as const
 
 export const sizings = [
