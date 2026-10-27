@@ -5,6 +5,50 @@ import { authComponent } from '../auth/auth'
 
 const PRESENCE_TIMEOUT_MS = 10 * 60_000
 
+export const skirmishProgress = query({
+  args: { slug: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      shipsDestroyed: v.number(),
+      rewarded: v.boolean(),
+    }),
+  ),
+  handler: async (context, { slug }) => {
+    if (!(await context.auth.getUserIdentity())) return null
+    const authUser = await authComponent.getAuthUser(context)
+    const user = await context.db
+      .query('users')
+      .withIndex('by_auth_user', (query) =>
+        query.eq('authUserId', String(authUser._id)),
+      )
+      .unique()
+    if (!user) return null
+
+    const refinement = await context.db
+      .query('refinements')
+      .withIndex('by_slug', (query) => query.eq('slug', slug))
+      .unique()
+    if (!refinement) return null
+
+    const progressEntries = await context.db
+      .query('skirmishProgress')
+      .withIndex('by_user_refinement', (query) =>
+        query.eq('userId', user._id).eq('refinementId', refinement._id),
+      )
+      .collect()
+    return {
+      shipsDestroyed: progressEntries.reduce(
+        (total, entry) =>
+          total +
+          (entry.shipsDestroyed ?? entry.normalShips + entry.eliteShips),
+        0,
+      ),
+      rewarded: progressEntries.some((entry) => entry.rewarded),
+    }
+  },
+})
+
 export const getBySlug = query({
   args: { slug: v.string(), guestId: v.string() },
   handler: async (context, { slug, guestId }) => {
@@ -98,6 +142,7 @@ export const getBySlug = query({
             'Invité',
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
           avatarFrameId: user?.avatarFrameId ?? null,
+          isAuthenticated: user !== null,
           assignedPokemonId: user?.assignedPokemonId ?? null,
           assignedPokemonShiny: user?.assignedPokemonShiny ?? false,
           showPokemon3d: user?.showPokemon3d ?? false,

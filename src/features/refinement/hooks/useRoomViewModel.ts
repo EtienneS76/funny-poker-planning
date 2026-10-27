@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useAccount } from '../../auth/useAccount'
 import { useAppSnackbar } from '../../../components/AppSnackbar'
@@ -21,6 +21,13 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     api.refinement.mutations.sendReaction,
   )
   const revealVotes = useMutation(api.refinement.mutations.reveal)
+  const recordSkirmishHit = useMutation(
+    api.refinement.mutations.recordSkirmishShipDestroyed,
+  )
+  const skirmishProgress = useQuery(
+    api.refinement.queries.skirmishProgress,
+    { slug: refinementSlug },
+  )
   const startNewRound = useMutation(api.refinement.mutations.startNewRound)
   const setSpectatorMutation = useMutation(
     api.refinement.mutations.setSpectator,
@@ -60,6 +67,13 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     (participant) => participant.userId === currentUserId,
   )
   const isSpectator = currentParticipant?.isSpectator ?? false
+  const activeSkirmishPlayers = (room?.participants ?? []).filter(
+    (participant) => !participant.isSpectator,
+  )
+  const skirmishEligible =
+    activeSkirmishPlayers.length >= 3 &&
+    activeSkirmishPlayers.filter((participant) => participant.isAuthenticated)
+      .length >= 2
   const remoteSelectedCard =
     room?.participants.find(
       (participant) => participant.userId === currentUserId,
@@ -363,6 +377,23 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     })
   }
 
+  async function recordDestroyedShip() {
+    if (!account.isAuthenticated) return
+    try {
+      const result = await recordSkirmishHit({ slug: refinementSlug })
+      if (result.rewarded) {
+        success('Récompense du Skirmish', 'Tu as gagné 5 Pokisous.')
+      }
+    } catch (hitError) {
+      error(
+        'Destruction non comptabilisée',
+        hitError instanceof Error
+          ? hitError.message
+          : 'Réessaie de détruire un vaisseau.',
+      )
+    }
+  }
+
   function closeReactionMenu() {
     setReactionTarget(null)
     reactionTrigger.current?.focus({ preventScroll: true })
@@ -440,6 +471,12 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
       openEditor: () => setIssueEditorOpen(true),
       closeEditor: () => setIssueEditorOpen(false),
       save: saveIssueUrl,
+    },
+    skirmish: {
+      refinementSlug,
+      eligible: skirmishEligible,
+      progress: skirmishProgress,
+      recordDestroyedShip,
     },
     copyInviteLink,
   }

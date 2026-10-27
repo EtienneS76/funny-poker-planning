@@ -65,6 +65,12 @@ export type RoomViewModel = {
     closeEditor: () => void
     save: (issueUrl: string | null) => Promise<boolean>
   }
+  skirmish: {
+    refinementSlug: string
+    eligible: boolean
+    progress: { shipsDestroyed: number; rewarded: boolean } | null | undefined
+    recordDestroyedShip: () => Promise<void>
+  }
   copyInviteLink: () => Promise<void>
 }
 
