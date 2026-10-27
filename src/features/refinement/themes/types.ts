@@ -22,6 +22,20 @@ export type Seat = {
 
 export type ReactionKind = 'tomato' | 'poop' | 'egg' | 'soap'
 
+/** Position + derniers événements d'un joueur dans le thème Among Us (voir convex/amongUs). */
+export type AmongUsPlayerRecord = {
+  userId: string
+  x: number
+  y: number
+  dir: number
+  hitAt?: number
+  hitDx?: number
+  hitDy?: number
+  pushAt?: number
+  pushDx?: number
+}
+export type AmongUsLocalState = { x: number; y: number; dir: 1 | -1 }
+
 /**
  * Tout ce dont un thème a besoin pour afficher la salle : de l'état et des
  * callbacks. Un thème ne parle jamais à Convex et ne contient aucune règle métier.
@@ -71,6 +85,15 @@ export type RoomViewModel = {
     eligible: boolean
     progress: { shipsDestroyed: number; rewarded: boolean } | null | undefined
     recordDestroyedShip: () => Promise<void>
+  }
+  amongUs: {
+    /** Thème Among Us affiché : seul cas où la synchro des positions est active. */
+    active: boolean
+    /** Les poussées suivent le réglage « interactions fun » de la salle. */
+    pushEnabled: boolean
+    players: AmongUsPlayerRecord[] | undefined
+    move: (state: AmongUsLocalState) => void
+    push: (targetUserId: string | null) => void
   }
   copyInviteLink: () => Promise<void>
 }

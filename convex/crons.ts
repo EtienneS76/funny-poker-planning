@@ -10,4 +10,11 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'remove stale among us positions',
+  { minutes: 1 },
+  internal.amongUs.mutations.cleanupStale,
+  {},
+)
+
 export default crons

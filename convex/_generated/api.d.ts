@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as amongUs_mutations from "../amongUs/mutations.js";
+import type * as amongUs_queries from "../amongUs/queries.js";
 import type * as auth_auth from "../auth/auth.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
@@ -33,6 +35,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "amongUs/mutations": typeof amongUs_mutations;
+  "amongUs/queries": typeof amongUs_queries;
   "auth/auth": typeof auth_auth;
   crons: typeof crons;
   http: typeof http;

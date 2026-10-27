@@ -225,7 +225,12 @@ export const create = mutation({
   args: {
     guestId: v.string(),
     guestName: v.string(),
-    universe: v.union(v.literal('default'), v.literal('pk'), v.literal('sw')),
+    universe: v.union(
+      v.literal('default'),
+      v.literal('pk'),
+      v.literal('sw'),
+      v.literal('au'),
+    ),
     sizing: v.string(),
     issueUrl: v.union(v.string(), v.null()),
     funInteractionsEnabled: v.boolean(),

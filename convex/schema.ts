@@ -22,6 +22,7 @@ import { presenceTable } from './presence/schema'
 import { voteTable } from './refinement/voteSchema'
 import { refinementRoundTable } from './refinement/roundSchema'
 import { reactionTable } from './refinement/reactionSchema'
+import { amongUsPlayerTable } from './amongUs/schema'
 
 export default defineSchema({
   refinements: refinementTable,
@@ -43,4 +44,5 @@ export default defineSchema({
   votes: voteTable,
   refinementRounds: refinementRoundTable,
   roomReactions: reactionTable,
+  amongUsPlayers: amongUsPlayerTable,
 })
