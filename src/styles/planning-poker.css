@@ -1350,17 +1350,20 @@
 .pp-card-design-preview[data-card-design='neon-synthwave'] .pp-design-card {
   border-color: #ff4fd8;
   background:
-    radial-gradient(circle at 50% 82%, #ffb347 0 9%, #ff4fd8 10% 22%, #0000 23%),
     repeating-linear-gradient(90deg, #4fe6ff22 0 1px, #0000 1px 9px),
     repeating-linear-gradient(0deg, #4fe6ff22 0 1px, #0000 1px 9px),
     linear-gradient(#12082b, #2b0f58);
-  box-shadow: inset 0 0 0 1px #ff4fd8, inset 0 0 12px #ff4fd899,
+  box-shadow:
+    inset 0 0 0 1px #ff4fd8,
+    inset 0 0 12px #ff4fd899,
     0 0 12px #ff4fd866;
 }
-.pp-card-design-preview[data-card-design='neon-synthwave'] .pp-design-card--back {
+.pp-card-design-preview[data-card-design='neon-synthwave']
+  .pp-design-card--back {
   animation: card-design-neon-pulse 2.4s ease-in-out infinite alternate;
 }
-.pp-card-design-preview[data-card-design='neon-synthwave'] .pp-design-card--back::after {
+.pp-card-design-preview[data-card-design='neon-synthwave']
+  .pp-design-card--back::after {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -1369,13 +1372,18 @@
   content: '';
   animation: card-design-scan 3s linear infinite;
 }
-.pp-card-design-preview[data-card-design='neon-synthwave'] .pp-design-card--face {
-  text-shadow: 0 0 6px #4fe6ff, 0 0 16px #ff4fd8;
+.pp-card-design-preview[data-card-design='neon-synthwave']
+  .pp-design-card--face {
+  text-shadow:
+    0 0 6px #4fe6ff,
+    0 0 16px #ff4fd8;
 }
 .pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card {
   border-color: #d2c1ff;
   background: linear-gradient(135deg, #24124f, #123a6a 60%, #2a1a5e);
-  box-shadow: inset 0 0 0 1px #d2c1ff, 0 0 14px #a56bf066;
+  box-shadow:
+    inset 0 0 0 1px #d2c1ff,
+    0 0 14px #a56bf066;
 }
 .pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card::before {
   position: absolute;
@@ -1395,10 +1403,12 @@
   content: '';
   mix-blend-mode: color-dodge;
 }
-.pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card--back::before {
+.pp-card-design-preview[data-card-design='holo-prism']
+  .pp-design-card--back::before {
   animation: card-design-holo 4.5s ease-in-out infinite;
 }
-.pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card--back::after {
+.pp-card-design-preview[data-card-design='holo-prism']
+  .pp-design-card--back::after {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -1409,7 +1419,8 @@
   mix-blend-mode: overlay;
   opacity: 0.72;
 }
-.pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card--back::after {
+.pp-card-design-preview[data-card-design='holo-prism']
+  .pp-design-card--back::after {
   animation: card-design-glitter 2.6s ease-in-out infinite alternate;
 }
 .pp-card-design-preview[data-card-design='holo-prism'] .pp-design-card--face {
@@ -1422,7 +1433,8 @@
   background: #0c0904;
   box-shadow: 0 0 18px #f3c24f77;
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card::before {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card::before {
   position: absolute;
   z-index: 0;
   inset: -60%;
@@ -1437,13 +1449,16 @@
   );
   content: '';
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card--back {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card--back {
   animation: card-design-gold-pulse 2.2s ease-in-out infinite alternate;
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card--back::before {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card--back::before {
   animation: card-design-spin 4s linear infinite;
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card::after {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card::after {
   position: absolute;
   z-index: 1;
   inset: 3px;
@@ -1457,10 +1472,14 @@
   color: transparent;
   filter: drop-shadow(0 0 6px #f3c24f99);
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card--back i {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card--back
+  i {
   animation: card-design-twinkle 2s ease-in-out infinite;
 }
-.pp-card-design-preview[data-card-design='golden-eclipse'] .pp-design-card--back i::before {
+.pp-card-design-preview[data-card-design='golden-eclipse']
+  .pp-design-card--back
+  i::before {
   animation: card-design-sweep 3s ease-in-out infinite;
 }
 .pp-collection-general {
@@ -1535,7 +1554,9 @@
 }
 @keyframes card-design-neon-pulse {
   to {
-    box-shadow: inset 0 0 0 1px #ff4fd8, inset 0 0 16px #ff4fd8cc,
+    box-shadow:
+      inset 0 0 0 1px #ff4fd8,
+      inset 0 0 16px #ff4fd8cc,
       0 0 20px #ff4fd899;
   }
 }

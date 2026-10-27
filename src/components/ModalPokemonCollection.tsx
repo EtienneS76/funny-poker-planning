@@ -35,7 +35,9 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   >(null)
   const [assigning, setAssigning] = useState(false)
   const [saving3d, setSaving3d] = useState(false)
-  const [pendingCardDesign, setPendingCardDesign] = useState<string | null>(null)
+  const [pendingCardDesign, setPendingCardDesign] = useState<string | null>(
+    null,
+  )
   const [search, setSearch] = useState('')
   const collection = useQuery(api.user.queries.pokemonCollection, {})
   const starWarsCollection = useQuery(api.user.queries.starWarsCollection, {})
@@ -414,10 +416,10 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                         </span>
                         {assignedPokemonId === pokemon.id &&
                           !assignedPokemonShiny && (
-                          <span className='pokemon-collection-assigned'>
-                            <Check size={14} aria-hidden='true' /> Équipé
-                          </span>
-                        )}
+                            <span className='pokemon-collection-assigned'>
+                              <Check size={14} aria-hidden='true' /> Équipé
+                            </span>
+                          )}
                       </>
                     )}
                   </button>
@@ -481,9 +483,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                       <p className='pokemon-collection-locked-note'>
                         Débloque ce Pokémon pour l’équiper et jouer avec.
                       </p>
-                    ) :
-                    assignedPokemonId === selectedPokemon.id &&
-                    !assignedPokemonShiny ? (
+                    ) : assignedPokemonId === selectedPokemon.id &&
+                      !assignedPokemonShiny ? (
                       <button
                         className='pokemon-collection-assign'
                         type='button'
@@ -644,14 +645,13 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                       <div>
                         <dt>Récupéré le</dt>
                         <dd>
-                          {new Date(selectedShinyPokemon.unlockedAt).toLocaleDateString(
-                            'fr-FR',
-                            {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            },
-                          )}
+                          {new Date(
+                            selectedShinyPokemon.unlockedAt,
+                          ).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
                         </dd>
                       </div>
                     </dl>
@@ -817,7 +817,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   </div>
                 ) : (
                   <p className='pp-inventory-empty'>
-                    Aucun cadre pour le moment. Tes prochains cadres apparaîtront ici.
+                    Aucun cadre pour le moment. Tes prochains cadres
+                    apparaîtront ici.
                   </p>
                 )}
               </section>
@@ -827,7 +828,10 @@ export default function ModalPokemonCollection({ onClose }: Props) {
               >
                 <div className='pp-shop-section-heading'>
                   <h3 id='collection-card-designs-title'>Dos de carte</h3>
-                  <p>Équipe le motif qui apparaîtra sur tes cartes pendant le vote.</p>
+                  <p>
+                    Équipe le motif qui apparaîtra sur tes cartes pendant le
+                    vote.
+                  </p>
                 </div>
                 {ownedCardDesigns?.length ? (
                   <div className='pp-card-design-owned-grid'>
@@ -870,7 +874,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   </div>
                 ) : (
                   <p className='pp-inventory-empty'>
-                    Aucun dos de carte pour le moment. Découvre les designs dans la boutique.
+                    Aucun dos de carte pour le moment. Découvre les designs dans
+                    la boutique.
                   </p>
                 )}
               </section>

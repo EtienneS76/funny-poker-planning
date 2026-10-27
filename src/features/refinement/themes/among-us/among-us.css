@@ -20,17 +20,17 @@
   position: relative;
   background:
     /* dalles du pont */
-      repeating-linear-gradient(
-        90deg,
-        transparent 0 119px,
-        rgb(54 83 108 / 8%) 119px 120px
-      ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 119px,
+      rgb(54 83 108 / 8%) 119px 120px
+    ),
     repeating-linear-gradient(
       0deg,
       transparent 0 59px,
-        rgb(54 83 108 / 8%) 59px 60px
+      rgb(54 83 108 / 8%) 59px 60px
     ),
-      radial-gradient(ellipse at 50% 48%, #ffffff, #e6eef4 72%), var(--pp-cream);
+    radial-gradient(ellipse at 50% 48%, #ffffff, #e6eef4 72%), var(--pp-cream);
   font-family: 'DM Sans', sans-serif;
 }
 
@@ -135,9 +135,13 @@
   left: 50%;
   bottom: calc(100% + 3px);
   transform: translateX(-50%);
-  max-width: 160px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: max-content;
+  max-width: 180px;
   padding: 1px 8px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 9px;
   border: 1px solid #d5e0e8;
   background: rgb(255 255 255 / 94%);
@@ -146,8 +150,51 @@
   font:
     700 12px 'DM Sans',
     sans-serif;
+  white-space: normal;
+}
+.au-name.avatar-frame {
+  position: absolute;
+  display: grid;
+  width: max-content;
+  max-width: 190px;
+  min-width: 0;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  padding: 3px 9px;
+  overflow: visible;
+  border-radius: 9px;
+  container-type: inline-size;
+  isolation: isolate;
+}
+.au-name-text {
+  display: block;
+  max-width: 168px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.au-spectator,
+.au-afk {
+  display: block;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+.au-spectator {
+  background: #e7eef5;
+  color: #445a70;
+}
+.au-afk {
+  background: #fff1d2;
+  color: #845b12;
+}
+.au-spectator[hidden],
+.au-afk[hidden] {
+  display: none;
 }
 .au-me .au-name {
   border-color: #159eae;
@@ -188,11 +235,7 @@
   place-items: center;
   border: 2px solid #0b0e14;
   border-radius: 5px;
-  background: repeating-linear-gradient(
-    45deg,
-    #38fedc 0 4px,
-    #24a8be 4px 8px
-  );
+  background: repeating-linear-gradient(45deg, #38fedc 0 4px, #24a8be 4px 8px);
   color: #0b0e14;
   font:
     800 13px 'Bricolage Grotesque',
@@ -203,7 +246,149 @@
 .au-card--face {
   width: 30px;
   height: 36px;
+.au-hint .au-charge-meter {
+  display: none;
+  position: relative;
+  width: 72px;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid #8fa4b7;
+  border-radius: 999px;
+  background: #dce5ec;
+}
+.au-hint.au-charging .au-charge-meter {
+  display: block;
+}
+.au-charge-meter i {
+  display: block;
+  width: var(--charge, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #24a8be, #159eae);
+  transition: width 60ms linear;
+}
   background: #fff;
+}
+.au-card-value {
+  position: relative;
+  z-index: 5;
+}
+.au-card[data-card-design='neon-synthwave'] {
+  position: absolute;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: #ff4fd8;
+  background:
+    repeating-linear-gradient(90deg, #4fe6ff55 0 1px, #0000 1px 5px),
+    linear-gradient(145deg, #12082b, #2b0f58);
+  box-shadow:
+    inset 0 0 0 1px #ff4fd8,
+    0 0 8px #ff4fd866;
+}
+.au-card[data-card-design='neon-synthwave']::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(180deg, #0000 35%, #ffffff55 50%, #0000 65%);
+  background-size: 100% 300%;
+  content: '';
+  animation: au-card-scan 3s linear infinite;
+}
+.au-card[data-card-design='holo-prism'] {
+  position: absolute;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: #d2c1ff;
+  background: linear-gradient(135deg, #24124f, #123a6a 60%, #2a1a5e);
+  box-shadow:
+    inset 0 0 0 1px #d2c1ff,
+    0 0 8px #a56bf066;
+}
+.au-card[data-card-design='holo-prism']::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    #0000 15%,
+    #ff7ad9bb 32%,
+    #7af0ffcc 48%,
+    #fff58aaa 62%,
+    #c58bffaa 78%,
+    #0000 92%
+  );
+  background-size: 260% 260%;
+  content: '';
+  mix-blend-mode: color-dodge;
+  animation: au-card-holo 4.5s ease-in-out infinite;
+}
+.au-card[data-card-design='holo-prism']::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: radial-gradient(circle, #fff 0 0.8px, #0000 1.4px) 0 0 / 8px 8px;
+  content: '';
+  mix-blend-mode: overlay;
+  animation: au-card-glitter 2.6s ease-in-out infinite alternate;
+}
+.au-card[data-card-design='golden-eclipse'] {
+  position: absolute;
+  overflow: hidden;
+  isolation: isolate;
+  border: 2px solid #e7c76a;
+  background: #0c0904;
+  color: #f3c24f;
+  box-shadow: 0 0 9px #f3c24f99;
+}
+.au-card[data-card-design='golden-eclipse']::before {
+  position: absolute;
+  z-index: 0;
+  inset: -60%;
+  background: conic-gradient(
+    #6b4a10,
+    #ffe9a0,
+    #c79a3b,
+    #fff7d1,
+    #8a6016,
+    #ffe9a0,
+    #6b4a10
+  );
+  content: '';
+  animation: au-card-spin 4s linear infinite;
+}
+.au-card[data-card-design='golden-eclipse']::after {
+  position: absolute;
+  z-index: 1;
+  inset: 2px;
+  border-radius: 3px;
+  background: radial-gradient(circle at 50% 40%, #3d2c0f, #0c0904 72%);
+  content: '';
+}
+.au-card[data-card-design='golden-eclipse'] .au-card-value {
+  background: linear-gradient(180deg, #fff7d1, #e9b84d 55%, #9a6a14);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 4px #f3c24f99);
+}
+@keyframes au-card-scan {
+  to {
+    background-position: 0 100%;
+  }
+}
+@keyframes au-card-holo {
+  50% {
+    background-position: 100% 100%;
+  }
+}
+@keyframes au-card-glitter {
+  to {
+    opacity: 0.95;
+  }
+}
+@keyframes au-card-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .au-stars {
@@ -328,6 +513,27 @@
 }
 .au-hint span {
   width: 10px;
+}
+.au-hint .au-charge-meter {
+  display: none;
+  position: relative;
+  width: 72px;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid #8fa4b7;
+  border-radius: 999px;
+  background: #dce5ec;
+}
+.au-hint.au-charging .au-charge-meter {
+  display: block;
+}
+.au-charge-meter i {
+  display: block;
+  width: var(--charge, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #24a8be, #159eae);
+  transition: width 60ms linear;
 }
 .au-hint kbd {
   min-width: 18px;

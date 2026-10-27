@@ -113,9 +113,12 @@ export const push = mutation({
     slug: v.string(),
     guestId: v.string(),
     targetUserId: v.union(v.string(), v.null()),
+    power: v.number(),
   },
   returns: v.null(),
-  handler: async (context, { slug, guestId, targetUserId }) => {
+  handler: async (context, { slug, guestId, targetUserId, power }) => {
+    if (!Number.isFinite(power)) return null
+    const charge = clamp01(power)
     const actor = await resolveActor(context, slug, guestId)
     if (!actor || actor.refinement.funInteractionsEnabled === false) return null
 
@@ -139,7 +142,8 @@ export const push = mutation({
       let kx = (target.x - source.x) * ARENA_ASPECT
       let ky = target.y - source.y
       const distance = Math.hypot(kx, ky)
-      if (distance <= PUSH_MAX_DISTANCE) {
+      const maxDistance = PUSH_MAX_DISTANCE * (0.55 + charge * 0.45)
+      if (distance <= maxDistance) {
         kx /= distance || 1
         ky /= distance || 1
         // la victime tombe toujours sur le côté
@@ -150,6 +154,7 @@ export const push = mutation({
           hitAt: now,
           hitDx: kx,
           hitDy: ky,
+          hitPower: charge,
         })
       }
     }

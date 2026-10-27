@@ -120,7 +120,11 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
             account.profile?.showPokemon3d ?? false,
             encounter.shiny,
           )}
-          fallbackImageSrc={getPokemonImageUrl(pokemon.id, false, encounter.shiny)}
+          fallbackImageSrc={getPokemonImageUrl(
+            pokemon.id,
+            false,
+            encounter.shiny,
+          )}
           balls={inventory === undefined ? undefined : balls}
           isAuthenticated={account.isAuthenticated}
           signInPending={account.pending}

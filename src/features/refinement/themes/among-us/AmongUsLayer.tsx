@@ -55,7 +55,14 @@ export function AmongUsLayer({ vm }: RoomProps) {
   const latest = useRef(vm)
   // derniers événements vus par joueur : un coup = hitAt / pushAt qui change
   const seen = useRef(
-    new Map<string, { hitAt: number | undefined; pushAt: number | undefined }>(),
+    new Map<
+      string,
+      {
+        hitAt: number | undefined
+        pushAt: number | undefined
+        hitPower: number | undefined
+      }
+    >(),
   )
 
   useEffect(() => {
@@ -70,7 +77,8 @@ export function AmongUsLayer({ vm }: RoomProps) {
       localId: null,
       getGeometry: readGeometry,
       onLocalState: (state) => latest.current.amongUs.move(state),
-      onPush: (targetId) => latest.current.amongUs.push(targetId),
+      onPush: (targetId, power) =>
+        latest.current.amongUs.push(targetId, power),
     })
     engineRef.current = engine
     return () => {
@@ -87,10 +95,13 @@ export function AmongUsLayer({ vm }: RoomProps) {
     const defs: CrewDef[] = vm.seats.map((seat) => ({
       id: seat.id,
       name: seat.name,
+      isSpectator: seat.isSpectator,
+      avatarFrameId: seat.avatarFrameId,
       card: {
         voted: !seat.isSpectator && seat.hasVoted,
         revealed: vm.table.revealed,
         value: seat.vote,
+        designId: seat.cardDesignId,
       },
     }))
     engine.setLocalId(vm.seats.find((seat) => seat.isMe)?.id ?? null)
@@ -109,7 +120,8 @@ export function AmongUsLayer({ vm }: RoomProps) {
     const localId = vm.seats.find((seat) => seat.isMe)?.id
     for (const player of players) {
       const previous = seen.current.get(player.userId)
-      if (player.userId !== localId) engine.applyRemoteState(player.userId, player)
+      if (player.userId !== localId)
+        engine.applyRemoteState(player.userId, player)
       // premier instantané = référence : on ne rejoue pas les anciens coups
       if (previous) {
         if (
@@ -120,12 +132,18 @@ export function AmongUsLayer({ vm }: RoomProps) {
           engine.playPush(player.userId, player.pushDx ?? player.dir)
         }
         if (player.hitAt !== undefined && player.hitAt !== previous.hitAt) {
-          engine.hit(player.userId, player.hitDx ?? player.dir, player.hitDy ?? 0)
+          engine.hit(
+            player.userId,
+            player.hitDx ?? player.dir,
+            player.hitDy ?? 0,
+            player.hitPower ?? 0,
+          )
         }
       }
       seen.current.set(player.userId, {
         hitAt: player.hitAt,
         pushAt: player.pushAt,
+        hitPower: player.hitPower,
       })
     }
   }, [players, vm.seats])

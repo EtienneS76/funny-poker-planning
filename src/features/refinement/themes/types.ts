@@ -31,6 +31,7 @@ export type AmongUsPlayerRecord = {
   hitAt?: number
   hitDx?: number
   hitDy?: number
+  hitPower?: number
   pushAt?: number
   pushDx?: number
 }
@@ -93,7 +94,7 @@ export type RoomViewModel = {
     pushEnabled: boolean
     players: AmongUsPlayerRecord[] | undefined
     move: (state: AmongUsLocalState) => void
-    push: (targetUserId: string | null) => void
+    push: (targetUserId: string | null, power: number) => void
   }
   copyInviteLink: () => Promise<void>
 }

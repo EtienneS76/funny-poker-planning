@@ -16,18 +16,30 @@ export type CrewCard = {
   voted: boolean
   revealed: boolean
   value: string | null
+  designId?: string | null
 }
-export type CrewDef = { id: string; name: string; card?: CrewCard }
+export type CrewDef = {
+  id: string
+  name: string
+  avatarFrameId?: string | null
+  isSpectator?: boolean
+  card?: CrewCard
+}
 export type LocalState = { x: number; y: number; dir: 1 | -1 }
-export type RemoteState = { x: number; y: number; dir: number }
+export type RemoteState = {
+  x: number
+  y: number
+  dir: number
+  updatedAt?: number
+}
 
 export type EngineOptions = {
   localId: string | null
   getGeometry: () => Geometry
   /** Position locale throttled; les déplacements distants sont interpolés. */
   onLocalState?: (state: LocalState) => void
-  /** Le joueur local a poussé : id de la cible la plus proche, ou null (coup dans le vide). */
-  onPush?: (targetId: string | null) => void
+  /** Le joueur a relâché l'attaque : cible et puissance normalisée 0..1. */
+  onPush?: (targetId: string | null, power: number) => void
   pushEnabled?: boolean
   fallDuration?: number
   pushCooldown?: number
@@ -36,7 +48,10 @@ export type EngineOptions = {
 type Crew = {
   id: string
   el: HTMLElement
+  nameWrapperEl: HTMLElement
   nameEl: HTMLElement
+  spectatorEl: HTMLElement
+  afkEl: HTMLElement
   bubbleEl: HTMLElement
   cardEl: HTMLElement
   colorKey: ColorKey
@@ -46,11 +61,18 @@ type Crew = {
   tnx: number
   tny: number
   hasState: boolean
+  remoteStartX: number
+  remoteStartY: number
+  remoteStartAt: number
+  lastRemoteUpdatedAt: number | undefined
+  lastHeardAt: number
+  isAfk: boolean
   dir: 1 | -1
   moving: boolean
   fallen: boolean
   vx: number
   vy: number
+  knockbackDrag: number
   lastPush: number
   fallTimer: number | undefined
   pushTimer: number | undefined
@@ -80,6 +102,9 @@ const SCREAMS = [
 
 const EMIT_EVERY_MS = 240
 const HEARTBEAT_MS = 5_000
+const AFK_AFTER_MS = 30_000
+const REMOTE_INTERPOLATION_MS = 260
+const MAX_CHARGE_MS = 5_000
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))
@@ -108,6 +133,8 @@ export class AmongUsEngine {
   private readonly keys = new Set<string>()
   private readonly timers = new Set<number>()
   private readonly hintEl: HTMLElement
+  private chargeStartedAt: number | undefined
+  private chargeTimer: number | undefined
 
   private arena: Rect = { left: 0, top: 0, width: 800, height: 400 }
   private table: Rect | null = null
@@ -133,8 +160,8 @@ export class AmongUsEngine {
     this.hintEl = document.createElement('div')
     this.hintEl.className = 'au-hint'
     this.hintEl.innerHTML =
-      '<kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> bouger<span></span>' +
-      '<kbd>Espace</kbd> pousser'
+      '<kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> Se déplacer<span></span>' +
+      '<kbd>Espace</kbd> Pousser<span class="au-charge-meter"><i></i></span>'
     host.append(this.hintEl)
 
     this.refreshGeometry()
@@ -173,8 +200,11 @@ export class AmongUsEngine {
     }
     const colors = assignColors(defs.map((def) => def.id))
     defs.forEach((def, index) => {
-      const crew = this.crew.get(def.id) ?? this.addCrew(def, index, defs.length)
+      const crew =
+        this.crew.get(def.id) ?? this.addCrew(def, index, defs.length)
       crew.nameEl.textContent = def.name
+      crew.spectatorEl.hidden = !def.isSpectator
+      crew.nameWrapperEl.className = 'au-name'
       this.setColor(crew, colors.get(def.id) ?? crew.colorKey)
       this.renderCard(crew, def.card)
     })
@@ -184,18 +214,35 @@ export class AmongUsEngine {
   applyRemoteState(id: string, state: RemoteState) {
     const crew = this.crew.get(id)
     if (!crew || crew.isLocal) return
-    crew.tnx = clamp(state.x, 0, 1)
-    crew.tny = clamp(state.y, 0, 1)
-    crew.dir = state.dir < 0 ? -1 : 1
-    if (!crew.hasState) {
-      crew.nx = crew.tnx
-      crew.ny = crew.tny
-      crew.hasState = true
+    const updatedAt = state.updatedAt ?? Date.now()
+    if (updatedAt !== crew.lastRemoteUpdatedAt) {
+      crew.lastRemoteUpdatedAt = updatedAt
+      crew.lastHeardAt = performance.now() - Math.max(0, Date.now() - updatedAt)
+      crew.isAfk = false
+      crew.afkEl.hidden = true
     }
+    const dir = state.dir < 0 ? -1 : 1
+    const nextX = clamp(state.x, 0, 1)
+    const nextY = clamp(state.y, 0, 1)
+    if (!crew.hasState) {
+      crew.nx = nextX
+      crew.ny = nextY
+      crew.remoteStartX = nextX
+      crew.remoteStartY = nextY
+      crew.remoteStartAt = performance.now()
+      crew.hasState = true
+    } else if (nextX !== crew.tnx || nextY !== crew.tny || dir !== crew.dir) {
+      crew.remoteStartX = crew.nx
+      crew.remoteStartY = crew.ny
+      crew.remoteStartAt = performance.now()
+    }
+    crew.tnx = nextX
+    crew.tny = nextY
+    crew.dir = dir
   }
 
   /** Un joueur vient de se faire pousser (événement serveur). */
-  hit(id: string, dx: number, _dy: number) {
+  hit(id: string, dx: number, _dy: number, power = 0) {
     const crew = this.crew.get(id)
     if (!crew || crew.fallen) return
     crew.fallen = true
@@ -205,7 +252,9 @@ export class AmongUsEngine {
     crew.el.classList.add('au-fallen')
     this.say(id, SCREAMS[Math.floor(Math.random() * SCREAMS.length)] ?? 'Aïe !')
     if (crew.isLocal) {
-      const knockback = this.size * 3
+      const charge = clamp(power, 0, 1)
+      const knockback = this.size * 2 + this.arena.width * 2.5 * charge
+      crew.knockbackDrag = 5 - charge * 2.8
       crew.vx = (dx < 0 ? -1 : 1) * knockback
       crew.vy = 0
     }
@@ -263,7 +312,7 @@ export class AmongUsEngine {
     return id === null ? undefined : this.crew.get(id)
   }
 
-  private push() {
+  private push(power: number) {
     const me = this.local()
     const now = performance.now()
     if (
@@ -275,7 +324,8 @@ export class AmongUsEngine {
       return
     me.lastPush = now
 
-    const range = this.size * 1.5
+    const hitRadiusX = this.size * (0.48 + power * 1.35)
+    const hitRadiusY = this.size * (0.52 + power * 1.1)
     let target: Crew | undefined
     let best = Infinity
     let tx = 0
@@ -283,8 +333,8 @@ export class AmongUsEngine {
       if (other === me || other.fallen) continue
       const dx = (other.nx - me.nx) * this.arena.width
       const dy = (other.ny - me.ny) * this.arena.height
-      const distance = Math.hypot(dx, dy * 1.6) // la profondeur compte plus
-      if (distance < range && distance < best) {
+      const distance = Math.hypot(dx / hitRadiusX, dy / hitRadiusY)
+      if (distance <= 1 && distance < best) {
         best = distance
         target = other
         tx = dx
@@ -293,7 +343,42 @@ export class AmongUsEngine {
     if (target && tx) me.dir = tx < 0 ? -1 : 1
 
     this.playPush(me.id, me.dir)
-    this.opts.onPush?.(target ? target.id : null)
+    this.opts.onPush?.(target ? target.id : null, power)
+  }
+
+  private startCharge() {
+    const me = this.local()
+    if (
+      !me ||
+      me.fallen ||
+      !this.opts.pushEnabled ||
+      this.chargeStartedAt !== undefined
+    )
+      return
+    this.chargeStartedAt = performance.now()
+    this.hintEl.classList.add('au-charging')
+    this.chargeTimer = this.later(() => {
+      this.chargeTimer = undefined
+      this.releaseCharge()
+    }, MAX_CHARGE_MS)
+  }
+
+  private releaseCharge() {
+    if (this.chargeStartedAt === undefined) return
+    if (this.chargeTimer !== undefined) {
+      window.clearTimeout(this.chargeTimer)
+      this.timers.delete(this.chargeTimer)
+      this.chargeTimer = undefined
+    }
+    const power = clamp(
+      (performance.now() - this.chargeStartedAt) / MAX_CHARGE_MS,
+      0,
+      1,
+    )
+    this.chargeStartedAt = undefined
+    this.hintEl.classList.remove('au-charging')
+    this.hintEl.style.setProperty('--charge', '0%')
+    this.push(power)
   }
 
   /* ------------------------------------------------------------ Crew */
@@ -305,7 +390,8 @@ export class AmongUsEngine {
     el.style.setProperty('--dir', '1')
     el.style.setProperty('--fall', '1')
     el.innerHTML =
-      '<div class="au-bubble"></div><div class="au-name"></div>' +
+      '<div class="au-bubble"></div><div class="au-name"><span class="au-name-text"></span>' +
+      '<small class="au-spectator" hidden>Spectateur</small><small class="au-afk" hidden>AFK</small></div>' +
       '<div class="au-card" hidden></div><div class="au-stars">💫</div>' +
       '<div class="au-shadow"></div><div class="au-flip"><div class="au-lunge">' +
       `<div class="au-sprite">${SPRITE}</div></div></div>`
@@ -339,7 +425,10 @@ export class AmongUsEngine {
     const crew: Crew = {
       id: def.id,
       el,
-      nameEl: el.querySelector<HTMLElement>('.au-name')!,
+      nameWrapperEl: el.querySelector<HTMLElement>('.au-name')!,
+      nameEl: el.querySelector<HTMLElement>('.au-name-text')!,
+      spectatorEl: el.querySelector<HTMLElement>('.au-spectator')!,
+      afkEl: el.querySelector<HTMLElement>('.au-afk')!,
       bubbleEl: el.querySelector<HTMLElement>('.au-bubble')!,
       cardEl: el.querySelector<HTMLElement>('.au-card')!,
       colorKey,
@@ -349,11 +438,18 @@ export class AmongUsEngine {
       tnx: nx,
       tny: ny,
       hasState: false,
+      remoteStartX: nx,
+      remoteStartY: ny,
+      remoteStartAt: performance.now(),
+      lastRemoteUpdatedAt: undefined,
+      lastHeardAt: performance.now(),
+      isAfk: false,
       dir: 1,
       moving: false,
       fallen: false,
       vx: 0,
       vy: 0,
+      knockbackDrag: 5,
       lastPush: 0,
       fallTimer: undefined,
       pushTimer: undefined,
@@ -380,6 +476,11 @@ export class AmongUsEngine {
   private applyLocalFlag(crew: Crew) {
     crew.isLocal = crew.id === this.opts.localId
     crew.el.classList.toggle('au-me', crew.isLocal)
+    if (crew.isLocal) {
+      crew.lastHeardAt = performance.now()
+      crew.isAfk = false
+      crew.afkEl.hidden = true
+    }
   }
 
   private setColor(crew: Crew, key: ColorKey) {
@@ -392,9 +493,22 @@ export class AmongUsEngine {
   private renderCard(crew: Crew, card: CrewCard | undefined) {
     const visible = Boolean(card?.voted)
     crew.cardEl.hidden = !visible
-    if (!card || !visible) return
+    if (!card || !visible) {
+      delete crew.cardEl.dataset.cardDesign
+      crew.cardEl.classList.remove('au-card--face')
+      crew.cardEl.replaceChildren()
+      return
+    }
+    if (card.designId) crew.cardEl.dataset.cardDesign = card.designId
+    else delete crew.cardEl.dataset.cardDesign
     crew.cardEl.classList.toggle('au-card--face', card.revealed)
-    crew.cardEl.textContent = card.revealed ? (card.value ?? '') : ''
+    crew.cardEl.replaceChildren()
+    if (card.revealed && card.value !== null) {
+      const value = document.createElement('span')
+      value.className = 'au-card-value'
+      value.textContent = card.value
+      crew.cardEl.append(value)
+    }
   }
 
   private getUp(crew: Crew) {
@@ -467,32 +581,47 @@ export class AmongUsEngine {
     )
       return
     const key = event.key.toLowerCase()
-    const isMove = (Object.values(MOVE_KEYS) as readonly (readonly string[])[]).some(
-      (list) => list.includes(key),
-    )
+    const isMove = (
+      Object.values(MOVE_KEYS) as readonly (readonly string[])[]
+    ).some((list) => list.includes(key))
     if (isMove) {
       this.keys.add(key)
       if (key.startsWith('arrow')) event.preventDefault()
     } else if (event.code === 'Space') {
-      // Espace pousse (Entrée reste disponible pour activer un bouton au clavier)
+      // Maintenir Espace charge le coup; le relâcher déclenche la poussée.
       event.preventDefault()
-      if (!event.repeat) this.push()
+      if (!event.repeat) this.startCharge()
     }
   }
 
   private readonly onKeyUp = (event: KeyboardEvent) => {
     this.keys.delete(event.key.toLowerCase())
-    if (event.code === 'Space' && !inputBlocked(event.target))
-      event.preventDefault() // évite de "cliquer" le bouton focus au relâchement
+    if (event.code === 'Space') {
+      if (!inputBlocked(event.target)) event.preventDefault()
+      this.releaseCharge()
+    }
   }
 
-  private readonly onBlur = () => this.keys.clear()
+  private readonly onBlur = () => {
+    this.keys.clear()
+    if (this.chargeTimer !== undefined) {
+      window.clearTimeout(this.chargeTimer)
+      this.timers.delete(this.chargeTimer)
+      this.chargeTimer = undefined
+    }
+    this.chargeStartedAt = undefined
+    this.hintEl.classList.remove('au-charging')
+  }
 
   /* ------------------------------------------------------------ Boucle */
 
   private readonly tick = (now: number) => {
     const dt = Math.min(0.05, (now - this.lastFrame) / 1000)
     this.lastFrame = now
+    if (this.chargeStartedAt !== undefined) {
+      const progress = clamp((now - this.chargeStartedAt) / MAX_CHARGE_MS, 0, 1)
+      this.hintEl.style.setProperty('--charge', `${progress * 100}%`)
+    }
     const { arena, size } = this
     const minX = arena.left + size * 0.4
     const maxX = arena.left + arena.width - size * 0.4
@@ -500,6 +629,11 @@ export class AmongUsEngine {
     const maxY = arena.top + arena.height - 4
 
     for (const crew of this.crew.values()) {
+      const isAfk = !crew.isLocal && now - crew.lastHeardAt >= AFK_AFTER_MS
+      if (crew.isAfk !== isAfk) {
+        crew.isAfk = isAfk
+        crew.afkEl.hidden = !isAfk
+      }
       let px = arena.left + crew.nx * arena.width
       let py = arena.top + crew.ny * arena.height
 
@@ -519,7 +653,7 @@ export class AmongUsEngine {
         if (crew.vx || crew.vy) {
           px += crew.vx * dt
           py += crew.vy * dt
-          const friction = Math.exp(-5 * dt)
+          const friction = Math.exp(-crew.knockbackDrag * dt)
           crew.vx *= friction
           crew.vy *= friction
           if (Math.hypot(crew.vx, crew.vy) < 4) crew.vx = crew.vy = 0
@@ -528,9 +662,14 @@ export class AmongUsEngine {
         py = clamp(py, minY, Math.max(minY, maxY))
         ;[px, py] = this.collideTable(px, py)
       } else if (crew.hasState) {
-        const k = 1 - Math.exp(-7 * dt)
-        crew.nx += (crew.tnx - crew.nx) * k
-        crew.ny += (crew.tny - crew.ny) * k
+        const progress = clamp(
+          (now - crew.remoteStartAt) / REMOTE_INTERPOLATION_MS,
+          0,
+          1,
+        )
+        const eased = progress * progress * (3 - 2 * progress)
+        crew.nx = crew.remoteStartX + (crew.tnx - crew.remoteStartX) * eased
+        crew.ny = crew.remoteStartY + (crew.tny - crew.remoteStartY) * eased
         px = arena.left + crew.nx * arena.width
         py = arena.top + crew.ny * arena.height
         crew.moving =
@@ -560,6 +699,7 @@ export class AmongUsEngine {
       return
     this.lastSent = signature
     this.lastEmit = now
+    me.lastHeardAt = now
     this.opts.onLocalState({ x, y, dir: me.dir })
   }
 

@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useMutation } from 'convex/react'
 import { Hexagon, Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
@@ -168,7 +163,10 @@ export default function ModalShop({
       const designName =
         cardDesigns.find((design) => design.id === designId)?.name ??
         'Design de carte'
-      snackbar.success('Achat effectué', `${designName} ajouté à ta collection.`)
+      snackbar.success(
+        'Achat effectué',
+        `${designName} ajouté à ta collection.`,
+      )
     } catch (error) {
       setPurchaseError(
         error instanceof Error
@@ -470,7 +468,9 @@ export default function ModalShop({
             <div className='pp-card-design-shop'>
               <div className='pp-shop-section-heading'>
                 <h3>Designs de carte</h3>
-                <p>Choisis le style des cartes dans tes mains et sur la table.</p>
+                <p>
+                  Choisis le style des cartes dans tes mains et sur la table.
+                </p>
               </div>
               <div className='pp-card-design-grid'>
                 {cardDesigns.map((design) => {

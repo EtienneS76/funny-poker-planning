@@ -120,7 +120,9 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                     key={seat.id}
                     className={`room-thrown-card${isTshirtSizing ? ' room-thrown-card--shirt' : ''}`}
                     data-card-design={
-                      !isTshirtSizing ? seat.cardDesignId ?? undefined : undefined
+                      !isTshirtSizing
+                        ? (seat.cardDesignId ?? undefined)
+                        : undefined
                     }
                     aria-label={`${seat.name} : ${seat.vote}`}
                     style={
@@ -276,7 +278,9 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                       <span
                         className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
                         data-card-design={
-                          seat.hasVoted ? (seat.cardDesignId ?? undefined) : undefined
+                          seat.hasVoted
+                            ? (seat.cardDesignId ?? undefined)
+                            : undefined
                         }
                         role='img'
                         aria-label={
@@ -346,7 +350,7 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                   className={`vote-card${selected ? ' vote-card--selected' : ''}${isTshirtSizing ? ' vote-card--shirt' : ''}`}
                   data-card-design={
                     !isTshirtSizing
-                      ? account.profile?.cardDesignId ?? undefined
+                      ? (account.profile?.cardDesignId ?? undefined)
                       : undefined
                   }
                   aria-pressed={selected}

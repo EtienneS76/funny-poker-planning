@@ -18,6 +18,7 @@ export const amongUsPlayerTable = defineTable({
   hitAt: v.optional(v.number()),
   hitDx: v.optional(v.number()),
   hitDy: v.optional(v.number()),
+  hitPower: v.optional(v.number()),
   // Donné : ce joueur a poussé (ou raté son coup)
   pushAt: v.optional(v.number()),
   pushDx: v.optional(v.number()),

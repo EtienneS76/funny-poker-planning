@@ -658,14 +658,21 @@
 .multivers[data-theme] .seat-card[data-card-design='neon-synthwave'] {
   border: 1px solid #ff4fd8;
   background:
-    radial-gradient(circle at 50% 84%, #ffb347 0 9%, #ff4fd8 10% 22%, #0000 23%),
     repeating-linear-gradient(90deg, #4fe6ff55 0 1px, #0000 1px 5px),
     linear-gradient(145deg, #12082b, #2b0f58);
-  box-shadow: inset 0 0 0 1px #ff4fd8, 0 0 8px #ff4fd866;
+  box-shadow:
+    inset 0 0 0 1px #ff4fd8,
+    0 0 8px #ff4fd866;
 }
 .multivers[data-theme] .seat-card[data-card-design='holo-prism'] {
   border: 1px solid #d2c1ff;
-  background: linear-gradient(135deg, #ff7ad9, #7af0ff 45%, #fff58a 70%, #7656ba);
+  background: linear-gradient(
+    135deg,
+    #ff7ad9,
+    #7af0ff 45%,
+    #fff58a 70%,
+    #7656ba
+  );
   box-shadow: inset 0 0 0 2px #24124f;
 }
 .multivers[data-theme] .seat-card[data-card-design='golden-eclipse'] {
@@ -838,7 +845,6 @@
 .multivers[data-theme] .pp-hand .vote-card[data-card-design='neon-synthwave'],
 .multivers[data-theme] .room-thrown-card[data-card-design='neon-synthwave'] {
   --card-face-bg:
-    radial-gradient(circle at 50% 84%, #ffb347 0 9%, #ff4fd8 10% 22%, #0000 23%),
     repeating-linear-gradient(90deg, #4fe6ff22 0 1px, #0000 1px 9px),
     repeating-linear-gradient(0deg, #4fe6ff22 0 1px, #0000 1px 9px),
     linear-gradient(#12082b, #2b0f58);
@@ -848,20 +854,27 @@
   border-color: #ff4fd8;
   background: var(--card-face-bg);
   color: #fff;
-  box-shadow: inset 0 0 0 2px #ff4fd8, inset 0 0 12px #ff4fd899,
+  box-shadow:
+    inset 0 0 0 2px #ff4fd8,
+    inset 0 0 12px #ff4fd899,
     0 0 14px #ff4fd866;
-  text-shadow: 0 0 6px #4fe6ff, 0 0 16px #ff4fd8;
+  text-shadow:
+    0 0 6px #4fe6ff,
+    0 0 16px #ff4fd8;
 }
 .multivers[data-theme] .pp-hand .vote-card[data-card-design='neon-synthwave'] {
   animation: card-design-neon-pulse 2.4s ease-in-out infinite alternate;
 }
 .multivers[data-theme] .room-thrown-card[data-card-design='neon-synthwave'] {
-  animation: poker-toss 650ms var(--deal-delay) cubic-bezier(0.2, 0.8, 0.3, 1)
-      both,
+  animation:
+    poker-toss 650ms var(--deal-delay) cubic-bezier(0.2, 0.8, 0.3, 1) both,
     card-design-neon-pulse 2.4s ease-in-out infinite alternate;
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='neon-synthwave']::before,
-.multivers[data-theme] .room-thrown-card[data-card-design='neon-synthwave']::before {
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='neon-synthwave']::before,
+.multivers[data-theme]
+  .room-thrown-card[data-card-design='neon-synthwave']::before {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -880,11 +893,16 @@
   border-color: #d2c1ff;
   background: var(--card-face-bg);
   color: #fff;
-  box-shadow: inset 0 0 0 1.5px #d2c1ff, 0 0 14px #a56bf066;
+  box-shadow:
+    inset 0 0 0 1.5px #d2c1ff,
+    0 0 14px #a56bf066;
   text-shadow: 0 0 8px #fff9;
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='holo-prism']::before,
-.multivers[data-theme] .room-thrown-card[data-card-design='holo-prism']::before {
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='holo-prism']::before,
+.multivers[data-theme]
+  .room-thrown-card[data-card-design='holo-prism']::before {
   position: absolute;
   z-index: 0;
   inset: 0;
@@ -903,7 +921,9 @@
   mix-blend-mode: color-dodge;
   animation: card-design-holo 4.5s ease-in-out infinite;
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='holo-prism']::after,
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='holo-prism']::after,
 .multivers[data-theme] .room-thrown-card[data-card-design='holo-prism']::after {
   position: absolute;
   z-index: 1;
@@ -932,12 +952,15 @@
   animation: card-design-gold-pulse 2.2s ease-in-out infinite alternate;
 }
 .multivers[data-theme] .room-thrown-card[data-card-design='golden-eclipse'] {
-  animation: poker-toss 650ms var(--deal-delay) cubic-bezier(0.2, 0.8, 0.3, 1)
-      both,
+  animation:
+    poker-toss 650ms var(--deal-delay) cubic-bezier(0.2, 0.8, 0.3, 1) both,
     card-design-gold-pulse 2.2s ease-in-out infinite alternate;
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='golden-eclipse']::before,
-.multivers[data-theme] .room-thrown-card[data-card-design='golden-eclipse']::before {
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='golden-eclipse']::before,
+.multivers[data-theme]
+  .room-thrown-card[data-card-design='golden-eclipse']::before {
   position: absolute;
   z-index: 0;
   inset: -60%;
@@ -953,8 +976,11 @@
   content: '';
   animation: card-design-spin 4s linear infinite;
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='golden-eclipse']::after,
-.multivers[data-theme] .room-thrown-card[data-card-design='golden-eclipse']::after {
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='golden-eclipse']::after,
+.multivers[data-theme]
+  .room-thrown-card[data-card-design='golden-eclipse']::after {
   position: absolute;
   z-index: 1;
   inset: 3px;
@@ -962,7 +988,10 @@
   background: radial-gradient(circle at 50% 40%, #3d2c0f, #0c0904 72%);
   content: '';
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='golden-eclipse'] .vote-card-value,
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='golden-eclipse']
+  .vote-card-value,
 .multivers[data-theme] .room-thrown-card[data-card-design='golden-eclipse'] b {
   position: relative;
   z-index: 5;
@@ -971,8 +1000,13 @@
   color: transparent;
   filter: drop-shadow(0 0 6px #f3c24f99);
 }
-.multivers[data-theme] .pp-hand .vote-card[data-card-design='golden-eclipse'] .card-design-glitter,
-.multivers[data-theme] .room-thrown-card[data-card-design='golden-eclipse'] .card-design-glitter {
+.multivers[data-theme]
+  .pp-hand
+  .vote-card[data-card-design='golden-eclipse']
+  .card-design-glitter,
+.multivers[data-theme]
+  .room-thrown-card[data-card-design='golden-eclipse']
+  .card-design-glitter {
   position: absolute;
   z-index: 4;
   inset: 6px;
@@ -1028,7 +1062,9 @@
 }
 @keyframes card-design-neon-pulse {
   to {
-    box-shadow: inset 0 0 0 2px #ff4fd8, inset 0 0 16px #ff4fd8cc,
+    box-shadow:
+      inset 0 0 0 2px #ff4fd8,
+      inset 0 0 16px #ff4fd8cc,
       0 0 20px #ff4fd899;
   }
 }
