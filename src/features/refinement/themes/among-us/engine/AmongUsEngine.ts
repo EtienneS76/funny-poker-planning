@@ -24,7 +24,7 @@ export type RemoteState = { x: number; y: number; dir: number }
 export type EngineOptions = {
   localId: string | null
   getGeometry: () => Geometry
-  /** ~10x/s quand le joueur local bouge, et toutes les 4 s à l'arrêt. */
+  /** Position locale throttled; les déplacements distants sont interpolés. */
   onLocalState?: (state: LocalState) => void
   /** Le joueur local a poussé : id de la cible la plus proche, ou null (coup dans le vide). */
   onPush?: (targetId: string | null) => void
@@ -78,8 +78,8 @@ const SCREAMS = [
   'Hého !',
 ]
 
-const EMIT_EVERY_MS = 100
-const HEARTBEAT_MS = 4_000
+const EMIT_EVERY_MS = 240
+const HEARTBEAT_MS = 5_000
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value))
@@ -205,11 +205,9 @@ export class AmongUsEngine {
     crew.el.classList.add('au-fallen')
     this.say(id, SCREAMS[Math.floor(Math.random() * SCREAMS.length)] ?? 'Aïe !')
     if (crew.isLocal) {
-      // projection : seul le client du joueur touché simule, les autres reçoivent sa position
-        const angle = Math.random() * Math.PI * 2
-        const speed = this.arena.width * (1.3 + Math.random() * 0.9)
-        crew.vx = Math.cos(angle) * speed
-        crew.vy = Math.sin(angle) * speed
+      const knockback = this.size * 3
+      crew.vx = (dx < 0 ? -1 : 1) * knockback
+      crew.vy = 0
     }
     window.clearTimeout(crew.fallTimer)
     crew.fallTimer = this.later(() => this.getUp(crew), this.opts.fallDuration)
@@ -519,25 +517,9 @@ export class AmongUsEngine {
           }
         }
         if (crew.vx || crew.vy) {
-          let nextX = px + crew.vx * dt
-          let nextY = py + crew.vy * dt
-          if (nextX < minX) {
-            nextX = minX + (minX - nextX)
-            crew.vx = Math.abs(crew.vx)
-          } else if (nextX > maxX) {
-            nextX = maxX - (nextX - maxX)
-            crew.vx = -Math.abs(crew.vx)
-          }
-          if (nextY < minY) {
-            nextY = minY + (minY - nextY)
-            crew.vy = Math.abs(crew.vy)
-          } else if (nextY > maxY) {
-            nextY = maxY - (nextY - maxY)
-            crew.vy = -Math.abs(crew.vy)
-          }
-          px = nextX
-          py = nextY
-          const friction = Math.exp(-0.9 * dt)
+          px += crew.vx * dt
+          py += crew.vy * dt
+          const friction = Math.exp(-5 * dt)
           crew.vx *= friction
           crew.vy *= friction
           if (Math.hypot(crew.vx, crew.vy) < 4) crew.vx = crew.vy = 0
@@ -546,7 +528,7 @@ export class AmongUsEngine {
         py = clamp(py, minY, Math.max(minY, maxY))
         ;[px, py] = this.collideTable(px, py)
       } else if (crew.hasState) {
-        const k = 1 - Math.exp(-12 * dt)
+        const k = 1 - Math.exp(-7 * dt)
         crew.nx += (crew.tnx - crew.nx) * k
         crew.ny += (crew.tny - crew.ny) * k
         px = arena.left + crew.nx * arena.width
