@@ -2,6 +2,7 @@ import { ConvexError, v } from 'convex/values'
 import { mutation, type MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 import { avatarFrameCatalog } from './avatarFrames'
+import { cardDesignCatalog } from './cardDesigns'
 import { pokemonConsumableCatalog } from './consumables'
 import { drawMysteryPokemonId, getPokemonRarityById } from './pokemonDraw'
 import { syncAuthenticatedUser } from './profile'
@@ -704,6 +705,67 @@ export const equipAvatarFrame = mutation({
     }
 
     await context.db.patch(user._id, { avatarFrameId: frameId ?? undefined })
+    return null
+  },
+})
+
+export const buyCardDesign = mutation({
+  args: { designId: v.string() },
+  returns: v.null(),
+  handler: async (context, { designId }) => {
+    const design = cardDesignCatalog.find((item) => item.id === designId)
+    if (!design) throw new ConvexError('Ce design de carte n’existe pas.')
+
+    const user = await requireAuthenticatedUser(context)
+    const existing = await context.db
+      .query('userCardDesigns')
+      .withIndex('by_user_design', (query) =>
+        query.eq('userId', user._id).eq('designId', designId),
+      )
+      .unique()
+    if (existing) throw new ConvexError('Tu possèdes déjà ce design.')
+
+    const wallet = await context.db
+      .query('pokisouWallets')
+      .withIndex('by_user_id', (query) => query.eq('userId', String(user._id)))
+      .unique()
+    if (!wallet || wallet.balance < design.price) {
+      throw new ConvexError('Tu n’as pas assez de Pokisous pour ce design.')
+    }
+
+    await context.db.patch(wallet._id, {
+      balance: wallet.balance - design.price,
+    })
+    await context.db.insert('userCardDesigns', {
+      userId: user._id,
+      designId,
+      purchasedAt: Date.now(),
+    })
+    return null
+  },
+})
+
+export const equipCardDesign = mutation({
+  args: { designId: v.union(v.string(), v.null()) },
+  returns: v.null(),
+  handler: async (context, { designId }) => {
+    const user = await requireAuthenticatedUser(context)
+    if (designId !== null) {
+      if (!cardDesignCatalog.some((design) => design.id === designId)) {
+        throw new ConvexError('Ce design de carte n’existe pas.')
+      }
+      const ownedDesign = await context.db
+        .query('userCardDesigns')
+        .withIndex('by_user_design', (query) =>
+          query.eq('userId', user._id).eq('designId', designId),
+        )
+        .unique()
+      if (!ownedDesign) throw new ConvexError('Tu ne possèdes pas ce design.')
+    }
+
+    await context.db.patch(user._id, {
+      cardDesignId: designId ?? undefined,
+    })
     return null
   },
 })

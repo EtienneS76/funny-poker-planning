@@ -8,6 +8,7 @@ export type Seat = {
   name: string
   avatarUrl: string | null
   avatarFrameId: string | null
+  cardDesignId: string | null
   pokemonGifUrl: string | null
   pokemonName: string | null
   pokemonId: number | null

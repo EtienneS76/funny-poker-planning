@@ -7,6 +7,7 @@ export const userTable = defineTable({
   displayName: v.optional(v.string()),
   avatarUrl: v.union(v.string(), v.null()),
   avatarFrameId: v.optional(v.string()),
+  cardDesignId: v.optional(v.string()),
   assignedPokemonId: v.optional(v.number()),
   assignedPokemonShiny: v.optional(v.boolean()),
   showPokemon3d: v.optional(v.boolean()),
@@ -27,6 +28,14 @@ export const userAvatarFramesTable = defineTable({
 })
   .index('by_user', ['userId'])
   .index('by_user_frame', ['userId', 'frameId'])
+
+export const userCardDesignsTable = defineTable({
+  userId: v.id('users'),
+  designId: v.string(),
+  purchasedAt: v.number(),
+})
+  .index('by_user', ['userId'])
+  .index('by_user_design', ['userId', 'designId'])
 
 export const userPokemonsTable = defineTable({
   userId: v.id('users'),

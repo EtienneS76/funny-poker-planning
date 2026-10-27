@@ -151,6 +151,7 @@ export const getBySlug = query({
             'Invité',
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
           avatarFrameId: user?.avatarFrameId ?? null,
+          cardDesignId: user?.cardDesignId ?? null,
           isAuthenticated: user !== null,
           assignedPokemonId: user?.assignedPokemonId ?? null,
           assignedPokemonShiny: user?.assignedPokemonShiny ?? false,

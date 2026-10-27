@@ -15,7 +15,7 @@ type Props = {
   onInvitePlayers?: () => void
 }
 
-type ShopTabId = 'decorations' | 'pokemon' | 'star-wars'
+type ShopTabId = 'decorations' | 'pokemon' | 'star-wars' | 'card-designs'
 
 export default function Topbar({ account, onInvitePlayers }: Props) {
   const [shopOpen, setShopOpen] = useState(false)
@@ -115,6 +115,9 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
           initialTab={shopInitialTab}
           balance={shopData?.balance ?? 0}
           catalog={shopData?.catalog ?? []}
+          cardDesigns={shopData?.cardDesigns ?? []}
+          ownedCardDesignIds={shopData?.ownedCardDesignIds ?? []}
+          equippedCardDesignId={shopData?.equippedCardDesignId ?? null}
           ownedIds={shopData?.ownedIds ?? []}
           consumables={shopData?.consumables ?? []}
           consumableInventory={shopData?.consumableInventory ?? []}

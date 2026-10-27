@@ -3,6 +3,7 @@ import { Check, Search, X } from 'lucide-react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
+import { CardDesignPreview } from './CardDesignPreview'
 import {
   getPokemonById,
   getPokemonImageUrl,
@@ -24,8 +25,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const account = useAccount()
   const snackbar = useAppSnackbar()
   const [activeTab, setActiveTab] = useState<
-    'frames' | 'pokemon' | 'shiny' | 'star-wars'
-  >('frames')
+    'general' | 'pokemon' | 'shiny' | 'star-wars'
+  >('general')
   const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
     null,
   )
@@ -34,12 +35,14 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   >(null)
   const [assigning, setAssigning] = useState(false)
   const [saving3d, setSaving3d] = useState(false)
+  const [pendingCardDesign, setPendingCardDesign] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const collection = useQuery(api.user.queries.pokemonCollection, {})
   const starWarsCollection = useQuery(api.user.queries.starWarsCollection, {})
   const inventory = useQuery(api.user.queries.shopData, {})
   const assignPokemon = useMutation(api.user.mutations.assignPokemon)
   const equipAvatarFrame = useMutation(api.user.mutations.equipAvatarFrame)
+  const equipCardDesign = useMutation(api.user.mutations.equipCardDesign)
   const savePokemonPreference = useMutation(
     api.user.mutations.updatePokemonDisplayPreference,
   )
@@ -49,6 +52,10 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const ownedFrames = inventory?.catalog.filter((frame) =>
     inventory.ownedIds.includes(frame.id),
   )
+  const ownedCardDesigns = inventory?.cardDesigns.filter((design) =>
+    inventory.ownedCardDesignIds.includes(design.id),
+  )
+  const equippedCardDesignId = account.profile?.cardDesignId ?? null
 
   useEffect(() => {
     const element = dialog.current
@@ -206,6 +213,26 @@ export default function ModalPokemonCollection({ onClose }: Props) {
     }
   }
 
+  async function setEquippedCardDesign(designId: string | null) {
+    setPendingCardDesign(designId ?? 'none')
+    try {
+      await equipCardDesign({ designId })
+      snackbar.success(
+        designId ? 'Dos équipé' : 'Dos retiré',
+        designId
+          ? 'Tes cartes affichent maintenant ce nouveau style.'
+          : 'Tes cartes utilisent le style classique.',
+      )
+    } catch (error) {
+      snackbar.error(
+        'Impossible de modifier le dos',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setPendingCardDesign(null)
+    }
+  }
+
   return (
     <dialog
       className='pp-modal pp-pokemon-collection-modal'
@@ -238,15 +265,15 @@ export default function ModalPokemonCollection({ onClose }: Props) {
           aria-label='Collection'
         >
           <button
-            id='collection-tab-frames'
+            id='collection-tab-general'
             className='pokemon-collection-tab'
             type='button'
             role='tab'
-            aria-selected={activeTab === 'frames'}
-            aria-controls='collection-panel-frames'
-            onClick={() => setActiveTab('frames')}
+            aria-selected={activeTab === 'general'}
+            aria-controls='collection-panel-general'
+            onClick={() => setActiveTab('general')}
           >
-            Cadre
+            Général
           </button>
           <button
             id='collection-tab-pokemon'
@@ -714,77 +741,140 @@ export default function ModalPokemonCollection({ onClose }: Props) {
           )}
         </section>
         <section
-          id='collection-panel-frames'
+          id='collection-panel-general'
           className='pokemon-collection-panel pokemon-frame-panel'
           role='tabpanel'
-          aria-labelledby='collection-tab-frames'
-          hidden={activeTab !== 'frames'}
+          aria-labelledby='collection-tab-general'
+          hidden={activeTab !== 'general'}
         >
           {inventory === undefined ? (
             <p className='pp-inventory-empty' role='status'>
-              Chargement de tes cadres…
+              Chargement de ta collection…
             </p>
-          ) : ownedFrames?.length ? (
-            <>
-              <div className='pp-frame-grid'>
-                {ownedFrames.map((frame) => {
-                  const isEquipped = inventory.equippedId === frame.id
-                  return (
-                    <article className='pp-frame-card' key={frame.id}>
-                      <div className='pp-frame-preview'>
-                        <AvatarFrame
-                          frameId={frame.id}
-                          className='pp-frame-avatar'
-                        >
-                          <span
-                            className='pp-frame-avatar-initial'
-                            aria-hidden='true'
-                          >
-                            {displayName.slice(0, 1).toUpperCase()}
-                          </span>
-                          {account.user?.avatarUrl && (
-                            <img
-                              className='pp-frame-avatar-image'
-                              src={account.user.avatarUrl}
-                              alt=''
-                            />
-                          )}
-                        </AvatarFrame>
-                      </div>
-                      <div className='pp-frame-copy'>
-                        <strong>{frame.name}</strong>
-                        <p>{frame.description}</p>
-                      </div>
-                      {isEquipped ? (
-                        <button
-                          className='pp-button pp-button--secondary pp-frame-action'
-                          type='button'
-                          disabled={pendingFrame !== null}
-                          onClick={() => void setEquippedFrame(null)}
-                        >
-                          {pendingFrame === 'none' ? 'Retrait…' : 'Retirer'}
-                        </button>
-                      ) : (
-                        <button
-                          className='pp-button pp-frame-action'
-                          type='button'
-                          disabled={pendingFrame !== null}
-                          onClick={() => void setEquippedFrame(frame.id)}
-                        >
-                          {pendingFrame === frame.id
-                            ? 'Équipement…'
-                            : 'Équiper'}
-                        </button>
-                      )}
-                    </article>
-                  )
-                })}
-              </div>
-            </>
           ) : (
-            <p className='pp-inventory-empty'>
-              Aucun cadre pour le moment. Tes prochains cadres apparaîtront ici.
-            </p>
+            <div className='pp-collection-general'>
+              <section
+                className='pp-collection-general-section'
+                aria-labelledby='collection-frames-title'
+              >
+                <div className='pp-shop-section-heading'>
+                  <h3 id='collection-frames-title'>Cadres</h3>
+                </div>
+                {ownedFrames?.length ? (
+                  <div className='pp-frame-grid'>
+                    {ownedFrames.map((frame) => {
+                      const isEquipped = inventory.equippedId === frame.id
+                      return (
+                        <article className='pp-frame-card' key={frame.id}>
+                          <div className='pp-frame-preview'>
+                            <AvatarFrame
+                              frameId={frame.id}
+                              className='pp-frame-avatar'
+                            >
+                              <span
+                                className='pp-frame-avatar-initial'
+                                aria-hidden='true'
+                              >
+                                {displayName.slice(0, 1).toUpperCase()}
+                              </span>
+                              {account.user?.avatarUrl && (
+                                <img
+                                  className='pp-frame-avatar-image'
+                                  src={account.user.avatarUrl}
+                                  alt=''
+                                />
+                              )}
+                            </AvatarFrame>
+                          </div>
+                          <div className='pp-frame-copy'>
+                            <strong>{frame.name}</strong>
+                            <p>{frame.description}</p>
+                          </div>
+                          {isEquipped ? (
+                            <button
+                              className='pp-button pp-button--secondary pp-frame-action'
+                              type='button'
+                              disabled={pendingFrame !== null}
+                              onClick={() => void setEquippedFrame(null)}
+                            >
+                              {pendingFrame === 'none' ? 'Retrait…' : 'Retirer'}
+                            </button>
+                          ) : (
+                            <button
+                              className='pp-button pp-frame-action'
+                              type='button'
+                              disabled={pendingFrame !== null}
+                              onClick={() => void setEquippedFrame(frame.id)}
+                            >
+                              {pendingFrame === frame.id
+                                ? 'Équipement…'
+                                : 'Équiper'}
+                            </button>
+                          )}
+                        </article>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className='pp-inventory-empty'>
+                    Aucun cadre pour le moment. Tes prochains cadres apparaîtront ici.
+                  </p>
+                )}
+              </section>
+              <section
+                className='pp-collection-general-section'
+                aria-labelledby='collection-card-designs-title'
+              >
+                <div className='pp-shop-section-heading'>
+                  <h3 id='collection-card-designs-title'>Dos de carte</h3>
+                  <p>Équipe le motif qui apparaîtra sur tes cartes pendant le vote.</p>
+                </div>
+                {ownedCardDesigns?.length ? (
+                  <div className='pp-card-design-owned-grid'>
+                    {ownedCardDesigns.map((design) => {
+                      const isEquipped = equippedCardDesignId === design.id
+                      return (
+                        <article
+                          className={`pp-card-design-owned-card${isEquipped ? ' pp-card-design-owned-card--equipped' : ''}`}
+                          key={design.id}
+                        >
+                          <CardDesignPreview design={design} />
+                          <div className='pp-card-design-owned-copy'>
+                            <strong>{design.name}</strong>
+                            <p>{design.description}</p>
+                            <span className='pp-card-design-owned-status'>
+                              {isEquipped ? 'Équipé' : 'Possédé'}
+                            </span>
+                          </div>
+                          <button
+                            className={`pp-button pp-card-design-owned-action${isEquipped ? ' pp-button--secondary' : ''}`}
+                            type='button'
+                            disabled={pendingCardDesign !== null}
+                            onClick={() =>
+                              void setEquippedCardDesign(
+                                isEquipped ? null : design.id,
+                              )
+                            }
+                          >
+                            {pendingCardDesign === design.id
+                              ? 'Équipement…'
+                              : pendingCardDesign === 'none' && isEquipped
+                                ? 'Retrait…'
+                                : isEquipped
+                                  ? 'Retirer'
+                                  : 'Équiper'}
+                          </button>
+                        </article>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className='pp-inventory-empty'>
+                    Aucun dos de carte pour le moment. Découvre les designs dans la boutique.
+                  </p>
+                )}
+              </section>
+            </div>
           )}
         </section>
       </div>

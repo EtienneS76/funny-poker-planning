@@ -4,6 +4,7 @@ import { participantTable } from './participant/schema'
 import {
   pokisouWalletTable,
   userAvatarFramesTable,
+  userCardDesignsTable,
   userPokemonsTable,
   userStarWarsCharactersTable,
   starterPokemonOpeningTable,
@@ -28,6 +29,7 @@ export default defineSchema({
   users: userTable,
   pokisouWallets: pokisouWalletTable,
   userAvatarFrames: userAvatarFramesTable,
+  userCardDesigns: userCardDesignsTable,
   userPokemons: userPokemonsTable,
   userStarWarsCharacters: userStarWarsCharactersTable,
   starterPokemonOpenings: starterPokemonOpeningTable,
