@@ -24,10 +24,9 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
   const recordSkirmishHit = useMutation(
     api.refinement.mutations.recordSkirmishShipDestroyed,
   )
-  const skirmishProgress = useQuery(
-    api.refinement.queries.skirmishProgress,
-    { slug: refinementSlug },
-  )
+  const skirmishProgress = useQuery(api.refinement.queries.skirmishProgress, {
+    slug: refinementSlug,
+  })
   const startNewRound = useMutation(api.refinement.mutations.startNewRound)
   const setSpectatorMutation = useMutation(
     api.refinement.mutations.setSpectator,
@@ -382,7 +381,7 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     try {
       const result = await recordSkirmishHit({ slug: refinementSlug })
       if (result.rewarded) {
-        success('Récompense du Skirmish', 'Tu as gagné 5 Pokisous.')
+        success("Récompense de l'escarmouche", 'Tu as gagné 5 Pokisous.')
       }
     } catch (hitError) {
       error(

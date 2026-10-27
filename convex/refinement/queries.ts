@@ -31,20 +31,29 @@ export const skirmishProgress = query({
       .unique()
     if (!refinement) return null
 
-    const progressEntries = await context.db
-      .query('skirmishProgress')
-      .withIndex('by_user_refinement', (query) =>
-        query.eq('userId', user._id).eq('refinementId', refinement._id),
+    const rounds = await context.db
+      .query('refinementRounds')
+      .withIndex('by_refinement_sequence', (query) =>
+        query.eq('refinementId', refinement._id),
       )
       .collect()
+    const currentRound = rounds.sort(
+      (left, right) => right.sequence - left.sequence,
+    )[0]
+    if (!currentRound) return { shipsDestroyed: 0, rewarded: false }
+
+    const progress = await context.db
+      .query('skirmishProgress')
+      .withIndex('by_user_round', (query) =>
+        query.eq('userId', user._id).eq('roundId', currentRound._id),
+      )
+      .unique()
     return {
-      shipsDestroyed: progressEntries.reduce(
-        (total, entry) =>
-          total +
-          (entry.shipsDestroyed ?? entry.normalShips + entry.eliteShips),
-        0,
-      ),
-      rewarded: progressEntries.some((entry) => entry.rewarded),
+      shipsDestroyed: progress
+        ? (progress.shipsDestroyed ??
+          progress.normalShips + progress.eliteShips)
+        : 0,
+      rewarded: progress?.rewarded ?? false,
     }
   },
 })

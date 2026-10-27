@@ -68,16 +68,18 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
             <span>Collection</span>
           </button>
         )}
-        <button
-          className='pp-button pp-button--secondary pp-button--inventory-nav'
-          type='button'
-          aria-label='Ouvrir les consommables'
-          title='Ouvrir les consommables'
-          onClick={() => setInventoryOpen(true)}
-        >
-          <PackageOpen size={17} aria-hidden='true' />
-          <span>Consommable</span>
-        </button>
+        {account.isAuthenticated && (
+          <button
+            className='pp-button pp-button--secondary pp-button--inventory-nav'
+            type='button'
+            aria-label='Ouvrir les consommables'
+            title='Ouvrir les consommables'
+            onClick={() => setInventoryOpen(true)}
+          >
+            <PackageOpen size={17} aria-hidden='true' />
+            <span>Consommable</span>
+          </button>
+        )}
         <button
           className='pp-button pp-button--invite pp-floating-invite'
           type='button'

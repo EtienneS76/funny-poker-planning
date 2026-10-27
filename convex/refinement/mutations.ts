@@ -654,8 +654,9 @@ export const recordSkirmishShipDestroyed = mutation({
         query.eq('refinementId', refinement._id),
       )
       .collect()
-    const currentRound =
-      rounds.sort((left, right) => right.sequence - left.sequence)[0]
+    const currentRound = rounds.sort(
+      (left, right) => right.sequence - left.sequence,
+    )[0]
     if (!currentRound || currentRound.revealedAt !== undefined) {
       throw new ConvexError('Le Skirmish est fermé pour cette manche.')
     }
@@ -668,27 +669,23 @@ export const recordSkirmishShipDestroyed = mutation({
         .collect()
       const hasVoted = votes.some(
         (vote) =>
-          vote.roundId === currentRound._id &&
-          vote.userId === String(user._id),
+          vote.roundId === currentRound._id && vote.userId === String(user._id),
       )
       if (!hasVoted) {
         throw new ConvexError('Vote avant de jouer au Skirmish.')
       }
     }
 
-    const progressEntries = await context.db
+    const progress = await context.db
       .query('skirmishProgress')
-      .withIndex('by_user_refinement', (query) =>
-        query.eq('userId', user._id).eq('refinementId', refinement._id),
+      .withIndex('by_user_round', (query) =>
+        query.eq('userId', user._id).eq('roundId', currentRound._id),
       )
-      .collect()
-    const previousShipsDestroyed = progressEntries.reduce(
-      (total, entry) =>
-        total +
-        (entry.shipsDestroyed ?? entry.normalShips + entry.eliteShips),
-      0,
-    )
-    if (progressEntries.some((entry) => entry.rewarded)) {
+      .unique()
+    const previousShipsDestroyed = progress
+      ? (progress.shipsDestroyed ?? progress.normalShips + progress.eliteShips)
+      : 0
+    if (progress?.rewarded) {
       return {
         rewarded: false,
         shipsDestroyed: previousShipsDestroyed,
@@ -697,22 +694,18 @@ export const recordSkirmishShipDestroyed = mutation({
 
     const shipsDestroyed = previousShipsDestroyed + 1
     const rewarded = shipsDestroyed >= 10
-    const [existingProgress, ...duplicateProgress] = progressEntries
-    if (existingProgress) {
-      await context.db.patch(existingProgress._id, {
-        roundId: undefined,
+    if (progress) {
+      await context.db.patch(progress._id, {
         normalShips: shipsDestroyed,
         eliteShips: 0,
         shipsDestroyed,
         rewarded,
       })
-      for (const duplicate of duplicateProgress) {
-        await context.db.delete(duplicate._id)
-      }
     } else {
       await context.db.insert('skirmishProgress', {
         userId: user._id,
         refinementId: refinement._id,
+        roundId: currentRound._id,
         normalShips: shipsDestroyed,
         eliteShips: 0,
         shipsDestroyed,

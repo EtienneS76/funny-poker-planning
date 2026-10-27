@@ -7,8 +7,25 @@
 * {
   box-sizing: border-box;
 }
+body,
+body * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+::selection {
+  color: inherit;
+  background: transparent;
+}
 body {
   margin: 0;
+}
+input,
+textarea,
+[contenteditable='true'],
+[contenteditable=''],
+[contenteditable='plaintext-only'] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
 }
 button,
 input {
