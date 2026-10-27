@@ -6,6 +6,7 @@ export const statisticsTable = defineTable({
   refinementCount: v.number(),
   roundCount: v.number(),
   mysteryPokeBallOpenCount: v.optional(v.number()),
+  skirmishShipProgress: v.optional(v.number()),
   firstConnectedAt: v.optional(v.number()),
   updatedAt: v.optional(v.number()),
 }).index('by_user', ['userId'])
@@ -20,3 +21,15 @@ export const userRoundParticipationTable = defineTable({
   .index('by_user_refinement_round', ['userId', 'refinementId', 'roundId'])
   .index('by_user_refinement', ['userId', 'refinementId'])
   .index('by_refinement', ['refinementId'])
+
+export const skirmishProgressTable = defineTable({
+  userId: v.id('users'),
+  refinementId: v.id('refinements'),
+  roundId: v.optional(v.id('refinementRounds')),
+  normalShips: v.number(),
+  eliteShips: v.number(),
+  shipsDestroyed: v.optional(v.number()),
+  rewarded: v.boolean(),
+})
+  .index('by_user_refinement', ['userId', 'refinementId'])
+  .index('by_user_round', ['userId', 'roundId'])

@@ -8,6 +8,7 @@ export const userTable = defineTable({
   avatarUrl: v.union(v.string(), v.null()),
   avatarFrameId: v.optional(v.string()),
   assignedPokemonId: v.optional(v.number()),
+  assignedPokemonShiny: v.optional(v.boolean()),
   showPokemon3d: v.optional(v.boolean()),
   starterCaptureBallsGiftedAt: v.optional(v.number()),
   createdAt: v.optional(v.number()),
@@ -30,6 +31,7 @@ export const userAvatarFramesTable = defineTable({
 export const userPokemonsTable = defineTable({
   userId: v.id('users'),
   pokemonId: v.number(),
+  shiny: v.optional(v.boolean()),
   unlockedAt: v.number(),
 })
   .index('by_user', ['userId'])
@@ -49,6 +51,7 @@ export const userStarWarsCharactersTable = defineTable({
 export const starterPokemonOpeningTable = defineTable({
   userId: v.id('users'),
   pokemonId: v.optional(v.number()),
+  shiny: v.optional(v.boolean()),
   rerollsRemaining: v.number(),
   giftedAt: v.optional(v.number()),
   claimedAt: v.optional(v.number()),
@@ -57,6 +60,7 @@ export const starterPokemonOpeningTable = defineTable({
 export const pokemonEncounterTable = defineTable({
   ownerKey: v.string(),
   pokemonId: v.number(),
+  shiny: v.optional(v.boolean()),
   status: v.union(
     v.literal('active'),
     v.literal('won'),

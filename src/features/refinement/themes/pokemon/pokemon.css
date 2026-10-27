@@ -796,6 +796,10 @@
   filter: drop-shadow(0 14px 12px #0009);
   animation: pokemon-capture-float 3s ease-in-out infinite;
 }
+.pokemon-capture-pokemon.is-shiny {
+  filter: drop-shadow(0 0 8px #ffd84d) drop-shadow(0 0 18px #e9ad26)
+    drop-shadow(0 14px 12px #0009);
+}
 
 .pokemon-capture-pokemon.is-absorbed {
   animation: pokemon-capture-absorb 650ms ease-in forwards;

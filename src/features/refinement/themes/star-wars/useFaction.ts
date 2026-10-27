@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useSyncExternalStore } from 'react'
 
 export type Faction = 'alliance' | 'empire'
 
@@ -12,21 +12,42 @@ function readFaction(): Faction {
   }
 }
 
+// Petit store partagé : le switch de camp et l'escarmouche lisent la même valeur.
+let current: Faction = readFaction()
+const listeners = new Set<() => void>()
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+function setFaction(next: Faction) {
+  if (next === current) return
+  current = next
+  try {
+    localStorage.setItem(STORAGE_KEY, next)
+  } catch {
+    // stockage indisponible : la faction reste valable pour la session
+  }
+  listeners.forEach((listener) => listener())
+}
+
 /**
  * Faction choisie (mémorisée dans le navigateur). Elle est exposée en CSS via
- * <html data-sw-faction="alliance|empire">, ce qui permet à la barre (Layer) et
- * à la salle de partager les mêmes variables --sw-* sans état React commun.
+ * <html data-sw-faction="alliance|empire"> pour que la barre, la salle et les
+ * couches du thème partagent les mêmes variables --sw-*.
  */
 export function useFaction() {
-  const [faction, setFaction] = useState<Faction>(readFaction)
+  const faction = useSyncExternalStore(
+    subscribe,
+    () => current,
+    (): Faction => 'alliance',
+  )
 
   useLayoutEffect(() => {
     document.documentElement.dataset.swFaction = faction
-    try {
-      localStorage.setItem(STORAGE_KEY, faction)
-    } catch {
-      // stockage indisponible : la faction reste valable pour la session
-    }
   }, [faction])
 
   useLayoutEffect(

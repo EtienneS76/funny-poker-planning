@@ -28,6 +28,10 @@ export default function ModalConsumableInventory({
 }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [openingPokemonId, setOpeningPokemonId] = useState<number | null>(null)
+  const [openingPokemonShiny, setOpeningPokemonShiny] = useState(false)
+  const [openingPokemonBall, setOpeningPokemonBall] = useState<
+    'mystery' | 'shiny'
+  >('mystery')
   const [openingCharacter, setOpeningCharacter] =
     useState<StarWarsCharacter | null>(null)
   const [openingRun, setOpeningRun] = useState(0)
@@ -42,6 +46,7 @@ export default function ModalConsumableInventory({
   const openMysteryPokeBall = useMutation(
     api.user.mutations.openMysteryPokeBall,
   )
+  const openShinyPokeBall = useMutation(api.user.mutations.openShinyPokeBall)
   const rerollWelcomeBall = useMutation(
     api.user.mutations.rerollWelcomeMysteryPokeBall,
   )
@@ -58,6 +63,8 @@ export default function ModalConsumableInventory({
     }) ?? []
   const mysteryBallQuantity =
     ownedItems.find((item) => item.id === 'mystery-poke-ball')?.quantity ?? 0
+  const shinyBallQuantity =
+    ownedItems.find((item) => item.id === 'shiny-poke-ball')?.quantity ?? 0
   const holocronQuantity =
     ownedItems.find((item) => item.id === 'holocron')?.quantity ?? 0
   const pokemonItems = ownedItems.filter((item) => item.id !== 'holocron')
@@ -95,12 +102,17 @@ export default function ModalConsumableInventory({
               ))}
             </ul>
           ) : null}
-          {item.id === 'mystery-poke-ball' && (
+          {(item.id === 'mystery-poke-ball' ||
+            item.id === 'shiny-poke-ball') && (
             <button
               className='pp-button pp-consumable-open'
               type='button'
               disabled={item.quantity < 1 || openingBall}
-              onClick={() => void openMysteryBall()}
+              onClick={() =>
+                void (item.id === 'shiny-poke-ball'
+                  ? openShinyBall()
+                  : openMysteryBall())
+              }
             >
               {openingBall ? 'Ouverture…' : 'Ouvrir'}
             </button>
@@ -140,9 +152,30 @@ export default function ModalConsumableInventory({
     try {
       const result = await openMysteryPokeBall({})
       setOpeningPokemonId(result.pokemonId)
+      setOpeningPokemonShiny(result.shiny)
+      setOpeningPokemonBall('mystery')
       setWelcomeRerollsRemaining(
         result.welcomeGift ? result.rerollsRemaining : null,
       )
+    } catch (error) {
+      snackbar.error(
+        'Ouverture impossible',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setOpeningBall(false)
+    }
+  }
+
+  async function openShinyBall() {
+    if (openingBall) return
+    setOpeningBall(true)
+    try {
+      const result = await openShinyPokeBall({})
+      setOpeningPokemonId(result.pokemonId)
+      setOpeningPokemonShiny(result.shiny)
+      setOpeningPokemonBall('shiny')
+      setWelcomeRerollsRemaining(null)
     } catch (error) {
       snackbar.error(
         'Ouverture impossible',
@@ -159,6 +192,7 @@ export default function ModalConsumableInventory({
     try {
       const result = await rerollWelcomeBall({})
       setOpeningPokemonId(result.pokemonId)
+      setOpeningPokemonShiny(result.shiny)
       setWelcomeRerollsRemaining(result.rerollsRemaining)
     } catch (error) {
       snackbar.error(
@@ -241,6 +275,7 @@ export default function ModalConsumableInventory({
         'Ton Pokémon de bienvenue a été ajouté à ta collection.',
       )
       setOpeningPokemonId(null)
+      setOpeningPokemonShiny(false)
       setWelcomeRerollsRemaining(null)
     } catch (error) {
       snackbar.error(
@@ -254,6 +289,8 @@ export default function ModalConsumableInventory({
 
   function closeOpening() {
     setOpeningPokemonId(null)
+    setOpeningPokemonShiny(false)
+    setOpeningPokemonBall('mystery')
     setOpeningCharacter(null)
     setOpeningHolocronsRemaining(0)
     setWelcomeRerollsRemaining(null)
@@ -351,20 +388,25 @@ export default function ModalConsumableInventory({
               <X size={20} aria-hidden='true' />
             </button>
             <PokeballOpening
-              key={`${openingPokemonId}-${welcomeRerollsRemaining ?? 'normal'}`}
+              key={`${openingPokemonId}-${openingPokemonBall}-${welcomeRerollsRemaining ?? 'normal'}`}
               pokemonId={openingPokemonId}
+              shiny={openingPokemonShiny}
               showPokemon3d={account.profile?.showPokemon3d ?? false}
               canOpenAnother={
                 welcomeRerollsRemaining !== null
                   ? welcomeRerollsRemaining > 0
-                  : mysteryBallQuantity > 0
+                  : openingPokemonBall === 'shiny'
+                    ? shinyBallQuantity > 0
+                    : mysteryBallQuantity > 0
               }
               rerollsRemaining={welcomeRerollsRemaining}
               onClose={closeOpening}
               onOpenAnother={
                 welcomeRerollsRemaining !== null
                   ? rerollWelcomePokemon
-                  : openMysteryBall
+                  : openingPokemonBall === 'shiny'
+                    ? openShinyBall
+                    : openMysteryBall
               }
               onKeepWelcomePokemon={
                 welcomeRerollsRemaining !== null

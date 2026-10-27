@@ -11,6 +11,7 @@ export type Seat = {
   pokemonGifUrl: string | null
   pokemonName: string | null
   pokemonId: number | null
+  pokemonShiny: boolean
   showPokemon3d: boolean
   isSpectator: boolean
   vote: string | null
@@ -63,6 +64,12 @@ export type RoomViewModel = {
     openEditor: () => void
     closeEditor: () => void
     save: (issueUrl: string | null) => Promise<boolean>
+  }
+  skirmish: {
+    refinementSlug: string
+    eligible: boolean
+    progress: { shipsDestroyed: number; rewarded: boolean } | null | undefined
+    recordDestroyedShip: () => Promise<void>
   }
   copyInviteLink: () => Promise<void>
 }

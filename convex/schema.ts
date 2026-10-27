@@ -15,6 +15,7 @@ import {
 import {
   statisticsTable,
   userRoundParticipationTable,
+  skirmishProgressTable,
 } from './statistics/schema'
 import { presenceTable } from './presence/schema'
 import { voteTable } from './refinement/voteSchema'
@@ -35,6 +36,7 @@ export default defineSchema({
   userConsumables: userConsumablesTable,
   statistics: statisticsTable,
   userRoundParticipations: userRoundParticipationTable,
+  skirmishProgress: skirmishProgressTable,
   presences: presenceTable,
   votes: voteTable,
   refinementRounds: refinementRoundTable,

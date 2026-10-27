@@ -1,0 +1,241 @@
+/* Escarmouche : vaisseaux, tirs et HUD. Les variables --sw-* viennent de :root[data-sw-faction]. */
+.sw-skirmish {
+  --bolt: #e5212e;
+  --bolt-glow: #e5212e99;
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sw-skirmish[data-faction='empire'] {
+  --bolt: #12a150;
+  --bolt-glow: #12a15099;
+}
+
+/* ---------- Vaisseaux ---------- */
+.sw-ship {
+  position: absolute;
+  top: var(--y);
+  left: 0;
+  width: var(--size);
+  height: var(--size);
+  margin-top: calc(var(--size) / -2);
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: manipulation;
+  animation: sw-fly-ltr var(--dur) linear forwards;
+}
+.sw-ship--rtl {
+  animation-name: sw-fly-rtl;
+}
+/* zone de clic plus large que le dessin */
+.sw-ship::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+}
+.sw-ship-art {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 8px #0003);
+  animation: sw-bob 1.4s ease-in-out infinite alternate;
+}
+.sw-ship--rtl .sw-ship-art svg {
+  transform: scaleX(-1);
+}
+.sw-ship-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@keyframes sw-fly-ltr {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(calc(100vw + 120px));
+  }
+}
+@keyframes sw-fly-rtl {
+  from {
+    transform: translateX(calc(100vw + 120px));
+  }
+  to {
+    transform: translateX(-120px);
+  }
+}
+@keyframes sw-bob {
+  to {
+    translate: 0 10px;
+  }
+}
+
+/* ---------- Tirs ---------- */
+.sw-bolt {
+  position: absolute;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--bolt));
+  box-shadow: 0 0 10px var(--bolt-glow);
+  transform-origin: 0 50%;
+  animation: sw-bolt 280ms ease-out forwards;
+}
+@keyframes sw-bolt {
+  from {
+    scale: 0 1;
+    opacity: 1;
+  }
+  55% {
+    scale: 1 1;
+    opacity: 1;
+  }
+  to {
+    scale: 1 1;
+    opacity: 0;
+  }
+}
+
+/* ---------- Explosions ---------- */
+.sw-blast {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: sw-blast-life 750ms linear forwards;
+}
+.sw-blast-ring {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #ff8a00;
+  border-radius: 50%;
+  animation: sw-ring 450ms ease-out forwards;
+}
+.sw-spark {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffb020;
+  box-shadow: 0 0 6px #ff8a00;
+  animation: sw-spark 600ms ease-out forwards;
+}
+.sw-plus {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  translate: -50% 0;
+  color: var(--sw-ink, #0f2742);
+  font: 800 18px 'Orbitron', sans-serif;
+  text-shadow: 0 1px 0 var(--sw-panel, #fff);
+  animation: sw-plus 750ms ease-out forwards;
+}
+@keyframes sw-blast-life {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sw-ring {
+  to {
+    scale: 5;
+    opacity: 0;
+  }
+}
+@keyframes sw-spark {
+  to {
+    translate: var(--dx) var(--dy);
+    scale: 0.2;
+    opacity: 0;
+  }
+}
+@keyframes sw-plus {
+  to {
+    translate: -50% -42px;
+    opacity: 0;
+  }
+}
+
+/* ---------- HUD ---------- */
+.sw-skirmish-hud {
+  position: fixed;
+  z-index: 60;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: 'Rajdhani', 'DM Sans', sans-serif;
+  color: var(--sw-ink, #0f2742);
+}
+.sw-skirmish-toggle {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--sw-line, #c9dcf0);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sw-panel, #fff) 94%, transparent);
+  box-shadow: 0 6px 18px var(--sw-glow, #1f6fe038);
+  color: var(--sw-ink, #0f2742);
+  font: 700 13px 'Rajdhani', 'DM Sans', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sw-skirmish-toggle[aria-pressed='true'] {
+  border-color: var(--sw-accent, #1f6fe0);
+  background: var(--sw-accent, #1f6fe0);
+  color: #fff;
+}
+.sw-skirmish-toggle:focus-visible {
+  outline: 3px solid var(--sw-ink, #0f2742);
+  outline-offset: 2px;
+}
+.sw-skirmish-score {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--sw-line, #c9dcf0);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--sw-panel, #fff) 94%, transparent);
+  box-shadow: 0 6px 18px var(--sw-glow, #1f6fe038);
+  font-size: 14px;
+  font-weight: 600;
+}
+.sw-skirmish-score small {
+  color: var(--sw-muted, #4a6785);
+  font-size: 12px;
+}
+.sw-skirmish-bar {
+  width: 180px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sw-line, #c9dcf0);
+}
+.sw-skirmish-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sw-accent, #1f6fe0);
+  transition: width 250ms ease;
+}
+
+@media (max-width: 899px) {
+  .sw-skirmish-hud {
+    bottom: 8px;
+    left: 8px;
+  }
+  .sw-skirmish-score {
+    padding: 8px 10px;
+  }
+  .sw-skirmish-bar {
+    width: 140px;
+  }
+}

@@ -2,7 +2,7 @@ import { DefaultRoom } from './default/DefaultRoom'
 import type { Theme } from './types'
 import { PokemonOnboardingLayer } from './pokemon/PokemonOnboardingLayer'
 import './pokemon/pokemon.css'
-import { StarWarsFactionLayer } from './star-wars/StarWarsFactionLayer'
+import { StarWarsLayer } from './star-wars/StarWarsLayer'
 
 const defaultTheme: Theme = { id: 'default', Room: DefaultRoom }
 
@@ -10,7 +10,7 @@ const defaultTheme: Theme = { id: 'default', Room: DefaultRoom }
 // Il réutilise la vue par défaut tant que sa structure ne diffère pas.
 const themes: Record<string, Theme> = {
   pk: { id: 'pk', Room: DefaultRoom, Layer: PokemonOnboardingLayer },
-  sw: { id: 'sw', Room: DefaultRoom, Layer: StarWarsFactionLayer },
+  sw: { id: 'sw', Room: DefaultRoom, Layer: StarWarsLayer },
 }
 
 export function getTheme(universe: string | undefined): Theme {

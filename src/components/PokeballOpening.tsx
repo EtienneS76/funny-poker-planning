@@ -9,6 +9,7 @@ import {
 
 type Props = {
   pokemonId: number
+  shiny: boolean
   showPokemon3d: boolean
   canOpenAnother: boolean
   rerollsRemaining?: number | null
@@ -61,6 +62,7 @@ const vars = (o: Record<string, string | number>) => o as CSSProperties
 
 export default function PokeballOpening({
   pokemonId,
+  shiny,
   showPokemon3d,
   canOpenAnother,
   rerollsRemaining = null,
@@ -157,7 +159,7 @@ export default function PokeballOpening({
               <div className='ground' />
               <div
                 ref={ballEl}
-                className='ball'
+                className={`ball${shiny ? ' ball--shiny' : ''}`}
                 role='button'
                 tabIndex={0}
                 aria-label='Ouvrir la pokéball'
@@ -218,20 +220,23 @@ export default function PokeballOpening({
                         <h2 className='pokemon-name'>
                           {detailsRevealed ? mon.name : '???'}
                         </h2>
-                        <span className='tag'>{RARITY[mon.rarity].label}</span>
+                        <span className='tag'>
+                          {shiny ? 'SHINY' : RARITY[mon.rarity].label}
+                        </span>
                       </header>
                       <div
-                        className={`art${detailsRevealed ? ' art--revealed' : ' art--mystery'}`}
+                        className={`art${detailsRevealed ? ' art--revealed' : ' art--mystery'}${shiny ? ' art--shiny' : ''}`}
                       >
                         {detailsRevealed ? (
                           <img
-                            src={getPokemonImageUrl(mon.id, showPokemon3d)}
+                            className={shiny ? 'pokemon-shiny-image' : undefined}
+                            src={getPokemonImageUrl(mon.id, showPokemon3d, shiny)}
                             alt={mon.name}
                             onError={(e) => {
                               const img = e.currentTarget
                               if (showPokemon3d && !img.dataset.fallback) {
                                 img.dataset.fallback = 'true'
-                                img.src = getPokemonImageUrl(mon.id, false)
+                                img.src = getPokemonImageUrl(mon.id, false, shiny)
                                 img.classList.add('hd')
                               }
                             }}
@@ -370,6 +375,9 @@ const CSS = `
   --px:0;--py:0;--rx:0deg;--ry:0deg;--mx:50%;--my:50%;
   transform:perspective(700px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .15s;
   filter:drop-shadow(0 22px 22px #000a)}
+.ball--shiny{filter:drop-shadow(0 22px 22px #0008) drop-shadow(0 0 18px #ffca28)}
+.ball--shiny::before{content:"";position:absolute;inset:-9px;border:3px solid #ffe276;border-radius:50%;
+  box-shadow:0 0 16px #ffca28,inset 0 0 14px #fff3aa;pointer-events:none;animation:shiny-ball-glow 1.5s ease-in-out infinite}
 .ball:focus-visible{box-shadow:0 0 0 4px #fff8}
 .ball-wrap.idle .ball:not(.hov){animation:float 3.2s ease-in-out infinite}
 .ball-wrap.shaking .ball{animation:shake 1.7s cubic-bezier(.36,.07,.19,.97) both;transform-origin:50% 100%}
@@ -377,8 +385,10 @@ const CSS = `
 .hemi{inset:0;border-radius:50%;transition:transform .85s cubic-bezier(.3,.8,.2,1),opacity .85s .1s}
 .hemi.top{clip-path:inset(0 0 50% 0);transform-origin:0 50%;
   background:radial-gradient(circle at 30% 22%,#ffe2f0 0%,#ff92c7 20%,#ed5fae 46%,#a82f82 76%,#411840 100%)}
+.ball--shiny .hemi.top{background:radial-gradient(circle at 30% 22%,#fffbd0 0%,#ffe878 20%,#f6bd25 46%,#c98209 76%,#563700 100%)}
 .hemi.bottom{clip-path:inset(50% 0 0 0);
   background:radial-gradient(circle at 30% 78%,#fff 0%,#f8f0ff 26%,#dfd0f2 54%,#ad9acb 84%,#655477 100%)}
+.ball--shiny .hemi.bottom{background:radial-gradient(circle at 30% 78%,#fffef0 0%,#fff5b4 26%,#e8d27d 54%,#b69543 84%,#685122 100%)}
 /* matière : grain + reflets anisotropes + rim light */
 .shade{inset:0;border-radius:50%;
   background:
@@ -397,10 +407,13 @@ const CSS = `
 .btn{left:calc(50% - 40px);top:calc(50% - 40px);width:80px;height:80px;border-radius:50%;transition:opacity .25s;
   background:radial-gradient(circle at 35% 30%,#a883bb,#493452 55%,#24172d);
   box-shadow:0 0 0 3px #0a0a0d,0 6px 12px #0009,inset 0 2px 3px #ffffff30}
+.ball--shiny .btn{background:radial-gradient(circle at 35% 30%,#fff3a4,#a8740a 55%,#4b3400)}
 .btn::before{content:"";position:absolute;inset:12px;border-radius:50%;
   background:radial-gradient(circle at 35% 28%,#fff,#f6e5fc 55%,#c79aca);box-shadow:inset 0 -4px 8px #0005}
+.ball--shiny .btn::before{background:radial-gradient(circle at 35% 28%,#fff,#fff4ae 55%,#dfb331)}
 .btn b{position:absolute;inset:28px;border-radius:50%;z-index:1;
   background:radial-gradient(circle at 40% 35%,#fff,#f7e9fc 55%,#cfacd6);box-shadow:inset 0 -3px 5px #0004,0 0 0 0 #fff}
+.ball--shiny .btn b{background:radial-gradient(circle at 40% 35%,#fff,#fff8c8 55%,#e4b931);box-shadow:inset 0 -3px 5px #0004,0 0 9px 3px #ffe988}
 .ball-wrap.shaking .seam::before{animation:leak 1.7s ease-in forwards}
 .ball-wrap.shaking .btn b{animation:led .42s ease-in-out infinite}
 
@@ -436,9 +449,12 @@ const CSS = `
   border:1px solid #49375620;box-shadow:inset 0 1px 3px #49375612;
   background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--glow) 24%,#fff),transparent 67%),
     linear-gradient(145deg,color-mix(in srgb,var(--c1) 18%,#fff),color-mix(in srgb,var(--c2) 14%,#fff))}
+.art--shiny{border-color:#dfb432;box-shadow:inset 0 1px 3px #fff9,0 0 18px #e9bd3f70;
+  background:radial-gradient(circle at 50% 50%,#ffdc6655,transparent 70%),linear-gradient(145deg,#fff7d9,#fffdf4)}
 .art img{position:absolute;z-index:2;left:9%;top:9%;width:82%;height:82%;object-fit:contain;image-rendering:pixelated;
   transform:translate(calc(var(--px)*9px),calc(var(--py)*7px));transition:transform .12s;
   filter:drop-shadow(0 8px 8px #352a3b38);animation:pokemon-fade .55s ease-out both}
+.art img.pokemon-shiny-image{filter:drop-shadow(0 0 8px #ffd84d) drop-shadow(0 0 18px #e9ad26) drop-shadow(0 8px 8px #352a3b38)}
 .art img.hd{image-rendering:auto}
 .art-question{position:absolute;inset:0;display:grid;place-items:center;color:color-mix(in srgb,var(--glow) 62%,#493756);font-size:84px;font-weight:800;opacity:.72}
 .inner footer{display:flex;justify-content:space-between;align-items:center;min-height:30px}
@@ -481,6 +497,7 @@ const CSS = `
   animation:fly 1.1s .15s ease-out both}
 
 @keyframes float{50%{transform:perspective(700px) translateY(-14px)}}
+@keyframes shiny-ball-glow{0%,100%{opacity:.55;transform:scale(.98)}50%{opacity:1;transform:scale(1.03)}}
 @keyframes gshadow{50%{transform:scale(.86);opacity:.7}}
 @keyframes shake{
   0%,100%{transform:rotate(0)}
@@ -507,5 +524,5 @@ const CSS = `
   .tilt{width:230px;height:322px}
 }
 @media (prefers-reduced-motion:reduce){
-  .front,.art img,.pokemon-name,.num,.ball,.rays{animation:none!important}}
+  .front,.art img,.pokemon-name,.num,.ball,.ball--shiny::before,.rays{animation:none!important}}
 `

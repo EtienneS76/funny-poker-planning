@@ -1405,6 +1405,18 @@
   height: 80px;
   object-fit: contain;
 }
+.pokemon-collection-card--shiny {
+  border-color: #d3a51b;
+  background: linear-gradient(145deg, #fff8d9, #fffdf5 58%, #fff0b8);
+  box-shadow: 0 0 0 1px #e6c45b, 0 0 16px #e9bd3f66;
+}
+.pokemon-collection-card--shiny img {
+  filter: drop-shadow(0 0 7px #ffd84d) drop-shadow(0 0 15px #e9ad2680);
+}
+.pokemon-collection-card--shiny.pokemon-collection-card--selected {
+  border-color: #9c7410;
+  box-shadow: 0 0 0 2px #ffcf42, 0 0 19px #e9bd3f99;
+}
 .pokemon-collection-card strong {
   max-width: 100%;
   text-transform: capitalize;
@@ -1587,6 +1599,16 @@
     ),
     #718ba51c;
   backdrop-filter: blur(10px) saturate(1.05);
+}
+.pokemon-collection-detail--shiny {
+  border-color: #d3a51b;
+  background: linear-gradient(120deg, #fff5ce, #fffaf0 58%, #fff0bd);
+}
+.pokemon-collection-detail--shiny > img {
+  filter: drop-shadow(0 0 9px #ffd84d) drop-shadow(0 0 18px #e9ad2680);
+  background:
+    radial-gradient(ellipse at 50% 44%, #ffe88988, #f8d76c30 58%, transparent 82%),
+    #f6e5ad70;
 }
 .pokemon-collection-detail-copy {
   display: grid;

@@ -582,6 +582,165 @@ export const reveal = mutation({
   },
 })
 
+export const recordSkirmishShipDestroyed = mutation({
+  args: { slug: v.string() },
+  returns: v.object({
+    rewarded: v.boolean(),
+    shipsDestroyed: v.number(),
+  }),
+  handler: async (context, { slug }) => {
+    if (!(await context.auth.getUserIdentity())) {
+      throw new ConvexError('Connecte-toi pour gagner des Pokisous.')
+    }
+    const user = await syncAuthenticatedUser(context)
+    const refinement = await context.db
+      .query('refinements')
+      .withIndex('by_slug', (query) => query.eq('slug', slug))
+      .unique()
+    if (!refinement) throw new ConvexError('Refinement introuvable.')
+
+    const participants = await context.db
+      .query('participants')
+      .withIndex('by_refinement', (query) =>
+        query.eq('refinementId', refinement._id),
+      )
+      .collect()
+    const activeBefore = Date.now() - PRESENCE_TIMEOUT_MS
+    const activeParticipants: Doc<'participants'>[] = []
+    for (const participant of participants) {
+      const presence = await context.db
+        .query('presences')
+        .withIndex('by_participant', (query) =>
+          query.eq('participantId', participant._id),
+        )
+        .unique()
+      const lastSeenAt =
+        presence?.lastSeenAt ??
+        participant.lastSeenAt ??
+        participant._creationTime
+      if (lastSeenAt > activeBefore) activeParticipants.push(participant)
+    }
+
+    const activePlayers = activeParticipants.filter(
+      (participant) => !participant.isSpectator,
+    )
+    const authenticatedIds = new Set<string>()
+    for (const participant of activePlayers) {
+      if (participant.userId.startsWith('guest:')) continue
+      try {
+        if (await context.db.get(participant.userId as Id<'users'>)) {
+          authenticatedIds.add(participant.userId)
+        }
+      } catch {
+        // Legacy participant IDs may not reference a users document.
+      }
+    }
+    if (activePlayers.length < 3 || authenticatedIds.size < 2) {
+      throw new ConvexError(
+        'Il faut 3 joueurs actifs, dont 2 authentifiés, pour le Skirmish.',
+      )
+    }
+
+    const currentParticipant = activeParticipants.find(
+      (participant) => participant.userId === String(user._id),
+    )
+    if (!currentParticipant) {
+      throw new ConvexError('Rejoins la salle avant de jouer au Skirmish.')
+    }
+
+    const rounds = await context.db
+      .query('refinementRounds')
+      .withIndex('by_refinement_sequence', (query) =>
+        query.eq('refinementId', refinement._id),
+      )
+      .collect()
+    const currentRound =
+      rounds.sort((left, right) => right.sequence - left.sequence)[0]
+    if (!currentRound || currentRound.revealedAt !== undefined) {
+      throw new ConvexError('Le Skirmish est fermé pour cette manche.')
+    }
+    if (!currentParticipant.isSpectator) {
+      const votes = await context.db
+        .query('votes')
+        .withIndex('by_refinement', (query) =>
+          query.eq('refinementId', refinement._id),
+        )
+        .collect()
+      const hasVoted = votes.some(
+        (vote) =>
+          vote.roundId === currentRound._id &&
+          vote.userId === String(user._id),
+      )
+      if (!hasVoted) {
+        throw new ConvexError('Vote avant de jouer au Skirmish.')
+      }
+    }
+
+    const progressEntries = await context.db
+      .query('skirmishProgress')
+      .withIndex('by_user_refinement', (query) =>
+        query.eq('userId', user._id).eq('refinementId', refinement._id),
+      )
+      .collect()
+    const previousShipsDestroyed = progressEntries.reduce(
+      (total, entry) =>
+        total +
+        (entry.shipsDestroyed ?? entry.normalShips + entry.eliteShips),
+      0,
+    )
+    if (progressEntries.some((entry) => entry.rewarded)) {
+      return {
+        rewarded: false,
+        shipsDestroyed: previousShipsDestroyed,
+      }
+    }
+
+    const shipsDestroyed = previousShipsDestroyed + 1
+    const rewarded = shipsDestroyed >= 10
+    const [existingProgress, ...duplicateProgress] = progressEntries
+    if (existingProgress) {
+      await context.db.patch(existingProgress._id, {
+        roundId: undefined,
+        normalShips: shipsDestroyed,
+        eliteShips: 0,
+        shipsDestroyed,
+        rewarded,
+      })
+      for (const duplicate of duplicateProgress) {
+        await context.db.delete(duplicate._id)
+      }
+    } else {
+      await context.db.insert('skirmishProgress', {
+        userId: user._id,
+        refinementId: refinement._id,
+        normalShips: shipsDestroyed,
+        eliteShips: 0,
+        shipsDestroyed,
+        rewarded,
+      })
+    }
+
+    if (rewarded) {
+      const wallet = await context.db
+        .query('pokisouWallets')
+        .withIndex('by_user_id', (query) =>
+          query.eq('userId', String(user._id)),
+        )
+        .unique()
+      if (wallet) {
+        await context.db.patch(wallet._id, { balance: wallet.balance + 5 })
+      } else {
+        await context.db.insert('pokisouWallets', {
+          userId: String(user._id),
+          balance: 5,
+        })
+      }
+    }
+
+    return { rewarded, shipsDestroyed }
+  },
+})
+
 export const startNewRound = mutation({
   args: {
     slug: v.string(),

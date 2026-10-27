@@ -113,6 +113,7 @@ export const openMysteryPokeBall = mutation({
   args: {},
   returns: v.object({
     pokemonId: v.number(),
+    shiny: v.boolean(),
     welcomeGift: v.boolean(),
     rerollsRemaining: v.number(),
   }),
@@ -129,18 +130,22 @@ export const openMysteryPokeBall = mutation({
       if (welcomeOpening.pokemonId !== undefined) {
         return {
           pokemonId: welcomeOpening.pokemonId,
+          shiny: welcomeOpening.shiny ?? false,
           welcomeGift: true,
           rerollsRemaining: welcomeOpening.rerollsRemaining,
         }
       }
       const pokemonId = drawMysteryPokemonId()
+      const shiny = Math.random() < 0.02
       await context.db.patch(welcomeOpening._id, {
         pokemonId,
+        shiny,
         rerollsRemaining: 2,
       })
       await incrementMysteryPokeBallOpenCount(context, user._id)
       return {
         pokemonId,
+        shiny,
         welcomeGift: true,
         rerollsRemaining: 2,
       }
@@ -157,6 +162,7 @@ export const openMysteryPokeBall = mutation({
     }
 
     const pokemonId = drawMysteryPokemonId()
+    const shiny = Math.random() < 0.02
     const now = Date.now()
     if (consumable.quantity === 1) {
       await context.db.delete(consumable._id)
@@ -169,10 +175,50 @@ export const openMysteryPokeBall = mutation({
     await context.db.insert('userPokemons', {
       userId: user._id,
       pokemonId,
+      shiny,
       unlockedAt: now,
     })
     await incrementMysteryPokeBallOpenCount(context, user._id)
-    return { pokemonId, welcomeGift: false, rerollsRemaining: 0 }
+    return { pokemonId, shiny, welcomeGift: false, rerollsRemaining: 0 }
+  },
+})
+
+export const openShinyPokeBall = mutation({
+  args: {},
+  returns: v.object({
+    pokemonId: v.number(),
+    shiny: v.boolean(),
+  }),
+  handler: async (context) => {
+    const user = await requireAuthenticatedUser(context)
+    const consumable = await context.db
+      .query('userConsumables')
+      .withIndex('by_user_consumable', (query) =>
+        query.eq('userId', user._id).eq('consumableId', 'shiny-poke-ball'),
+      )
+      .unique()
+    if (!consumable || consumable.quantity < 1) {
+      throw new ConvexError('Tu ne possèdes pas de Poké Ball shiny.')
+    }
+
+    const pokemonId = drawMysteryPokemonId()
+    const now = Date.now()
+    if (consumable.quantity === 1) {
+      await context.db.delete(consumable._id)
+    } else {
+      await context.db.patch(consumable._id, {
+        quantity: consumable.quantity - 1,
+        updatedAt: now,
+      })
+    }
+    await context.db.insert('userPokemons', {
+      userId: user._id,
+      pokemonId,
+      shiny: true,
+      unlockedAt: now,
+    })
+
+    return { pokemonId, shiny: true }
   },
 })
 
@@ -245,6 +291,7 @@ export const startPokemonEncounter = mutation({
   args: { guestId: v.string() },
   returns: v.object({
     pokemonId: v.number(),
+    shiny: v.boolean(),
   }),
   handler: async (context, { guestId }) => {
     const ownerKey = await pokemonEncounterOwnerKey(context, guestId)
@@ -253,15 +300,17 @@ export const startPokemonEncounter = mutation({
       .withIndex('by_owner', (query) => query.eq('ownerKey', ownerKey))
       .unique()
     if (existing?.status === 'active') {
-      return { pokemonId: existing.pokemonId }
+      return { pokemonId: existing.pokemonId, shiny: existing.shiny ?? false }
     }
 
     const pokemonId = drawMysteryPokemonId(
       existing?.status === 'escaped' ? existing.pokemonId : undefined,
     )
+    const shiny = Math.random() < 0.02
     if (existing) {
       await context.db.patch(existing._id, {
         pokemonId,
+        shiny,
         status: 'active',
         createdAt: Date.now(),
       })
@@ -269,11 +318,12 @@ export const startPokemonEncounter = mutation({
       await context.db.insert('pokemonEncounters', {
         ownerKey,
         pokemonId,
+        shiny,
         status: 'active',
         createdAt: Date.now(),
       })
     }
-    return { pokemonId }
+    return { pokemonId, shiny }
   },
 })
 
@@ -387,6 +437,7 @@ export const throwCaptureBall = mutation({
       await context.db.insert('userPokemons', {
         userId: user._id,
         pokemonId: encounter.pokemonId,
+        shiny: encounter.shiny ?? false,
         unlockedAt: Date.now(),
       })
     }
@@ -500,6 +551,7 @@ export const rerollWelcomeMysteryPokeBall = mutation({
   args: {},
   returns: v.object({
     pokemonId: v.number(),
+    shiny: v.boolean(),
     rerollsRemaining: v.number(),
   }),
   handler: async (context) => {
@@ -521,9 +573,10 @@ export const rerollWelcomeMysteryPokeBall = mutation({
     }
 
     const pokemonId = drawMysteryPokemonId()
+    const shiny = Math.random() < 0.02
     const rerollsRemaining = opening.rerollsRemaining - 1
-    await context.db.patch(opening._id, { pokemonId, rerollsRemaining })
-    return { pokemonId, rerollsRemaining }
+    await context.db.patch(opening._id, { pokemonId, shiny, rerollsRemaining })
+    return { pokemonId, shiny, rerollsRemaining }
   },
 })
 
@@ -550,9 +603,13 @@ export const claimStarterPokemon = mutation({
     await context.db.insert('userPokemons', {
       userId: user._id,
       pokemonId: opening.pokemonId,
+      shiny: opening.shiny ?? false,
       unlockedAt: now,
     })
-    await context.db.patch(user._id, { assignedPokemonId: opening.pokemonId })
+    await context.db.patch(user._id, {
+      assignedPokemonId: opening.pokemonId,
+      assignedPokemonShiny: opening.shiny ?? false,
+    })
     await context.db.patch(opening._id, { claimedAt: now })
     return opening.pokemonId
   },
@@ -652,10 +709,14 @@ export const equipAvatarFrame = mutation({
 })
 
 export const assignPokemon = mutation({
-  args: { pokemonId: v.union(v.number(), v.null()) },
+  args: {
+    pokemonId: v.union(v.number(), v.null()),
+    shiny: v.optional(v.boolean()),
+  },
   returns: v.null(),
-  handler: async (context, { pokemonId }) => {
+  handler: async (context, { pokemonId, shiny }) => {
     const user = await requireAuthenticatedUser(context)
+    const assignedPokemonShiny = pokemonId !== null && (shiny ?? false)
     if (pokemonId !== null) {
       if (!Number.isInteger(pokemonId) || pokemonId < 1 || pokemonId > 151) {
         throw new ConvexError(
@@ -667,14 +728,19 @@ export const assignPokemon = mutation({
         .withIndex('by_user_pokemon', (query) =>
           query.eq('userId', user._id).eq('pokemonId', pokemonId),
         )
-        .unique()
-      if (!ownedPokemon) {
-        throw new ConvexError('Tu dois d’abord débloquer ce Pokémon.')
+        .collect()
+      if (
+        !ownedPokemon.some(
+          (entry) => (entry.shiny ?? false) === assignedPokemonShiny,
+        )
+      ) {
+        throw new ConvexError('Tu dois d’abord débloquer cette variante.')
       }
     }
 
     await context.db.patch(user._id, {
       assignedPokemonId: pokemonId ?? undefined,
+      assignedPokemonShiny: assignedPokemonShiny || undefined,
     })
     return null
   },
