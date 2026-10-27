@@ -4,7 +4,7 @@ export const cardDesignCatalog = [
     name: 'Néon Synthwave',
     description: 'Grille néon, soleil rétro et scanline animée.',
     rarity: 'rare',
-    price: 400,
+    price: 250,
     symbol: '✦',
   },
   {
@@ -12,7 +12,7 @@ export const cardDesignCatalog = [
     name: 'Holo Prisme',
     description: 'Foil holographique arc-en-ciel, grain et éclats.',
     rarity: 'epic',
-    price: 900,
+    price: 500,
     symbol: '◈',
   },
   {
@@ -20,7 +20,7 @@ export const cardDesignCatalog = [
     name: 'Éclipse Dorée',
     description: 'Cadre d’or vivant, reflets mobiles et halo doré.',
     rarity: 'legendary',
-    price: 2000,
+    price: 1000,
     symbol: '♛',
   },
 ] as const

@@ -12,8 +12,8 @@ type Options = {
 
 /**
  * Synchronisation temps réel des positions et des poussées (Convex).
- * Les écritures sont limitées par le moteur (~10/s en mouvement, 1 toutes les
- * 4 s à l'arrêt) ; les erreurs réseau sont ignorées, la position suivante
+ * Les écritures sont limitées par le moteur (~4/s en mouvement, 1 toutes les
+ * 5 s à l'arrêt) ; les erreurs réseau sont ignorées, la position suivante
  * corrige tout.
  */
 export function useAmongUsSync({ slug, guestId, active }: Options) {

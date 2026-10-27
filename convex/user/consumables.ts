@@ -3,7 +3,7 @@ export const pokemonConsumableCatalog = [
     id: 'poke-ball',
     name: 'Poké Ball',
     description: 'Une balle classique pour tenter de capturer un Pokémon.',
-    price: 25,
+    price: 20,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
     catchRates: {
@@ -18,7 +18,7 @@ export const pokemonConsumableCatalog = [
     id: 'hyper-ball',
     name: 'Hyper Ball',
     description: 'Une balle puissante qui augmente tes chances de capture.',
-    price: 75,
+    price: 40,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png',
     catchRates: {
@@ -33,7 +33,7 @@ export const pokemonConsumableCatalog = [
     id: 'master-ball',
     name: 'Master Ball',
     description: 'La balle ultime : elle garantit la capture.',
-    price: 200,
+    price: 100,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
     catchRates: {
@@ -48,7 +48,7 @@ export const pokemonConsumableCatalog = [
     id: 'mystery-poke-ball',
     name: 'Poké Ball mystère',
     description: 'Une capsule scellée qui renferme un Pokémon aléatoire.',
-    price: 150,
+    price: 100,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/dream-ball.png',
   },
@@ -56,7 +56,7 @@ export const pokemonConsumableCatalog = [
     id: 'shiny-poke-ball',
     name: 'Poké Ball shiny',
     description: 'Une capsule rare qui renferme un Pokémon shiny aléatoire.',
-    price: 2500,
+    price: 500,
     sprite:
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/park-ball.png',
   },
@@ -65,7 +65,7 @@ export const pokemonConsumableCatalog = [
     name: 'Holocron',
     description:
       'Un artefact ancien contenant une carte de personnage Star Wars.',
-    price: 150,
+    price: 100,
     sprite: 'holocron',
   },
 ] as const
