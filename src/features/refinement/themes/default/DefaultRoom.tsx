@@ -191,6 +191,7 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                             src={getPokemonImageUrl(
                               seat.pokemonId ?? 0,
                               seat.showPokemon3d,
+                              seat.pokemonShiny,
                             )}
                             alt=''
                             width={56}
@@ -219,15 +220,23 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                           src={getPokemonImageUrl(
                             pokemon.id,
                             seat.showPokemon3d,
+                            seat.pokemonShiny,
                           )}
                           alt=''
                         />
                         <div className='pokemon-seat-tooltip-info'>
                           <strong>{pokemon.name}</strong>
-                          <span
-                            className={`pokemon-seat-tooltip-rarity pokemon-seat-tooltip-rarity--${pokemon.rarity}`}
-                          >
-                            {rarityLabel(pokemon.rarity)}
+                          <span className='pokemon-seat-tooltip-badges'>
+                            <span
+                              className={`pokemon-seat-tooltip-rarity pokemon-seat-tooltip-rarity--${pokemon.rarity}`}
+                            >
+                              {rarityLabel(pokemon.rarity)}
+                            </span>
+                            {seat.pokemonShiny && (
+                              <span className='pokemon-seat-tooltip-shiny'>
+                                Shiny
+                              </span>
+                            )}
                           </span>
                           <span className='pokemon-seat-tooltip-types'>
                             {pokemon.types.map((type) => (

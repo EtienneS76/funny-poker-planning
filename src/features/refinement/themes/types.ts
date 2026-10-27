@@ -11,6 +11,7 @@ export type Seat = {
   pokemonGifUrl: string | null
   pokemonName: string | null
   pokemonId: number | null
+  pokemonShiny: boolean
   showPokemon3d: boolean
   isSpectator: boolean
   vote: string | null

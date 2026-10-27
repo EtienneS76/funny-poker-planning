@@ -53,6 +53,14 @@ export const pokemonConsumableCatalog = [
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/dream-ball.png',
   },
   {
+    id: 'shiny-poke-ball',
+    name: 'Poké Ball shiny',
+    description: 'Une capsule rare qui renferme un Pokémon shiny aléatoire.',
+    price: 2500,
+    sprite:
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/park-ball.png',
+  },
+  {
     id: 'holocron',
     name: 'Holocron',
     description:

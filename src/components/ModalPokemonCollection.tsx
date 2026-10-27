@@ -24,11 +24,14 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const account = useAccount()
   const snackbar = useAppSnackbar()
   const [activeTab, setActiveTab] = useState<
-    'frames' | 'pokemon' | 'star-wars'
+    'frames' | 'pokemon' | 'shiny' | 'star-wars'
   >('frames')
   const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
     null,
   )
+  const [selectedShinyPokemonId, setSelectedShinyPokemonId] = useState<
+    number | null
+  >(null)
   const [assigning, setAssigning] = useState(false)
   const [saving3d, setSaving3d] = useState(false)
   const [search, setSearch] = useState('')
@@ -62,15 +65,23 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   }, [])
 
   const unlockedAtById = new Map(
-    (collection ?? []).map(({ pokemonId, unlockedAt }) => [
-      pokemonId,
-      unlockedAt,
-    ]),
+    (collection ?? [])
+      .filter(({ shiny }) => !shiny)
+      .map(({ pokemonId, unlockedAt }) => [pokemonId, unlockedAt]),
   )
   const pokedex = KANTO_POKEDEX.map((pokemon) => ({
     ...pokemon,
     unlockedAt: unlockedAtById.get(pokemon.id),
   }))
+  const shinyUnlockedAtById = new Map(
+    (collection ?? [])
+      .filter(({ shiny }) => shiny)
+      .map(({ pokemonId, unlockedAt }) => [pokemonId, unlockedAt]),
+  )
+  const shinyPokedex = KANTO_POKEDEX.flatMap((pokemon) => {
+    const unlockedAt = shinyUnlockedAtById.get(pokemon.id)
+    return unlockedAt === undefined ? [] : [{ ...pokemon, unlockedAt }]
+  })
   const normalizedSearch = search
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
@@ -93,11 +104,23 @@ export default function ModalPokemonCollection({ onClose }: Props) {
       .toLocaleLowerCase('fr')
       .includes(normalizedSearch)
   })
+  const filteredShinyPokedex = shinyPokedex.filter((pokemon) => {
+    if (!normalizedSearch) return true
+    return [pokemon.name, String(pokemon.id), ...pokemon.types.map(typeLabel)]
+      .join(' ')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLocaleLowerCase('fr')
+      .includes(normalizedSearch)
+  })
   const selectedPokemon =
     pokedex.find(
       ({ id, unlockedAt }) =>
         id === selectedPokemonId && unlockedAt !== undefined,
     ) ?? pokedex.find(({ unlockedAt }) => unlockedAt !== undefined)
+  const selectedShinyPokemon =
+    shinyPokedex.find(({ id }) => id === selectedShinyPokemonId) ??
+    shinyPokedex[0]
   const unlockedCount = pokedex.filter(
     (pokemon) => pokemon.unlockedAt !== undefined,
   ).length
@@ -110,6 +133,7 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   ).size
   const starWarsCompletion = Math.round((uniqueStarWarsCharacters / 100) * 100)
   const assignedPokemonId = account.profile?.assignedPokemonId ?? null
+  const assignedPokemonShiny = account.profile?.assignedPokemonShiny ?? false
   const [pendingFrame, setPendingFrame] = useState<string | null>(null)
 
   useEffect(() => {
@@ -124,10 +148,20 @@ export default function ModalPokemonCollection({ onClose }: Props) {
     }
   }, [collection, selectedPokemonId])
 
-  async function setAssignedPokemon(pokemonId: number | null) {
+  useEffect(() => {
+    if (
+      selectedShinyPokemonId === null &&
+      collection !== undefined &&
+      shinyPokedex.length
+    ) {
+      setSelectedShinyPokemonId(shinyPokedex[0].id)
+    }
+  }, [collection, selectedShinyPokemonId])
+
+  async function setAssignedPokemon(pokemonId: number | null, shiny = false) {
     setAssigning(true)
     try {
-      await assignPokemon({ pokemonId })
+      await assignPokemon({ pokemonId, shiny })
     } catch (error) {
       snackbar.error(
         'Assignation impossible',
@@ -226,6 +260,20 @@ export default function ModalPokemonCollection({ onClose }: Props) {
             Pokémon{' '}
             <span className='pokemon-collection-tab-progress'>
               ({collection === undefined ? '…' : `${pokemonCompletion}%`})
+            </span>
+          </button>
+          <button
+            id='collection-tab-shiny'
+            className='pokemon-collection-tab'
+            type='button'
+            role='tab'
+            aria-selected={activeTab === 'shiny'}
+            aria-controls='collection-panel-shiny'
+            onClick={() => setActiveTab('shiny')}
+          >
+            Pokémon Shiny{' '}
+            <span className='pokemon-collection-tab-progress'>
+              ({collection === undefined ? '…' : shinyPokedex.length})
             </span>
           </button>
           <button
@@ -337,7 +385,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                             </span>
                           ))}
                         </span>
-                        {assignedPokemonId === pokemon.id && (
+                        {assignedPokemonId === pokemon.id &&
+                          !assignedPokemonShiny && (
                           <span className='pokemon-collection-assigned'>
                             <Check size={14} aria-hidden='true' /> Équipé
                           </span>
@@ -405,7 +454,9 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                       <p className='pokemon-collection-locked-note'>
                         Débloque ce Pokémon pour l’équiper et jouer avec.
                       </p>
-                    ) : assignedPokemonId === selectedPokemon.id ? (
+                    ) :
+                    assignedPokemonId === selectedPokemon.id &&
+                    !assignedPokemonShiny ? (
                       <button
                         className='pokemon-collection-assign'
                         type='button'
@@ -421,6 +472,179 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                         disabled={assigning}
                         onClick={() =>
                           void setAssignedPokemon(selectedPokemon.id)
+                        }
+                      >
+                        {assigning ? 'Équipement…' : 'Équiper'}
+                      </button>
+                    )}
+                  </div>
+                </article>
+              )}
+            </>
+          )}
+        </section>
+        <section
+          id='collection-panel-shiny'
+          className='pokemon-collection-panel'
+          role='tabpanel'
+          aria-labelledby='collection-tab-shiny'
+          hidden={activeTab !== 'shiny'}
+        >
+          {collection === undefined ? (
+            <p className='pp-inventory-empty' role='status'>
+              Chargement de tes Pokémon shiny…
+            </p>
+          ) : (
+            <>
+              <div className='pokedex-toolbar'>
+                <label
+                  className='pokedex-search'
+                  htmlFor='shiny-pokedex-search'
+                >
+                  <Search size={18} aria-hidden='true' />
+                  <input
+                    id='shiny-pokedex-search'
+                    type='search'
+                    value={search}
+                    placeholder='Rechercher un shiny par nom ou numéro'
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                <span className='pokedex-progress'>
+                  <strong>{shinyPokedex.length}</strong>{' '}
+                  {shinyPokedex.length === 1 ? 'shiny obtenu' : 'shiny obtenus'}
+                </span>
+                <label
+                  className='pokemon-collection-3d-switch'
+                  title='Afficher les Pokémon shiny en animé'
+                >
+                  <span>Pokémons animés</span>
+                  <input
+                    type='checkbox'
+                    role='switch'
+                    aria-label='Afficher les Pokémon shiny en animé'
+                    checked={showPokemon3d}
+                    disabled={saving3d}
+                    onChange={(event) =>
+                      void setPokemon3d(event.currentTarget.checked)
+                    }
+                  />
+                </label>
+              </div>
+              <div
+                className='pokemon-collection-grid'
+                aria-label='Pokédex Shiny'
+              >
+                {filteredShinyPokedex.map((pokemon) => (
+                  <button
+                    className={`pokemon-collection-card pokemon-collection-card--shiny${selectedShinyPokemon?.id === pokemon.id ? ' pokemon-collection-card--selected' : ''}`}
+                    key={pokemon.id}
+                    type='button'
+                    aria-label={`${pokemon.name} shiny, numéro ${String(pokemon.id).padStart(3, '0')}`}
+                    aria-pressed={selectedShinyPokemon?.id === pokemon.id}
+                    onClick={() => setSelectedShinyPokemonId(pokemon.id)}
+                  >
+                    <img
+                      src={getPokemonImageUrl(pokemon.id, showPokemon3d, true)}
+                      alt=''
+                      width={80}
+                      height={80}
+                      loading='lazy'
+                    />
+                    <strong>{pokemon.name}</strong>
+                    <span className='pokemon-collection-number'>
+                      Shiny · #{String(pokemon.id).padStart(3, '0')}
+                    </span>
+                    {assignedPokemonId === pokemon.id &&
+                      assignedPokemonShiny && (
+                        <span className='pokemon-collection-assigned'>
+                          <Check size={14} aria-hidden='true' /> Équipé
+                        </span>
+                      )}
+                    <span className='pokemon-collection-types'>
+                      {pokemon.types.map((type) => (
+                        <span
+                          className={`pokemon-type pokemon-type--${type}`}
+                          key={type}
+                        >
+                          {typeLabel(type)}
+                        </span>
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {filteredShinyPokedex.length === 0 && (
+                <p className='pp-inventory-empty'>
+                  {shinyPokedex.length === 0
+                    ? 'Aucun Pokémon shiny pour le moment.'
+                    : `Aucun shiny ne correspond à « ${search} ».`}
+                </p>
+              )}
+              {selectedShinyPokemon && (
+                <article className='pokemon-collection-detail pokemon-collection-detail--shiny'>
+                  <img
+                    src={getPokemonImageUrl(
+                      selectedShinyPokemon.id,
+                      showPokemon3d,
+                      true,
+                    )}
+                    alt=''
+                    width={192}
+                    height={192}
+                  />
+                  <div className='pokemon-collection-detail-copy'>
+                    <span className='pokemon-collection-detail-kicker'>
+                      POKÉDEX SHINY #
+                      {String(selectedShinyPokemon.id).padStart(3, '0')}
+                    </span>
+                    <h3>{selectedShinyPokemon.name}</h3>
+                    <div className='pokemon-collection-types'>
+                      {selectedShinyPokemon.types.map((type) => (
+                        <span
+                          className={`pokemon-type pokemon-type--${type}`}
+                          key={type}
+                        >
+                          {typeLabel(type)}
+                        </span>
+                      ))}
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>Rareté</dt>
+                        <dd>{rarityLabel(selectedShinyPokemon.rarity)}</dd>
+                      </div>
+                      <div>
+                        <dt>Récupéré le</dt>
+                        <dd>
+                          {new Date(selectedShinyPokemon.unlockedAt).toLocaleDateString(
+                            'fr-FR',
+                            {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            },
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                    {assignedPokemonId === selectedShinyPokemon.id &&
+                    assignedPokemonShiny ? (
+                      <button
+                        className='pokemon-collection-assign'
+                        type='button'
+                        disabled={assigning}
+                        onClick={() => void setAssignedPokemon(null)}
+                      >
+                        {assigning ? 'Mise à jour…' : 'Déséquiper'}
+                      </button>
+                    ) : (
+                      <button
+                        className='pokemon-collection-assign'
+                        type='button'
+                        disabled={assigning}
+                        onClick={() =>
+                          void setAssignedPokemon(selectedShinyPokemon.id, true)
                         }
                       >
                         {assigning ? 'Équipement…' : 'Équiper'}

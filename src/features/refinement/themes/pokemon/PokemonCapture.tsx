@@ -22,6 +22,7 @@ type CaptureResult = {
 type Props = {
   name: string
   rarity: PokemonRarity
+  shiny: boolean
   imageSrc: string
   fallbackImageSrc: string
   balls: CaptureBall[] | undefined
@@ -58,6 +59,7 @@ function captureVars(values: Record<string, string>): CSSProperties {
 export function PokemonCapture({
   name,
   rarity,
+  shiny,
   imageSrc,
   fallbackImageSrc,
   balls,
@@ -264,7 +266,7 @@ export function PokemonCapture({
           <div className='pokemon-capture-aura' />
           <div className='pokemon-capture-ground' />
           <img
-            className={`pokemon-capture-pokemon${phase === 'absorb' ? ' is-absorbed' : ''}${phase === 'escaped' ? ' is-back' : ''}`}
+            className={`pokemon-capture-pokemon${shiny ? ' is-shiny' : ''}${phase === 'absorb' ? ' is-absorbed' : ''}${phase === 'escaped' ? ' is-back' : ''}`}
             src={image}
             alt={name}
             style={{

@@ -40,6 +40,8 @@ const BASE_URL =
   'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork'
 const POKEMON_3D_BASE_URL =
   'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-vii/lets-go-pikachu-lets-go-eevee'
+const POKEMON_SHINY_ANIMATED_BASE_URL =
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-vii/lets-go-pikachu-lets-go-eevee/shiny'
 // Configuration table with weight & Pokemon entries (IDs 1 to 151)
 const POKEDEX_TIERS: Record<PokemonRarity, RarityTierData> = {
   ultime: {
@@ -237,7 +239,10 @@ plante,poison|plante,poison|plante,poison|feu|feu|feu,vol|eau|eau|eau|insecte
 |insecte|normal|eau|eau,vol|eau,glace|normal|normal|eau|electrik|feu
 |normal|roche,eau|roche,eau|roche,eau|roche,eau|roche,vol|normal|glace,vol|electrik,vol|feu,vol
 |dragon|dragon|dragon,vol|psy|psy
-`.trim().split(/\s*\|\s*/).map((types) => types.split(',') as PokemonType[])
+`
+  .trim()
+  .split(/\s*\|\s*/)
+  .map((types) => types.split(',') as PokemonType[])
 
 /**
  * Generates a random Pokemon based on rarity weights.
@@ -280,7 +285,16 @@ export function getPokemonTypes(id: number): PokemonType[] {
   return TYPES_BY_POKEDEX_ID[id - 1] ?? []
 }
 
-export function getPokemonImageUrl(id: number, use3d: boolean): string {
+export function getPokemonImageUrl(
+  id: number,
+  use3d: boolean,
+  shiny = false,
+): string {
+  if (shiny) {
+    return use3d
+      ? `${POKEMON_SHINY_ANIMATED_BASE_URL}/${id}.gif`
+      : `${BASE_URL}/shiny/${id}.png`
+  }
   return `${use3d ? POKEMON_3D_BASE_URL : BASE_URL}/${id}.${use3d ? 'gif' : 'png'}`
 }
 

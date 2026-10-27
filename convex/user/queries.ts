@@ -67,7 +67,7 @@ export const shopData = query({
         name: storedItem?.name ?? item.name,
         description: storedItem?.description ?? item.description,
         price: storedItem?.price ?? item.price,
-        sprite: storedItem?.sprite ?? item.sprite,
+        sprite: item.sprite,
         ...(catchRates ? { catchRates } : {}),
       }
     })
@@ -151,6 +151,7 @@ export const current = query({
       ...user,
       avatarFrameId: user.avatarFrameId ?? null,
       assignedPokemonId: user.assignedPokemonId ?? null,
+      assignedPokemonShiny: user.assignedPokemonShiny ?? false,
       showPokemon3d: user.showPokemon3d ?? false,
       firstConnectedAt: user._creationTime,
       statistics,
@@ -163,6 +164,7 @@ export const pokemonCollection = query({
   returns: v.array(
     v.object({
       pokemonId: v.number(),
+      shiny: v.boolean(),
       unlockedAt: v.number(),
     }),
   ),
@@ -183,8 +185,9 @@ export const pokemonCollection = query({
       .query('userPokemons')
       .withIndex('by_user', (query) => query.eq('userId', user._id))
       .collect()
-    return entries.map(({ pokemonId, unlockedAt }) => ({
+    return entries.map(({ pokemonId, shiny, unlockedAt }) => ({
       pokemonId,
+      shiny: shiny ?? false,
       unlockedAt,
     }))
   },
@@ -237,6 +240,7 @@ export const starterPokemonOpening = query({
   returns: v.union(
     v.object({
       pokemonId: v.number(),
+      shiny: v.boolean(),
       rerollsRemaining: v.number(),
     }),
     v.null(),
@@ -269,6 +273,7 @@ export const starterPokemonOpening = query({
 
     return {
       pokemonId: opening.pokemonId,
+      shiny: opening.shiny ?? false,
       rerollsRemaining: opening.rerollsRemaining,
     }
   },

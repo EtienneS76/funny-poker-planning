@@ -11,7 +11,7 @@ import { PokemonCapture } from './PokemonCapture'
 import type { RoomProps } from '../types'
 
 type CaptureBallId = 'poke-ball' | 'hyper-ball' | 'master-ball'
-type Encounter = { pokemonId: number }
+type Encounter = { pokemonId: number; shiny: boolean }
 
 const captureBallIds: CaptureBallId[] = [
   'poke-ball',
@@ -114,11 +114,13 @@ export function PokemonEncounterLayer({ vm }: RoomProps) {
           key={encounter.pokemonId}
           name={pokemon.name}
           rarity={pokemon.rarity}
+          shiny={encounter.shiny}
           imageSrc={getPokemonImageUrl(
             pokemon.id,
             account.profile?.showPokemon3d ?? false,
+            encounter.shiny,
           )}
-          fallbackImageSrc={getPokemonImageUrl(pokemon.id, false)}
+          fallbackImageSrc={getPokemonImageUrl(pokemon.id, false, encounter.shiny)}
           balls={inventory === undefined ? undefined : balls}
           isAuthenticated={account.isAuthenticated}
           signInPending={account.pending}

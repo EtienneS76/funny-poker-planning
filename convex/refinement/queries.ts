@@ -99,6 +99,7 @@ export const getBySlug = query({
           avatarUrl: user?.avatarUrl ?? participant.avatar ?? null,
           avatarFrameId: user?.avatarFrameId ?? null,
           assignedPokemonId: user?.assignedPokemonId ?? null,
+          assignedPokemonShiny: user?.assignedPokemonShiny ?? false,
           showPokemon3d: user?.showPokemon3d ?? false,
           isSpectator: participant.isSpectator ?? false,
           hasVoted: votesByUserId.has(participant.userId),

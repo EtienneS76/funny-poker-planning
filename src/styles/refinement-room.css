@@ -594,6 +594,21 @@
   font-weight: 800;
   white-space: nowrap;
 }
+.pokemon-seat-tooltip-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pokemon-seat-tooltip-shiny {
+  padding: 3px 7px;
+  border: 1px solid #e4c15c;
+  border-radius: 999px;
+  background: #fff3bd;
+  color: #80600c;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
 .pokemon-seat-tooltip-rarity--rare {
   background: #dceefa;
   color: #315b79;
