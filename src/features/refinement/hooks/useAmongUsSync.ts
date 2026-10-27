@@ -17,10 +17,7 @@ type Options = {
  * corrige tout.
  */
 export function useAmongUsSync({ slug, guestId, active }: Options) {
-  const players = useQuery(
-    api.amongUs.queries.list,
-    active ? { slug } : 'skip',
-  )
+  const players = useQuery(api.amongUs.queries.list, active ? { slug } : 'skip')
   const moveMutation = useMutation(api.amongUs.mutations.move)
   const pushMutation = useMutation(api.amongUs.mutations.push)
 
@@ -32,8 +29,8 @@ export function useAmongUsSync({ slug, guestId, active }: Options) {
   )
 
   const push = useCallback(
-    (targetUserId: string | null) => {
-      void pushMutation({ slug, guestId, targetUserId }).catch(
+    (targetUserId: string | null, power: number) => {
+      void pushMutation({ slug, guestId, targetUserId, power }).catch(
         () => undefined,
       )
     },

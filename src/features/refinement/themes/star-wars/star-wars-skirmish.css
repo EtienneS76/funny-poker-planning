@@ -130,7 +130,9 @@
   top: -10px;
   translate: -50% 0;
   color: var(--sw-ink, #0f2742);
-  font: 800 18px 'Orbitron', sans-serif;
+  font:
+    800 18px 'Orbitron',
+    sans-serif;
   text-shadow: 0 1px 0 var(--sw-panel, #fff);
   animation: sw-plus 750ms ease-out forwards;
 }
@@ -183,7 +185,10 @@
   background: color-mix(in srgb, var(--sw-panel, #fff) 94%, transparent);
   box-shadow: 0 6px 18px var(--sw-glow, #1f6fe038);
   color: var(--sw-ink, #0f2742);
-  font: 700 13px 'Rajdhani', 'DM Sans', sans-serif;
+  font:
+    700 13px 'Rajdhani',
+    'DM Sans',
+    sans-serif;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

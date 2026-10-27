@@ -229,14 +229,24 @@ export default function PokeballOpening({
                       >
                         {detailsRevealed ? (
                           <img
-                            className={shiny ? 'pokemon-shiny-image' : undefined}
-                            src={getPokemonImageUrl(mon.id, showPokemon3d, shiny)}
+                            className={
+                              shiny ? 'pokemon-shiny-image' : undefined
+                            }
+                            src={getPokemonImageUrl(
+                              mon.id,
+                              showPokemon3d,
+                              shiny,
+                            )}
                             alt={mon.name}
                             onError={(e) => {
                               const img = e.currentTarget
                               if (showPokemon3d && !img.dataset.fallback) {
                                 img.dataset.fallback = 'true'
-                                img.src = getPokemonImageUrl(mon.id, false, shiny)
+                                img.src = getPokemonImageUrl(
+                                  mon.id,
+                                  false,
+                                  shiny,
+                                )
                                 img.classList.add('hd')
                               }
                             }}
