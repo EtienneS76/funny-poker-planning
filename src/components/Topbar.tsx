@@ -15,7 +15,7 @@ type Props = {
   onInvitePlayers?: () => void
 }
 
-type ShopTabId = 'decorations' | 'pokemon' | 'star-wars'
+type ShopTabId = 'decorations' | 'pokemon' | 'star-wars' | 'card-designs'
 
 export default function Topbar({ account, onInvitePlayers }: Props) {
   const [shopOpen, setShopOpen] = useState(false)
@@ -68,16 +68,18 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
             <span>Collection</span>
           </button>
         )}
-        <button
-          className='pp-button pp-button--secondary pp-button--inventory-nav'
-          type='button'
-          aria-label='Ouvrir les consommables'
-          title='Ouvrir les consommables'
-          onClick={() => setInventoryOpen(true)}
-        >
-          <PackageOpen size={17} aria-hidden='true' />
-          <span>Consommable</span>
-        </button>
+        {account.isAuthenticated && (
+          <button
+            className='pp-button pp-button--secondary pp-button--inventory-nav'
+            type='button'
+            aria-label='Ouvrir les consommables'
+            title='Ouvrir les consommables'
+            onClick={() => setInventoryOpen(true)}
+          >
+            <PackageOpen size={17} aria-hidden='true' />
+            <span>Consommable</span>
+          </button>
+        )}
         <button
           className='pp-button pp-button--invite pp-floating-invite'
           type='button'
@@ -113,6 +115,9 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
           initialTab={shopInitialTab}
           balance={shopData?.balance ?? 0}
           catalog={shopData?.catalog ?? []}
+          cardDesigns={shopData?.cardDesigns ?? []}
+          ownedCardDesignIds={shopData?.ownedCardDesignIds ?? []}
+          equippedCardDesignId={shopData?.equippedCardDesignId ?? null}
           ownedIds={shopData?.ownedIds ?? []}
           consumables={shopData?.consumables ?? []}
           consumableInventory={shopData?.consumableInventory ?? []}

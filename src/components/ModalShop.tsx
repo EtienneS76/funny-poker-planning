@@ -1,12 +1,18 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
 import { useMutation } from 'convex/react'
 import { Hexagon, Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
+import { CardDesignPreview } from './CardDesignPreview'
 import { useAppSnackbar } from './AppSnackbar'
 
 type Props = {
-  initialTab: 'decorations' | 'pokemon' | 'star-wars'
+  initialTab: 'decorations' | 'pokemon' | 'star-wars' | 'card-designs'
   balance: number
   catalog: Array<{
     id: string
@@ -15,6 +21,16 @@ type Props = {
     rarity: 'common' | 'rare' | 'legendary' | 'ultimate'
     price: number
   }>
+  cardDesigns: Array<{
+    id: string
+    name: string
+    description: string
+    rarity: 'rare' | 'epic' | 'legendary'
+    price: number
+    symbol: string
+  }>
+  ownedCardDesignIds: string[]
+  equippedCardDesignId: string | null
   ownedIds: string[]
   consumables: Array<{
     id: string
@@ -43,6 +59,7 @@ type Props = {
 
 const shopTabs = [
   { id: 'avatar', label: 'Avatar' },
+  { id: 'card-designs', label: 'Dos de carte' },
   { id: 'consumables', label: 'Consommable' },
 ] as const
 
@@ -59,6 +76,9 @@ export default function ModalShop({
   initialTab,
   balance,
   catalog,
+  cardDesigns,
+  ownedCardDesignIds,
+  equippedCardDesignId,
   ownedIds,
   consumables,
   consumableInventory,
@@ -69,9 +89,14 @@ export default function ModalShop({
 }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [activeTab, setActiveTab] = useState<ShopTabId>(
-    initialTab === 'decorations' ? 'avatar' : 'consumables',
+    initialTab === 'decorations'
+      ? 'avatar'
+      : initialTab === 'card-designs'
+        ? 'card-designs'
+        : 'consumables',
   )
   const [buyingFrame, setBuyingFrame] = useState<string | null>(null)
+  const [buyingCardDesign, setBuyingCardDesign] = useState<string | null>(null)
   const [buyingConsumable, setBuyingConsumable] = useState<string | null>(null)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const formattedBalance = new Intl.NumberFormat('fr-FR').format(balance)
@@ -82,6 +107,7 @@ export default function ModalShop({
     (item) => item.id === 'holocron',
   )
   const buyAvatarFrame = useMutation(api.user.mutations.buyAvatarFrame)
+  const buyCardDesignMutation = useMutation(api.user.mutations.buyCardDesign)
   const buyConsumable = useMutation(api.user.mutations.buyConsumable)
   const snackbar = useAppSnackbar()
 
@@ -131,6 +157,26 @@ export default function ModalShop({
       )
     } finally {
       setBuyingFrame(null)
+    }
+  }
+
+  async function purchaseCardDesign(designId: string) {
+    setBuyingCardDesign(designId)
+    setPurchaseError(null)
+    try {
+      await buyCardDesignMutation({ designId })
+      const designName =
+        cardDesigns.find((design) => design.id === designId)?.name ??
+        'Design de carte'
+      snackbar.success('Achat effectué', `${designName} ajouté à ta collection.`)
+    } catch (error) {
+      setPurchaseError(
+        error instanceof Error
+          ? error.message
+          : 'Achat impossible pour le moment.',
+      )
+    } finally {
+      setBuyingCardDesign(null)
     }
   }
 
@@ -416,6 +462,83 @@ export default function ModalShop({
                         })}
                       </div>
                     </section>
+                  )
+                })}
+              </div>
+            </div>
+          ) : activeTab === 'card-designs' ? (
+            <div className='pp-card-design-shop'>
+              <div className='pp-shop-section-heading'>
+                <h3>Designs de carte</h3>
+                <p>Choisis le style des cartes dans tes mains et sur la table.</p>
+              </div>
+              <div className='pp-card-design-grid'>
+                {cardDesigns.map((design) => {
+                  const isOwned = ownedCardDesignIds.includes(design.id)
+                  const isEquipped = equippedCardDesignId === design.id
+                  const canAfford = balance >= design.price
+                  const rarityLabel =
+                    design.rarity === 'rare'
+                      ? 'Rare'
+                      : design.rarity === 'epic'
+                        ? 'Épique'
+                        : 'Légendaire'
+                  return (
+                    <article
+                      className={`pp-card-design-card pp-card-design-card--${design.id}`}
+                      key={design.id}
+                    >
+                      <div className='pp-card-design-copy'>
+                        <span
+                          className={`pp-card-design-rarity pp-card-design-rarity--${design.rarity}`}
+                        >
+                          {rarityLabel}
+                        </span>
+                        <h4>{design.name}</h4>
+                        <p>{design.description}</p>
+                        <ul>
+                          <li>Face et dos assortis</li>
+                          <li>Visible par les autres joueurs</li>
+                        </ul>
+                        <strong className='pp-card-design-price'>
+                          {new Intl.NumberFormat('fr-FR').format(design.price)}{' '}
+                          Pokisous
+                        </strong>
+                        {isEquipped && (
+                          <span className='pp-card-design-equipped'>
+                            Design équipé
+                          </span>
+                        )}
+                      </div>
+                      <CardDesignPreview design={design} />
+                      <button
+                        className='pp-button pp-card-design-action'
+                        type='button'
+                        disabled={
+                          isOwned ||
+                          (!isOwned && isAuthenticated && !canAfford) ||
+                          (!isAuthenticated && !canSignIn) ||
+                          buyingCardDesign !== null
+                        }
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            onSignIn()
+                          } else {
+                            void purchaseCardDesign(design.id)
+                          }
+                        }}
+                      >
+                        {buyingCardDesign === design.id
+                          ? 'Achat…'
+                          : isOwned
+                            ? 'Possédé'
+                            : isAuthenticated
+                              ? canAfford
+                                ? 'Acheter'
+                                : 'Solde insuffisant'
+                              : 'Connexion requise'}
+                      </button>
+                    </article>
                   )
                 })}
               </div>

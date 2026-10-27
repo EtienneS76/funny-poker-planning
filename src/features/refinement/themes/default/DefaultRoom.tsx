@@ -119,6 +119,9 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                   <li
                     key={seat.id}
                     className={`room-thrown-card${isTshirtSizing ? ' room-thrown-card--shirt' : ''}`}
+                    data-card-design={
+                      !isTshirtSizing ? seat.cardDesignId ?? undefined : undefined
+                    }
                     aria-label={`${seat.name} : ${seat.vote}`}
                     style={
                       {
@@ -137,7 +140,17 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                         <small>{seat.vote}</small>
                       </span>
                     ) : (
-                      <span>{seat.vote}</span>
+                      <>
+                        <span className='room-thrown-card-value'>
+                          <b>{seat.vote}</b>
+                        </span>
+                        {seat.cardDesignId === 'golden-eclipse' && (
+                          <i
+                            className='card-design-glitter'
+                            aria-hidden='true'
+                          />
+                        )}
+                      </>
                     )}
                   </li>
                 )
@@ -262,6 +275,9 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                     ) : (
                       <span
                         className={`seat-card${seat.hasVoted ? ' seat-card--voted' : ''}`}
+                        data-card-design={
+                          seat.hasVoted ? (seat.cardDesignId ?? undefined) : undefined
+                        }
                         role='img'
                         aria-label={
                           seat.vote !== null ? 'A voté' : 'N’a pas encore voté'
@@ -328,6 +344,11 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                   type='button'
                   disabled={!canVote}
                   className={`vote-card${selected ? ' vote-card--selected' : ''}${isTshirtSizing ? ' vote-card--shirt' : ''}`}
+                  data-card-design={
+                    !isTshirtSizing
+                      ? account.profile?.cardDesignId ?? undefined
+                      : undefined
+                  }
                   aria-pressed={selected}
                   onClick={() => onSelect(card)}
                   style={
@@ -343,7 +364,12 @@ export function DefaultRoom({ vm, themeId = 'default' }: RoomProps) {
                       <span>{card}</span>
                     </>
                   ) : (
-                    card
+                    <>
+                      <span className='vote-card-value'>{card}</span>
+                      {account.profile?.cardDesignId === 'golden-eclipse' && (
+                        <i className='card-design-glitter' aria-hidden='true' />
+                      )}
+                    </>
                   )}
                 </button>
               )
