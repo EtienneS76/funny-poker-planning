@@ -160,7 +160,7 @@ export class AmongUsEngine {
     this.hintEl = document.createElement('div')
     this.hintEl.className = 'au-hint'
     this.hintEl.innerHTML =
-      '<kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> Se déplacer<span></span>' +
+      '<kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> Se déplac<span></span>' +
       '<kbd>Espace</kbd> Pousser<span class="au-charge-meter"><i></i></span>'
     host.append(this.hintEl)
 

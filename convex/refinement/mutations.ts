@@ -554,18 +554,27 @@ export const reveal = mutation({
     }
 
     const activeAuthenticatedIds = new Set<string>()
-    for (const player of activePlayers) {
-      if (player.userId.startsWith('guest:')) continue
+    const activeAuthenticatedSpectatorIds = new Set<string>()
+    for (const participant of activeParticipants) {
+      if (participant.userId.startsWith('guest:')) continue
       try {
-        const user = await context.db.get(player.userId as Id<'users'>)
-        if (user) activeAuthenticatedIds.add(player.userId)
+        const user = await context.db.get(participant.userId as Id<'users'>)
+        if (user) {
+          const recipientIds = participant.isSpectator
+            ? activeAuthenticatedSpectatorIds
+            : activeAuthenticatedIds
+          recipientIds.add(participant.userId)
+        }
       } catch {
         // Legacy participant IDs are not authenticated user IDs.
       }
     }
 
     if (activePlayers.length >= 3 && activeAuthenticatedIds.size >= 2) {
-      for (const userId of activeAuthenticatedIds) {
+      for (const userId of [
+        ...activeAuthenticatedIds,
+        ...activeAuthenticatedSpectatorIds,
+      ]) {
         const wallet = await context.db
           .query('pokisouWallets')
           .withIndex('by_user_id', (query) => query.eq('userId', userId))
