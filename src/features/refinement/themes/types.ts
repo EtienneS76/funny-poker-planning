@@ -28,6 +28,9 @@ export type AmongUsPlayerRecord = {
   x: number
   y: number
   dir: number
+  vx?: number
+  vy?: number
+  updatedAt?: number
   hitAt?: number
   hitDx?: number
   hitDy?: number
@@ -35,7 +38,14 @@ export type AmongUsPlayerRecord = {
   pushAt?: number
   pushDx?: number
 }
-export type AmongUsLocalState = { x: number; y: number; dir: 1 | -1 }
+export type AmongUsLocalState = {
+  x: number
+  y: number
+  dir: 1 | -1
+  /** Vitesse normalisée par seconde : les autres clients extrapolent avec. */
+  vx: number
+  vy: number
+}
 
 /**
  * Tout ce dont un thème a besoin pour afficher la salle : de l'état et des
@@ -92,7 +102,13 @@ export type RoomViewModel = {
     active: boolean
     /** Les poussées suivent le réglage « interactions fun » de la salle. */
     pushEnabled: boolean
-    players: AmongUsPlayerRecord[] | undefined
+    /**
+     * Abonnement direct aux positions : elles changent plusieurs fois par
+     * seconde, on ne les fait donc pas passer par un rendu React de la salle.
+     */
+    subscribe: (
+      listener: (players: AmongUsPlayerRecord[]) => void,
+    ) => () => void
     move: (state: AmongUsLocalState) => void
     push: (targetUserId: string | null, power: number) => void
   }

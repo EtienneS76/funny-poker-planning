@@ -9,8 +9,9 @@ import './among-us.css'
 
 /**
  * Thème Among Us : les joueurs sont des crewmates qui se baladent autour de la
- * table avec Z Q S D. Espace pousse (3 s au sol); la révélation reste dans les
- * commandes classiques de la salle.
+ * table avec Z Q S D. Espace pousse (maintenir pour charger) : la victime
+ * s'envole, rebondit et reste 3 s au sol. La révélation reste dans les commandes
+ * classiques de la salle.
  *
  * La zone de jeu est lue dans le DOM de la salle : entre la barre du haut et la
  * main de cartes, et la vraie table `.pp-table` sert d'obstacle.
@@ -57,11 +58,7 @@ export function AmongUsLayer({ vm }: RoomProps) {
   const seen = useRef(
     new Map<
       string,
-      {
-        hitAt: number | undefined
-        pushAt: number | undefined
-        hitPower: number | undefined
-      }
+      { hitAt: number | undefined; pushAt: number | undefined }
     >(),
   )
 
@@ -112,41 +109,44 @@ export function AmongUsLayer({ vm }: RoomProps) {
     engineRef.current?.setPushEnabled(vm.amongUs.pushEnabled)
   }, [vm.amongUs.pushEnabled])
 
-  // positions et coups venus de Convex
-  const { players } = vm.amongUs
-  useEffect(() => {
-    const engine = engineRef.current
-    if (!engine || !players) return
-    const localId = vm.seats.find((seat) => seat.isMe)?.id
-    for (const player of players) {
-      const previous = seen.current.get(player.userId)
-      if (player.userId !== localId)
-        engine.applyRemoteState(player.userId, player)
-      // premier instantané = référence : on ne rejoue pas les anciens coups
-      if (previous) {
-        if (
-          player.pushAt !== undefined &&
-          player.pushAt !== previous.pushAt &&
-          player.userId !== localId
-        ) {
-          engine.playPush(player.userId, player.pushDx ?? player.dir)
+  // positions et coups venus de Convex, sans passer par un rendu React
+  const { subscribe } = vm.amongUs
+  useEffect(
+    () =>
+      subscribe((players) => {
+        const engine = engineRef.current
+        if (!engine) return
+        const localId = latest.current.seats.find((seat) => seat.isMe)?.id
+        for (const player of players) {
+          const previous = seen.current.get(player.userId)
+          if (player.userId !== localId)
+            engine.applyRemoteState(player.userId, player)
+          // premier instantané = référence : on ne rejoue pas les anciens coups
+          if (previous) {
+            if (
+              player.pushAt !== undefined &&
+              player.pushAt !== previous.pushAt &&
+              player.userId !== localId
+            ) {
+              engine.playPush(player.userId, player.pushDx ?? player.dir)
+            }
+            if (player.hitAt !== undefined && player.hitAt !== previous.hitAt) {
+              engine.hit(
+                player.userId,
+                player.hitDx ?? player.dir,
+                player.hitDy ?? 0,
+                player.hitPower ?? 0,
+              )
+            }
+          }
+          seen.current.set(player.userId, {
+            hitAt: player.hitAt,
+            pushAt: player.pushAt,
+          })
         }
-        if (player.hitAt !== undefined && player.hitAt !== previous.hitAt) {
-          engine.hit(
-            player.userId,
-            player.hitDx ?? player.dir,
-            player.hitDy ?? 0,
-            player.hitPower ?? 0,
-          )
-        }
-      }
-      seen.current.set(player.userId, {
-        hitAt: player.hitAt,
-        pushAt: player.pushAt,
-        hitPower: player.hitPower,
-      })
-    }
-  }, [players, vm.seats])
+      }),
+    [subscribe],
+  )
 
   return <div ref={hostRef} className='au-layer' aria-hidden='true' />
 }

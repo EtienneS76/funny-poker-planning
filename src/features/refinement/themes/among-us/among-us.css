@@ -86,8 +86,13 @@
   width: 100%;
   height: 100%;
 }
+.au-lunge {
+  transform-origin: 50% 100%;
+}
+/* pivot au centre du corps : le moteur y applique hauteur, vrille et écrasement */
 .au-sprite {
-  transform-origin: 50% 92%;
+  transform-origin: 50% 58.3%;
+  will-change: transform;
 }
 .au-svg {
   display: block;
@@ -111,8 +116,15 @@
 .au-visor {
   fill: #9fe3f2;
 }
-.au-arm {
+.au-arm,
+.au-ko {
   display: none;
+}
+.au-ko {
+  fill: none;
+  stroke: #0b0e14;
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 .au-leg {
   transform-box: fill-box;
@@ -127,7 +139,6 @@
   border-radius: 50%;
   background: rgb(0 0 0 / 40%);
   filter: blur(1.5px);
-  transition: transform 300ms;
 }
 
 .au-name {
@@ -246,27 +257,6 @@
 .au-card--face {
   width: 30px;
   height: 36px;
-.au-hint .au-charge-meter {
-  display: none;
-  position: relative;
-  width: 72px;
-  height: 7px;
-  overflow: hidden;
-  border: 1px solid #8fa4b7;
-  border-radius: 999px;
-  background: #dce5ec;
-}
-.au-hint.au-charging .au-charge-meter {
-  display: block;
-}
-.au-charge-meter i {
-  display: block;
-  width: var(--charge, 0%);
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #24a8be, #159eae);
-  transition: width 60ms linear;
-}
   background: #fff;
 }
 .au-card-value {
@@ -454,42 +444,98 @@
   }
 }
 
-/* chute : 3 s au sol, puis il se relève */
-.au-fallen .au-sprite {
-  animation: au-fall 600ms ease-in forwards;
+/* charge : le crewmate local se ramasse et tremble avant de frapper */
+.au-charging .au-lunge {
+  transform: scale(
+    calc(1 + 0.14 * var(--chg, 0)),
+    calc(1 - 0.22 * var(--chg, 0))
+  );
 }
-.au-fallen .au-stars {
+.au-charging .au-svg {
+  animation: au-shake 90ms linear infinite alternate;
+}
+@keyframes au-shake {
+  from {
+    transform: translateX(calc(var(--chg, 0) * -2px));
+  }
+  to {
+    transform: translateX(calc(var(--chg, 0) * 2px));
+  }
+}
+
+/* chute : la trajectoire (vol, vrille, rebonds) est pilotée par le moteur ;
+   ici seulement l'habillage : jambes qui battent, yeux en croix, étoiles au sol */
+.au-fallen .au-ko {
   display: block;
+}
+.au-fallen .au-leg-l {
+  animation: au-step 170ms linear infinite;
+}
+.au-fallen .au-leg-r {
+  animation: au-step 170ms linear infinite;
+  animation-delay: -85ms;
+}
+.au-fallen.au-down .au-leg-l,
+.au-fallen.au-down .au-leg-r {
+  animation-duration: 900ms;
 }
 .au-fallen .au-name {
   opacity: 0.55;
 }
-.au-fallen .au-shadow {
-  transform: scaleX(1.9);
+.au-down .au-stars {
+  display: block;
 }
-@keyframes au-fall {
-  0% {
-    transform: rotate(0);
+
+/* effets jetables : poussière à l'impact, onomatopée sur les gros chocs */
+.au-fx {
+  position: absolute;
+  pointer-events: none;
+}
+.au-puff {
+  width: calc(var(--au-s) * 0.9);
+  height: calc(var(--au-s) * 0.32);
+  margin: calc(var(--au-s) * -0.16) 0 0 calc(var(--au-s) * -0.45);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgb(120 140 158 / 55%),
+    rgb(120 140 158 / 0%) 70%
+  );
+  animation: au-puff 520ms ease-out forwards;
+}
+@keyframes au-puff {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
   }
-  40% {
-    transform: translateY(-14px) rotate(calc(var(--fall) * 35deg));
+  to {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+.au-pop {
+  color: #c51111;
+  font:
+    800 calc(var(--au-s) * 0.34) 'Bricolage Grotesque',
+    'DM Sans',
+    sans-serif;
+  white-space: nowrap;
+  -webkit-text-stroke: 3px #fff;
+  paint-order: stroke fill;
+  animation: au-pop 540ms ease-out forwards;
+}
+@keyframes au-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.4) rotate(-14deg);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -12px) scale(1.25) rotate(-8deg);
   }
   100% {
-    transform: translateY(10px) rotate(calc(var(--fall) * 90deg));
-  }
-}
-.au-getup .au-sprite {
-  animation: au-getup 380ms ease-out;
-}
-@keyframes au-getup {
-  0% {
-    transform: translateY(10px) rotate(calc(var(--fall) * 90deg));
-  }
-  60% {
-    transform: translateY(-10px) rotate(calc(var(--fall) * -8deg));
-  }
-  100% {
-    transform: none;
+    opacity: 0;
+    transform: translate(-50%, -30px) scale(1) rotate(-4deg);
   }
 }
 
@@ -553,7 +599,11 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .au-stars {
+  .au-stars,
+  .au-charging .au-svg {
     animation: none;
+  }
+  .au-fx {
+    display: none;
   }
 }

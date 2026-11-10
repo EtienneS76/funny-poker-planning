@@ -20,6 +20,8 @@ export const list = query({
       x: player.x,
       y: player.y,
       dir: player.dir,
+      vx: player.vx,
+      vy: player.vy,
       updatedAt: player.updatedAt,
       hitAt: player.hitAt,
       hitDx: player.hitDx,

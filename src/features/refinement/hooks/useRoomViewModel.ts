@@ -492,7 +492,7 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
     amongUs: {
       active: amongUsActive,
       pushEnabled: funInteractionsEnabled,
-      players: amongUsSync.players,
+      subscribe: amongUsSync.subscribe,
       move: amongUsSync.move,
       push: amongUsSync.push,
     },
