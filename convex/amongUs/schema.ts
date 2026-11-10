@@ -12,6 +12,9 @@ export const amongUsPlayerTable = defineTable({
   x: v.number(),
   y: v.number(),
   dir: v.number(), // 1 = regarde à droite, -1 = à gauche
+  // Vitesse normalisée par seconde, pour l'extrapolation côté client
+  vx: v.optional(v.number()),
+  vy: v.optional(v.number()),
   updatedAt: v.number(),
   // Subi : ce joueur a été poussé
   fallenUntil: v.optional(v.number()),

@@ -50,7 +50,10 @@ export function assignColors(ids: readonly string[]): Map<string, ColorKey> {
   return result
 }
 
-/** Crewmate tourné vers la droite. Les jambes sont deux groupes animés en CSS. */
+/**
+ * Crewmate tourné vers la droite. Les jambes sont deux groupes animés en CSS ;
+ * `.au-ko` (yeux en croix) et `.au-arm` ne s'affichent que pendant une chute / un coup.
+ */
 export const SPRITE = `
 <svg class="au-svg" viewBox="0 0 60 72" aria-hidden="true">
   <g class="au-leg au-leg-l"><rect class="au-c2" x="13" y="50" width="16" height="21" rx="6"/></g>
@@ -60,5 +63,6 @@ export const SPRITE = `
   <path d="M14 25c0-6 4-11 10-13" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" fill="none"/>
   <rect class="au-visor" x="27" y="15" width="29" height="19" rx="9.5"/>
   <rect x="33" y="18" width="14" height="4" rx="2" fill="#fff" fill-opacity=".75"/>
+  <path class="au-ko" d="M33 21l6 6m0-6l-6 6M44 21l6 6m0-6l-6 6"/>
   <rect class="au-c au-arm" x="40" y="37" width="24" height="9" rx="4.5"/>
 </svg>`

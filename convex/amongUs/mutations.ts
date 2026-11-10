@@ -14,6 +14,11 @@ const ARENA_ASPECT = 2.8 // la zone de jeu est ~2,8x plus large que haute
 const STALE_MS = 60_000
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
+const MAX_VELOCITY = 4 // en zones de jeu par seconde : large, même pour une grosse éjection
+const clampVelocity = (value: number | undefined) =>
+  value !== undefined && Number.isFinite(value)
+    ? Math.min(MAX_VELOCITY, Math.max(-MAX_VELOCITY, value))
+    : 0
 
 /** Même résolution d'identité que les autres mutations (compte ou invité), sans écriture. */
 async function resolveActor(
@@ -74,9 +79,12 @@ export const move = mutation({
     x: v.number(),
     y: v.number(),
     dir: v.number(),
+    // vitesse (unités normalisées / seconde) : les autres clients extrapolent entre deux envois
+    vx: v.optional(v.number()),
+    vy: v.optional(v.number()),
   },
   returns: v.null(),
-  handler: async (context, { slug, guestId, x, y, dir }) => {
+  handler: async (context, { slug, guestId, x, y, dir, vx, vy }) => {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null
     const actor = await resolveActor(context, slug, guestId)
     if (!actor) return null
@@ -85,6 +93,8 @@ export const move = mutation({
       x: clamp01(x),
       y: clamp01(y),
       dir: dir < 0 ? -1 : 1,
+      vx: clampVelocity(vx),
+      vy: clampVelocity(vy),
       updatedAt: Date.now(),
     }
     const existing = await findPlayer(
