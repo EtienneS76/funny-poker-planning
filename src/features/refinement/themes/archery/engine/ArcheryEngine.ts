@@ -51,6 +51,10 @@ import {
  * ~3 fois par seconde (les autres voient le tir venir) ; chaque client rejoue ensuite la même simulation dans le même
  * monde logique (voir world.ts).
  *
+ * Deux équipes : le côté gauche contre le côté droit. Une flèche traverse les
+ * coéquipiers du tireur et leurs plateformes, elle ne peut toucher (ou se
+ * planter dans) que le camp d'en face.
+ *
  * Qui décide d'un impact ? La cible : elle seule voit son esquive sans décalage
  * réseau. Chez les autres, une flèche qui semble toucher reste « en suspens »
  * jusqu'à la confirmation ; sans confirmation, c'était une esquive.
@@ -147,6 +151,8 @@ type Arrow = {
   key: string
   serverId: string | null
   shooterId: string
+  /** Camp du tireur (1 = gauche, -1 = droite, 0 = inconnu) : la flèche traverse ce camp. */
+  team: number
   color: string
   skin: ArrowSkin | null
   x: number
@@ -272,6 +278,8 @@ export class ArcheryEngine {
   private roundKey: string | undefined
 
   private platforms = new Float32Array(0)
+  /** Camp du propriétaire de chaque plateforme, dans le même ordre que `platforms`. */
+  private platformTeams = new Int8Array(0)
   private scale = 1
   private offsetX = 0
   private offsetY = 0
@@ -380,6 +388,7 @@ export class ArcheryEngine {
       this.renderCard(archer, def.card)
     }
     this.platforms = new Float32Array(this.archers.size * 4)
+    this.platformTeams = new Int8Array(this.archers.size)
     this.layoutKey = ''
     this.layout()
     if (this.lastState) this.applyPlayers(this.lastState)
@@ -645,6 +654,7 @@ export class ArcheryEngine {
       key,
       serverId,
       shooterId,
+      team: this.archers.get(shooterId)?.stick.baseFacing ?? 0,
       color: this.archers.get(shooterId)?.stick.color ?? '#5b4636',
       skin,
       x: shot.x,
@@ -1302,6 +1312,7 @@ export class ArcheryEngine {
         }
       }
       const left = stick.x - PLATFORM_W / 2
+      this.platformTeams[index / 4] = stick.baseFacing
       this.platforms[index++] = left
       this.platforms[index++] = stick.y
       this.platforms[index++] = left + PLATFORM_W
@@ -1401,6 +1412,8 @@ export class ArcheryEngine {
         arrow.x += arrow.vx * h
         arrow.y += arrow.vy * h
         for (let r = 0; r < platforms.length; r += 4) {
+          // les plateformes de son camp ne l'arrêtent pas
+          if (this.platformTeams[r / 4] === arrow.team) continue
           if (
             arrow.x > platforms[r]! &&
             arrow.x < platforms[r + 2]! &&
@@ -1419,6 +1432,7 @@ export class ArcheryEngine {
           const stick = archer.stick
           if (
             stick.id === arrow.shooterId ||
+            stick.baseFacing === arrow.team || // pas de tir ami : elle traverse
             stick.down > 0 ||
             stick.shield > 0
           )
