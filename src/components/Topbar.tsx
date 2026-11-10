@@ -118,6 +118,9 @@ export default function Topbar({ account, onInvitePlayers }: Props) {
           cardDesigns={shopData?.cardDesigns ?? []}
           ownedCardDesignIds={shopData?.ownedCardDesignIds ?? []}
           equippedCardDesignId={shopData?.equippedCardDesignId ?? null}
+          arrowSkins={shopData?.arrowSkins ?? []}
+          ownedArrowSkinIds={shopData?.ownedArrowSkinIds ?? []}
+          equippedArrowSkinId={shopData?.equippedArrowSkinId ?? null}
           ownedIds={shopData?.ownedIds ?? []}
           consumables={shopData?.consumables ?? []}
           consumableInventory={shopData?.consumableInventory ?? []}

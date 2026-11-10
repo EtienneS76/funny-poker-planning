@@ -5,7 +5,7 @@ import {
   type MutationCtx,
 } from '../_generated/server'
 import type { Doc, Id } from '../_generated/dataModel'
-import { authComponent } from '../auth/auth'
+import { resolveActor } from '../refinement/actor'
 
 const FALL_MS = 3_000
 const PUSH_COOLDOWN_MS = 500 // le client limite à 700 ms : on garde de la marge réseau
@@ -19,42 +19,6 @@ const clampVelocity = (value: number | undefined) =>
   value !== undefined && Number.isFinite(value)
     ? Math.min(MAX_VELOCITY, Math.max(-MAX_VELOCITY, value))
     : 0
-
-/** Même résolution d'identité que les autres mutations (compte ou invité), sans écriture. */
-async function resolveActor(
-  context: MutationCtx,
-  slug: string,
-  guestId: string,
-) {
-  const refinement = await context.db
-    .query('refinements')
-    .withIndex('by_slug', (q) => q.eq('slug', slug))
-    .unique()
-  if (!refinement) return null
-
-  let userId = `guest:${guestId}`
-  if (await context.auth.getUserIdentity()) {
-    const authUser = await authComponent.getAuthUser(context)
-    const user = await context.db
-      .query('users')
-      .withIndex('by_auth_user', (q) =>
-        q.eq('authUserId', String(authUser._id)),
-      )
-      .unique()
-    if (!user) return null
-    userId = String(user._id)
-  }
-
-  const participant = await context.db
-    .query('participants')
-    .withIndex('by_refinement_and_user', (q) =>
-      q.eq('refinementId', refinement._id).eq('userId', userId),
-    )
-    .unique()
-  if (!participant) return null
-
-  return { refinement, userId }
-}
 
 function findPlayer(
   context: MutationCtx,

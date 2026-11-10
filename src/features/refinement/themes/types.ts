@@ -47,6 +47,58 @@ export type AmongUsLocalState = {
   vy: number
 }
 
+/** État du thème « Tir à l'arc » (voir convex/archery). */
+export type ArcheryState = {
+  /** Les tirs suivent le réglage « interactions fun » de la salle. */
+  enabled: boolean
+  roundKey: string
+  players: {
+    userId: string
+    crouch: boolean
+    aiming: boolean
+    aim: number
+    jumpAt?: number
+    parryAt?: number
+    /** Flèche cosmétique équipée (boutique). */
+    skin?: string
+    away: boolean
+    arrowsLeft: number
+    hits: number
+    /** Points de vie restants dans la manche : 0 = éliminé jusqu'à la suivante. */
+    health: number
+  }[]
+  shots: {
+    id: string
+    shooterId: string
+    clientId: string
+    x: number
+    y: number
+    vx: number
+    vy: number
+    skin?: string
+    hitUserId?: string
+    headshot?: boolean
+    kill?: boolean
+    rewarded?: boolean
+  }[]
+}
+export type ArcheryPose = {
+  crouch: boolean
+  jump: boolean
+  parry: boolean
+  away: boolean
+  /** Arc bandé et direction visée (radians), visibles par les autres joueurs. */
+  aiming: boolean
+  aim: number
+}
+export type ArcheryShot = {
+  clientId: string
+  x: number
+  y: number
+  vx: number
+  vy: number
+}
+
 /**
  * Tout ce dont un thème a besoin pour afficher la salle : de l'état et des
  * callbacks. Un thème ne parle jamais à Convex et ne contient aucune règle métier.
@@ -111,6 +163,14 @@ export type RoomViewModel = {
     ) => () => void
     move: (state: AmongUsLocalState) => void
     push: (targetUserId: string | null, power: number) => void
+  }
+  archery: {
+    /** Abonnement direct (sans rendu React) aux postures et aux flèches. */
+    subscribe: (listener: (state: ArcheryState) => void) => () => void
+    setPose: (pose: ArcheryPose) => void
+    /** Résout à false si le serveur refuse le tir (carquois vide…). */
+    shoot: (shot: ArcheryShot) => Promise<boolean>
+    reportHit: (shotId: string, targetUserId: string, headshot: boolean) => void
   }
   copyInviteLink: () => Promise<void>
 }

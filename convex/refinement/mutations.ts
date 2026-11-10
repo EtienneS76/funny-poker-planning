@@ -230,6 +230,7 @@ export const create = mutation({
       v.literal('pk'),
       v.literal('sw'),
       v.literal('au'),
+      v.literal('ar'),
     ),
     sizing: v.string(),
     issueUrl: v.union(v.string(), v.null()),
@@ -540,18 +541,20 @@ export const reveal = mutation({
 
     await context.db.patch(currentRound._id, { revealedAt: Date.now() })
     const activeBefore = Date.now() - PRESENCE_TIMEOUT_MS
-    const activePlayers: Doc<'participants'>[] = []
-    for (const player of players) {
+    // spectateurs compris : ils touchent aussi la récompense s'ils sont présents
+    const activeParticipants: Doc<'participants'>[] = []
+    for (const item of participants) {
       const presence = await context.db
         .query('presences')
         .withIndex('by_participant', (query) =>
-          query.eq('participantId', player._id),
+          query.eq('participantId', item._id),
         )
         .unique()
       const lastSeenAt =
-        presence?.lastSeenAt ?? player.lastSeenAt ?? player._creationTime
-      if (lastSeenAt > activeBefore) activePlayers.push(player)
+        presence?.lastSeenAt ?? item.lastSeenAt ?? item._creationTime
+      if (lastSeenAt > activeBefore) activeParticipants.push(item)
     }
+    const activePlayers = activeParticipants.filter((item) => !item.isSpectator)
 
     const activeAuthenticatedIds = new Set<string>()
     const activeAuthenticatedSpectatorIds = new Set<string>()

@@ -5,6 +5,7 @@ import {
   pokisouWalletTable,
   userAvatarFramesTable,
   userCardDesignsTable,
+  userArrowSkinsTable,
   userPokemonsTable,
   userStarWarsCharactersTable,
   starterPokemonOpeningTable,
@@ -23,6 +24,7 @@ import { voteTable } from './refinement/voteSchema'
 import { refinementRoundTable } from './refinement/roundSchema'
 import { reactionTable } from './refinement/reactionSchema'
 import { amongUsPlayerTable } from './amongUs/schema'
+import { archeryPlayerTable, archeryShotTable } from './archery/schema'
 
 export default defineSchema({
   refinements: refinementTable,
@@ -31,6 +33,7 @@ export default defineSchema({
   pokisouWallets: pokisouWalletTable,
   userAvatarFrames: userAvatarFramesTable,
   userCardDesigns: userCardDesignsTable,
+  userArrowSkins: userArrowSkinsTable,
   userPokemons: userPokemonsTable,
   userStarWarsCharacters: userStarWarsCharactersTable,
   starterPokemonOpenings: starterPokemonOpeningTable,
@@ -45,4 +48,6 @@ export default defineSchema({
   refinementRounds: refinementRoundTable,
   roomReactions: reactionTable,
   amongUsPlayers: amongUsPlayerTable,
+  archeryPlayers: archeryPlayerTable,
+  archeryShots: archeryShotTable,
 })

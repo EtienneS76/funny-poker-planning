@@ -3,6 +3,7 @@ import { mutation, type MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 import { avatarFrameCatalog } from './avatarFrames'
 import { cardDesignCatalog } from './cardDesigns'
+import { arrowSkinCatalog } from './arrowSkins'
 import { pokemonConsumableCatalog } from './consumables'
 import { drawMysteryPokemonId, getPokemonRarityById } from './pokemonDraw'
 import { syncAuthenticatedUser } from './profile'
@@ -766,6 +767,65 @@ export const equipCardDesign = mutation({
     await context.db.patch(user._id, {
       cardDesignId: designId ?? undefined,
     })
+    return null
+  },
+})
+
+export const buyArrowSkin = mutation({
+  args: { skinId: v.string() },
+  returns: v.null(),
+  handler: async (context, { skinId }) => {
+    const skin = arrowSkinCatalog.find((item) => item.id === skinId)
+    if (!skin) throw new ConvexError('Cette flèche n’existe pas.')
+
+    const user = await requireAuthenticatedUser(context)
+    const existing = await context.db
+      .query('userArrowSkins')
+      .withIndex('by_user_skin', (query) =>
+        query.eq('userId', user._id).eq('skinId', skinId),
+      )
+      .unique()
+    if (existing) throw new ConvexError('Tu possèdes déjà cette flèche.')
+
+    const wallet = await context.db
+      .query('pokisouWallets')
+      .withIndex('by_user_id', (query) => query.eq('userId', String(user._id)))
+      .unique()
+    if (!wallet || wallet.balance < skin.price) {
+      throw new ConvexError('Tu n’as pas assez de Pokisous pour cette flèche.')
+    }
+
+    await context.db.patch(wallet._id, {
+      balance: wallet.balance - skin.price,
+    })
+    await context.db.insert('userArrowSkins', {
+      userId: user._id,
+      skinId,
+      purchasedAt: Date.now(),
+    })
+    // première flèche achetée : on l'équipe directement
+    const profile = await context.db.get(user._id)
+    if (profile && !profile.arrowSkinId)
+      await context.db.patch(user._id, { arrowSkinId: skinId })
+    return null
+  },
+})
+
+export const equipArrowSkin = mutation({
+  args: { skinId: v.union(v.string(), v.null()) },
+  returns: v.null(),
+  handler: async (context, { skinId }) => {
+    const user = await requireAuthenticatedUser(context)
+    if (skinId !== null) {
+      const owned = await context.db
+        .query('userArrowSkins')
+        .withIndex('by_user_skin', (query) =>
+          query.eq('userId', user._id).eq('skinId', skinId),
+        )
+        .unique()
+      if (!owned) throw new ConvexError('Tu ne possèdes pas cette flèche.')
+    }
+    await context.db.patch(user._id, { arrowSkinId: skinId ?? undefined })
     return null
   },
 })

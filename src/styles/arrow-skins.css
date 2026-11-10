@@ -1,0 +1,53 @@
+/* Flèches cosmétiques : vignette statique (les cartes sont les .pp-cosmetic-card communes). */
+.pp-arrow-preview {
+  --arrow-shaft: #5b4636;
+  --arrow-head: #25324a;
+  flex: none;
+  display: grid;
+  place-items: center;
+  height: 104px;
+  border: 1px solid #d2dbe4;
+  border-radius: 10px;
+  background: linear-gradient(#dfe8f1, #f3ede4);
+}
+.pp-arrow-preview svg {
+  display: block;
+  width: 96px;
+  height: 96px;
+}
+.pp-arrow-preview[data-arrow-skin='fire'] {
+  --arrow-shaft: #8a2c0d;
+  --arrow-head: #ff6a1a;
+  background: linear-gradient(#fbe9dc, #f6d7c2);
+}
+.pp-arrow-preview[data-arrow-skin='ice'] {
+  --arrow-shaft: #3f9fd6;
+  --arrow-head: #5fb7e6;
+  background: linear-gradient(#e2f3fb, #cfe9f7);
+}
+.pp-arrow-preview[data-arrow-skin='rainbow'] {
+  --arrow-shaft: #8e4ec6;
+  --arrow-head: #e5484d;
+}
+.pp-arrow-preview[data-arrow-skin='dragon'] {
+  --arrow-shaft: #1d6fd6;
+  --arrow-head: #1d6fd6;
+  background: linear-gradient(#1b2a4a, #24406e);
+  border-color: #2f4f86;
+}
+.pp-arrow-preview-shaft {
+  fill: none;
+  stroke: var(--arrow-shaft);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.pp-arrow-preview-feather {
+  fill: none;
+  stroke: var(--arrow-head);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pp-arrow-preview-head {
+  fill: var(--arrow-head);
+}

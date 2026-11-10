@@ -1486,6 +1486,117 @@
   display: grid;
   gap: 24px;
 }
+/* cosmétiques (dos de carte, flèches) : cartes compactes à peu près carrées,
+   en grille, dans la boutique comme dans la collection */
+.pp-cosmetic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 14px;
+}
+.pp-cosmetic-card {
+  /* colonne : la vignette en haut, prix + bouton calés en bas, pour que toutes
+     les cartes d'une rangée aient la même hauteur et les boutons alignés */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--pp-line);
+  border-radius: 12px;
+  background: var(--pp-paper);
+}
+.pp-cosmetic-card--equipped {
+  border-color: var(--pp-ink);
+}
+.pp-cosmetic-card strong {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 15px;
+}
+.pp-cosmetic-card p {
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.pp-cosmetic-card-meta {
+  display: flex;
+  margin-top: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pp-cosmetic-card-meta span {
+  color: var(--pp-muted);
+}
+.pp-cosmetic-card .pp-button {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* dos de carte en version vignette : une face et le dos, côte à côte */
+.pp-card-design-preview--compact {
+  /* annule le placement « preview » de la grande carte : sans ça la vignette
+     crée une colonne fantôme dans la carte compacte */
+  grid-area: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 104px;
+  min-height: 0;
+  padding: 8px;
+}
+.pp-card-design-preview--compact .pp-design-card {
+  width: 44px;
+  height: 64px;
+  margin: 0;
+  font-size: 17px;
+}
+.pp-card-design-preview--compact .pp-design-card--face {
+  transform: rotate(-6deg);
+}
+.pp-card-design-preview--compact .pp-design-card--back {
+  transform: rotate(6deg);
+}
+/* collection > Général : sous-catégories par type d'objet */
+.pp-collection-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pp-collection-subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--pp-line);
+  border-radius: 999px;
+  background: var(--pp-paper);
+  color: var(--pp-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pp-collection-subtab small {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--pp-cream);
+  color: var(--pp-muted);
+  font-size: 11px;
+}
+.pp-collection-subtab[aria-pressed='true'] {
+  border-color: var(--pp-ink);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
 .pp-collection-general-section {
   display: grid;
   align-content: start;
