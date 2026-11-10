@@ -3,6 +3,7 @@ import { query } from '../_generated/server'
 import { authComponent } from '../auth/auth'
 import { avatarFrameCatalog } from './avatarFrames'
 import { cardDesignCatalog } from './cardDesigns'
+import { arrowSkinCatalog } from './arrowSkins'
 import { pokemonConsumableCatalog } from './consumables'
 
 export const shopData = query({
@@ -39,6 +40,16 @@ export const shopData = query({
     ),
     ownedCardDesignIds: v.array(v.string()),
     equippedCardDesignId: v.union(v.string(), v.null()),
+    arrowSkins: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        description: v.string(),
+        price: v.number(),
+      }),
+    ),
+    ownedArrowSkinIds: v.array(v.string()),
+    equippedArrowSkinId: v.union(v.string(), v.null()),
     ownedIds: v.array(v.string()),
     equippedId: v.union(v.string(), v.null()),
     consumables: v.array(
@@ -69,6 +80,7 @@ export const shopData = query({
   handler: async (context) => {
     const catalog = avatarFrameCatalog.map((frame) => ({ ...frame }))
     const cardDesigns = cardDesignCatalog.map((design) => ({ ...design }))
+    const arrowSkins = arrowSkinCatalog.map((skin) => ({ ...skin }))
     const storedConsumables = await context.db
       .query('consumableCatalog')
       .collect()
@@ -97,6 +109,9 @@ export const shopData = query({
         cardDesigns,
         ownedCardDesignIds: [],
         equippedCardDesignId: null,
+        arrowSkins,
+        ownedArrowSkinIds: [],
+        equippedArrowSkinId: null,
         ownedIds: [],
         equippedId: null,
         consumables,
@@ -118,6 +133,9 @@ export const shopData = query({
         cardDesigns,
         ownedCardDesignIds: [],
         equippedCardDesignId: null,
+        arrowSkins,
+        ownedArrowSkinIds: [],
+        equippedArrowSkinId: null,
         ownedIds: [],
         equippedId: null,
         consumables,
@@ -137,6 +155,10 @@ export const shopData = query({
       .query('userCardDesigns')
       .withIndex('by_user', (query) => query.eq('userId', user._id))
       .collect()
+    const arrowSkinInventory = await context.db
+      .query('userArrowSkins')
+      .withIndex('by_user', (query) => query.eq('userId', user._id))
+      .collect()
     const consumableInventory = await context.db
       .query('userConsumables')
       .withIndex('by_user', (query) => query.eq('userId', user._id))
@@ -148,6 +170,9 @@ export const shopData = query({
       cardDesigns,
       ownedCardDesignIds: cardDesignInventory.map((item) => item.designId),
       equippedCardDesignId: user.cardDesignId ?? null,
+      arrowSkins,
+      ownedArrowSkinIds: arrowSkinInventory.map((item) => item.skinId),
+      equippedArrowSkinId: user.arrowSkinId ?? null,
       ownedIds: inventory.map((item) => item.frameId),
       equippedId: user.avatarFrameId ?? null,
       consumables,

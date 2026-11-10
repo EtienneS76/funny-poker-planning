@@ -17,4 +17,11 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'remove old archery arrows',
+  { minutes: 5 },
+  internal.archery.mutations.cleanup,
+  {},
+)
+
 export default crons

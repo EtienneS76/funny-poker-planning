@@ -4,6 +4,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
 import { CardDesignPreview } from './CardDesignPreview'
+import { ArrowSkinPreview } from './ArrowSkinPreview'
 import {
   getPokemonById,
   getPokemonImageUrl,
@@ -38,13 +39,18 @@ export default function ModalPokemonCollection({ onClose }: Props) {
   const [pendingCardDesign, setPendingCardDesign] = useState<string | null>(
     null,
   )
+  const [pendingArrowSkin, setPendingArrowSkin] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [generalSection, setGeneralSection] = useState<
+    'frames' | 'card-designs' | 'arrows'
+  >('frames')
   const collection = useQuery(api.user.queries.pokemonCollection, {})
   const starWarsCollection = useQuery(api.user.queries.starWarsCollection, {})
   const inventory = useQuery(api.user.queries.shopData, {})
   const assignPokemon = useMutation(api.user.mutations.assignPokemon)
   const equipAvatarFrame = useMutation(api.user.mutations.equipAvatarFrame)
   const equipCardDesign = useMutation(api.user.mutations.equipCardDesign)
+  const equipArrowSkin = useMutation(api.user.mutations.equipArrowSkin)
   const savePokemonPreference = useMutation(
     api.user.mutations.updatePokemonDisplayPreference,
   )
@@ -58,6 +64,10 @@ export default function ModalPokemonCollection({ onClose }: Props) {
     inventory.ownedCardDesignIds.includes(design.id),
   )
   const equippedCardDesignId = account.profile?.cardDesignId ?? null
+  const ownedArrowSkins = inventory?.arrowSkins.filter((skin) =>
+    inventory.ownedArrowSkinIds.includes(skin.id),
+  )
+  const equippedArrowSkinId = inventory?.equippedArrowSkinId ?? null
 
   useEffect(() => {
     const element = dialog.current
@@ -232,6 +242,26 @@ export default function ModalPokemonCollection({ onClose }: Props) {
       )
     } finally {
       setPendingCardDesign(null)
+    }
+  }
+
+  async function setEquippedArrowSkin(skinId: string | null) {
+    setPendingArrowSkin(skinId ?? 'none')
+    try {
+      await equipArrowSkin({ skinId })
+      snackbar.success(
+        skinId ? 'Flèche équipée' : 'Flèche retirée',
+        skinId
+          ? 'Tes tirs utilisent maintenant cette flèche.'
+          : 'Tes tirs utilisent la flèche classique.',
+      )
+    } catch (error) {
+      snackbar.error(
+        'Impossible de modifier la flèche',
+        error instanceof Error ? error.message : 'Réessaie dans un instant.',
+      )
+    } finally {
+      setPendingArrowSkin(null)
     }
   }
 
@@ -753,6 +783,31 @@ export default function ModalPokemonCollection({ onClose }: Props) {
             </p>
           ) : (
             <div className='pp-collection-general'>
+              <div
+                className='pp-collection-subtabs'
+                role='group'
+                aria-label='Type d’objet'
+              >
+                {(
+                  [
+                    ['frames', 'Cadres', ownedFrames?.length ?? 0],
+                    ['card-designs', 'Dos de carte', ownedCardDesigns?.length ?? 0],
+                    ['arrows', 'Flèches', ownedArrowSkins?.length ?? 0],
+                  ] as const
+                ).map(([id, label, count]) => (
+                  <button
+                    key={id}
+                    className='pp-collection-subtab'
+                    type='button'
+                    aria-pressed={generalSection === id}
+                    onClick={() => setGeneralSection(id)}
+                  >
+                    {label}
+                    <small>{count}</small>
+                  </button>
+                ))}
+              </div>
+              {generalSection === 'frames' && (
               <section
                 className='pp-collection-general-section'
                 aria-labelledby='collection-frames-title'
@@ -822,6 +877,8 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   </p>
                 )}
               </section>
+              )}
+              {generalSection === 'card-designs' && (
               <section
                 className='pp-collection-general-section'
                 aria-labelledby='collection-card-designs-title'
@@ -834,24 +891,21 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   </p>
                 </div>
                 {ownedCardDesigns?.length ? (
-                  <div className='pp-card-design-owned-grid'>
+                  <div className='pp-cosmetic-grid'>
                     {ownedCardDesigns.map((design) => {
                       const isEquipped = equippedCardDesignId === design.id
                       return (
                         <article
-                          className={`pp-card-design-owned-card${isEquipped ? ' pp-card-design-owned-card--equipped' : ''}`}
+                          className={`pp-cosmetic-card${isEquipped ? ' pp-cosmetic-card--equipped' : ''}`}
                           key={design.id}
                         >
-                          <CardDesignPreview design={design} />
-                          <div className='pp-card-design-owned-copy'>
-                            <strong>{design.name}</strong>
-                            <p>{design.description}</p>
-                            <span className='pp-card-design-owned-status'>
-                              {isEquipped ? 'Équipé' : 'Possédé'}
-                            </span>
+                          <CardDesignPreview design={design} compact />
+                          <strong>{design.name}</strong>
+                          <div className='pp-cosmetic-card-meta'>
+                            <span>{isEquipped ? 'Équipé' : 'Possédé'}</span>
                           </div>
                           <button
-                            className={`pp-button pp-card-design-owned-action${isEquipped ? ' pp-button--secondary' : ''}`}
+                            className={`pp-button${isEquipped ? ' pp-button--secondary' : ''}`}
                             type='button'
                             disabled={pendingCardDesign !== null}
                             onClick={() =>
@@ -879,6 +933,61 @@ export default function ModalPokemonCollection({ onClose }: Props) {
                   </p>
                 )}
               </section>
+              )}
+              {generalSection === 'arrows' && (
+              <section
+                className='pp-collection-general-section'
+                aria-labelledby='collection-arrow-skins-title'
+              >
+                <div className='pp-shop-section-heading'>
+                  <h3 id='collection-arrow-skins-title'>Flèches</h3>
+                  <p>
+                    Équipe la flèche que tu tires dans le thème « Tir à l’arc ».
+                  </p>
+                </div>
+                {ownedArrowSkins?.length ? (
+                  <div className='pp-cosmetic-grid'>
+                    {ownedArrowSkins.map((skin) => {
+                      const isEquipped = equippedArrowSkinId === skin.id
+                      return (
+                        <article
+                          className={`pp-cosmetic-card${isEquipped ? ' pp-cosmetic-card--equipped' : ''}`}
+                          key={skin.id}
+                        >
+                          <ArrowSkinPreview skin={skin} />
+                          <strong>{skin.name}</strong>
+                          <div className='pp-cosmetic-card-meta'>
+                            <span>{isEquipped ? 'Équipée' : 'Possédée'}</span>
+                          </div>
+                          <button
+                            className={`pp-button${isEquipped ? ' pp-button--secondary' : ''}`}
+                            type='button'
+                            disabled={pendingArrowSkin !== null}
+                            onClick={() =>
+                              void setEquippedArrowSkin(
+                                isEquipped ? null : skin.id,
+                              )
+                            }
+                          >
+                            {pendingArrowSkin === skin.id
+                              ? 'Équipement…'
+                              : pendingArrowSkin === 'none' && isEquipped
+                                ? 'Retrait…'
+                                : isEquipped
+                                  ? 'Retirer'
+                                  : 'Équiper'}
+                          </button>
+                        </article>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className='pp-inventory-empty'>
+                    Aucune flèche pour le moment. Découvre-les dans la boutique.
+                  </p>
+                )}
+              </section>
+              )}
             </div>
           )}
         </section>

@@ -4,6 +4,7 @@ import { PokemonOnboardingLayer } from './pokemon/PokemonOnboardingLayer'
 import './pokemon/pokemon.css'
 import { StarWarsLayer } from './star-wars/StarWarsLayer'
 import { AmongUsLayer } from './among-us/AmongUsLayer'
+import { ArcheryLayer } from './archery/ArcheryLayer'
 
 const defaultTheme: Theme = { id: 'default', Room: DefaultRoom }
 
@@ -13,6 +14,7 @@ const themes: Record<string, Theme> = {
   pk: { id: 'pk', Room: DefaultRoom, Layer: PokemonOnboardingLayer },
   sw: { id: 'sw', Room: DefaultRoom, Layer: StarWarsLayer },
   au: { id: 'au', Room: DefaultRoom, Layer: AmongUsLayer },
+  ar: { id: 'ar', Room: DefaultRoom, Layer: ArcheryLayer },
 }
 
 export function getTheme(universe: string | undefined): Theme {

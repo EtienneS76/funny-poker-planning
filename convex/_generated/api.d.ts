@@ -10,15 +10,20 @@
 
 import type * as amongUs_mutations from "../amongUs/mutations.js";
 import type * as amongUs_queries from "../amongUs/queries.js";
+import type * as archery_mutations from "../archery/mutations.js";
+import type * as archery_queries from "../archery/queries.js";
+import type * as archery_rules from "../archery/rules.js";
 import type * as auth_auth from "../auth/auth.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as refinement_actor from "../refinement/actor.js";
 import type * as refinement_mutations from "../refinement/mutations.js";
 import type * as refinement_queries from "../refinement/queries.js";
 import type * as refinement_reactionSchema from "../refinement/reactionSchema.js";
 import type * as refinement_roundSchema from "../refinement/roundSchema.js";
 import type * as refinement_slug from "../refinement/slug.js";
 import type * as refinement_voteSchema from "../refinement/voteSchema.js";
+import type * as user_arrowSkins from "../user/arrowSkins.js";
 import type * as user_avatarFrames from "../user/avatarFrames.js";
 import type * as user_cardDesigns from "../user/cardDesigns.js";
 import type * as user_consumables from "../user/consumables.js";
@@ -37,15 +42,20 @@ import type {
 declare const fullApi: ApiFromModules<{
   "amongUs/mutations": typeof amongUs_mutations;
   "amongUs/queries": typeof amongUs_queries;
+  "archery/mutations": typeof archery_mutations;
+  "archery/queries": typeof archery_queries;
+  "archery/rules": typeof archery_rules;
   "auth/auth": typeof auth_auth;
   crons: typeof crons;
   http: typeof http;
+  "refinement/actor": typeof refinement_actor;
   "refinement/mutations": typeof refinement_mutations;
   "refinement/queries": typeof refinement_queries;
   "refinement/reactionSchema": typeof refinement_reactionSchema;
   "refinement/roundSchema": typeof refinement_roundSchema;
   "refinement/slug": typeof refinement_slug;
   "refinement/voteSchema": typeof refinement_voteSchema;
+  "user/arrowSkins": typeof user_arrowSkins;
   "user/avatarFrames": typeof user_avatarFrames;
   "user/cardDesigns": typeof user_cardDesigns;
   "user/consumables": typeof user_consumables;

@@ -4,6 +4,7 @@ import { Hexagon, Info, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { AvatarFrame } from '../features/avatar/AvatarFrame'
 import { CardDesignPreview } from './CardDesignPreview'
+import { ArrowSkinPreview } from './ArrowSkinPreview'
 import { useAppSnackbar } from './AppSnackbar'
 
 type Props = {
@@ -26,6 +27,14 @@ type Props = {
   }>
   ownedCardDesignIds: string[]
   equippedCardDesignId: string | null
+  arrowSkins: Array<{
+    id: string
+    name: string
+    description: string
+    price: number
+  }>
+  ownedArrowSkinIds: string[]
+  equippedArrowSkinId: string | null
   ownedIds: string[]
   consumables: Array<{
     id: string
@@ -55,6 +64,7 @@ type Props = {
 const shopTabs = [
   { id: 'avatar', label: 'Avatar' },
   { id: 'card-designs', label: 'Dos de carte' },
+  { id: 'arrows', label: 'Flèches' },
   { id: 'consumables', label: 'Consommable' },
 ] as const
 
@@ -74,6 +84,9 @@ export default function ModalShop({
   cardDesigns,
   ownedCardDesignIds,
   equippedCardDesignId,
+  arrowSkins,
+  ownedArrowSkinIds,
+  equippedArrowSkinId,
   ownedIds,
   consumables,
   consumableInventory,
@@ -93,6 +106,7 @@ export default function ModalShop({
   const [buyingFrame, setBuyingFrame] = useState<string | null>(null)
   const [buyingCardDesign, setBuyingCardDesign] = useState<string | null>(null)
   const [buyingConsumable, setBuyingConsumable] = useState<string | null>(null)
+  const [pendingArrowSkin, setPendingArrowSkin] = useState<string | null>(null)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const formattedBalance = new Intl.NumberFormat('fr-FR').format(balance)
   const pokemonConsumables = consumables.filter(
@@ -104,6 +118,8 @@ export default function ModalShop({
   const buyAvatarFrame = useMutation(api.user.mutations.buyAvatarFrame)
   const buyCardDesignMutation = useMutation(api.user.mutations.buyCardDesign)
   const buyConsumable = useMutation(api.user.mutations.buyConsumable)
+  const buyArrowSkin = useMutation(api.user.mutations.buyArrowSkin)
+  const equipArrowSkin = useMutation(api.user.mutations.equipArrowSkin)
   const snackbar = useAppSnackbar()
 
   useEffect(() => {
@@ -175,6 +191,30 @@ export default function ModalShop({
       )
     } finally {
       setBuyingCardDesign(null)
+    }
+  }
+
+  /** Achète une flèche, ou l'équipe / la retire si elle est déjà possédée. */
+  async function changeArrowSkin(skinId: string, action: 'buy' | 'equip' | 'unequip') {
+    setPendingArrowSkin(skinId)
+    setPurchaseError(null)
+    try {
+      if (action === 'buy') {
+        await buyArrowSkin({ skinId })
+        const skinName =
+          arrowSkins.find((skin) => skin.id === skinId)?.name ?? 'Flèche'
+        snackbar.success('Achat effectué', `${skinName} ajoutée à ton carquois.`)
+      } else {
+        await equipArrowSkin({ skinId: action === 'equip' ? skinId : null })
+      }
+    } catch (error) {
+      setPurchaseError(
+        error instanceof Error
+          ? error.message
+          : 'Achat impossible pour le moment.',
+      )
+    } finally {
+      setPendingArrowSkin(null)
     }
   }
 
@@ -464,6 +504,81 @@ export default function ModalShop({
                 })}
               </div>
             </div>
+          ) : activeTab === 'arrows' ? (
+            <div className='pp-card-design-shop'>
+              <div className='pp-shop-section-heading'>
+                <h3>Flèches</h3>
+                <p>
+                  Cosmétiques du thème « Tir à l’arc » : traînée, tir et
+                  impact, visibles par tous les joueurs.
+                </p>
+              </div>
+              <div className='pp-cosmetic-grid'>
+                {arrowSkins.map((skin) => {
+                  const isOwned = ownedArrowSkinIds.includes(skin.id)
+                  const isEquipped = equippedArrowSkinId === skin.id
+                  const canAfford = balance >= skin.price
+                  return (
+                    <article
+                      className={`pp-cosmetic-card${isEquipped ? ' pp-cosmetic-card--equipped' : ''}`}
+                      key={skin.id}
+                    >
+                      <ArrowSkinPreview skin={skin} />
+                      <strong>{skin.name}</strong>
+                      <p>{skin.description}</p>
+                      <div className='pp-cosmetic-card-meta'>
+                        {new Intl.NumberFormat('fr-FR').format(skin.price)}{' '}
+                        Pokisous
+                        {isOwned && (
+                          <span>{isEquipped ? 'Équipée' : 'Possédée'}</span>
+                        )}
+                      </div>
+                      {isOwned ? (
+                        <button
+                          className={`pp-button${isEquipped ? ' pp-button--secondary' : ''}`}
+                          type='button'
+                          disabled={pendingArrowSkin !== null}
+                          onClick={() =>
+                            void changeArrowSkin(
+                              skin.id,
+                              isEquipped ? 'unequip' : 'equip',
+                            )
+                          }
+                        >
+                          {pendingArrowSkin === skin.id
+                            ? 'Un instant…'
+                            : isEquipped
+                              ? 'Retirer'
+                              : 'Équiper'}
+                        </button>
+                      ) : (
+                        <button
+                          className='pp-button'
+                          type='button'
+                          disabled={
+                            (isAuthenticated && !canAfford) ||
+                            (!isAuthenticated && !canSignIn) ||
+                            pendingArrowSkin !== null
+                          }
+                          onClick={() => {
+                            if (!isAuthenticated) onSignIn()
+                            else void changeArrowSkin(skin.id, 'buy')
+                          }}
+                        >
+                          {pendingArrowSkin === skin.id
+                            ? 'Achat…'
+                            : isAuthenticated
+                              ? canAfford
+                                ? 'Acheter'
+                                : 'Solde insuffisant'
+                              : 'Connexion requise'}
+                        </button>
+                      )}
+                    </article>
+                  )
+                })}
+              </div>
+            </div>
           ) : activeTab === 'card-designs' ? (
             <div className='pp-card-design-shop'>
               <div className='pp-shop-section-heading'>
@@ -472,7 +587,7 @@ export default function ModalShop({
                   Choisis le style des cartes dans tes mains et sur la table.
                 </p>
               </div>
-              <div className='pp-card-design-grid'>
+              <div className='pp-cosmetic-grid'>
                 {cardDesigns.map((design) => {
                   const isOwned = ownedCardDesignIds.includes(design.id)
                   const isEquipped = equippedCardDesignId === design.id
@@ -485,47 +600,29 @@ export default function ModalShop({
                         : 'Légendaire'
                   return (
                     <article
-                      className={`pp-card-design-card pp-card-design-card--${design.id}`}
+                      className={`pp-cosmetic-card${isEquipped ? ' pp-cosmetic-card--equipped' : ''}`}
                       key={design.id}
                     >
-                      <div className='pp-card-design-copy'>
-                        <span
-                          className={`pp-card-design-rarity pp-card-design-rarity--${design.rarity}`}
-                        >
-                          {rarityLabel}
-                        </span>
-                        <h4>{design.name}</h4>
-                        <p>{design.description}</p>
-                        <ul>
-                          <li>Face et dos assortis</li>
-                          <li>Visible par les autres joueurs</li>
-                        </ul>
-                        <strong className='pp-card-design-price'>
-                          {new Intl.NumberFormat('fr-FR').format(design.price)}{' '}
-                          Pokisous
-                        </strong>
-                        {isEquipped && (
-                          <span className='pp-card-design-equipped'>
-                            Design équipé
-                          </span>
-                        )}
+                      <CardDesignPreview design={design} compact />
+                      <strong>{design.name}</strong>
+                      <p>{design.description}</p>
+                      <div className='pp-cosmetic-card-meta'>
+                        {new Intl.NumberFormat('fr-FR').format(design.price)}{' '}
+                        Pokisous
+                        <span>{isEquipped ? 'Équipé' : rarityLabel}</span>
                       </div>
-                      <CardDesignPreview design={design} />
                       <button
-                        className='pp-button pp-card-design-action'
+                        className='pp-button'
                         type='button'
                         disabled={
                           isOwned ||
-                          (!isOwned && isAuthenticated && !canAfford) ||
+                          (isAuthenticated && !canAfford) ||
                           (!isAuthenticated && !canSignIn) ||
                           buyingCardDesign !== null
                         }
                         onClick={() => {
-                          if (!isAuthenticated) {
-                            onSignIn()
-                          } else {
-                            void purchaseCardDesign(design.id)
-                          }
+                          if (!isAuthenticated) onSignIn()
+                          else void purchaseCardDesign(design.id)
                         }}
                       >
                         {buyingCardDesign === design.id

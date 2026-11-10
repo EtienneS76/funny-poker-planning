@@ -9,6 +9,7 @@ import { getPokemonById } from '../../pokemon/functions/GeneratePokemon'
 import type { ReactionKind, RoomViewModel, Seat } from '../themes/types'
 import { useRefinementRoom } from './useRefinementRoom'
 import { useAmongUsSync } from './useAmongUsSync'
+import { useArcherySync } from './useArcherySync'
 
 /**
  * Toute la logique de la salle (vote, révélation, manches, réactions, présence).
@@ -19,8 +20,13 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
   const { playerJoined, playerLeft, success, error } = useAppSnackbar()
   const room = useRefinementRoom(refinementSlug)
   const [searchParams] = useSearchParams()
-  const amongUsActive =
-    (searchParams.get('theme') ?? room?.refinement.universe) === 'au'
+  const shownTheme = searchParams.get('theme') ?? room?.refinement.universe
+  const amongUsActive = shownTheme === 'au'
+  const archerySync = useArcherySync({
+    slug: refinementSlug,
+    guestId: account.guestId,
+    active: shownTheme === 'ar',
+  })
   const amongUsSync = useAmongUsSync({
     slug: refinementSlug,
     guestId: account.guestId,
@@ -496,6 +502,7 @@ export function useRoomViewModel(refinementSlug: string): RoomViewModel {
       move: amongUsSync.move,
       push: amongUsSync.push,
     },
+    archery: archerySync,
     copyInviteLink,
   }
 }

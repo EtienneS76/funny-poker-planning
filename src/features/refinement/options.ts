@@ -3,6 +3,7 @@ export const availableThemes = [
   { id: 'pk', label: 'Pokémon' },
   { id: 'sw', label: 'Star Wars' },
   { id: 'au', label: 'Among Us' },
+  { id: 'ar', label: 'Tir à l’arc' },
 ] as const
 
 export const sizings = [

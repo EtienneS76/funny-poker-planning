@@ -20,6 +20,9 @@
   width: 100%;
   max-width: 216px;
   margin-top: 0;
+  /* collé au bord droit de la fenêtre (avec le padding de la salle), même quand
+     l'écran est plus large que les 1440px de .pp-room */
+  margin-right: min(0px, calc((1440px - 100vw) / 2));
   padding: 16px 0;
   border-top: 1px solid var(--pp-border);
   border-bottom: 1px solid var(--pp-border);

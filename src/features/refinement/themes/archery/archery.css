@@ -1,0 +1,245 @@
+/* Thème « Tir à l'arc » : champ de tir de kermesse, tons clairs et éteints
+   pour que les bonshommes (noirs) et les flèches restent lisibles.
+   Habille la salle par défaut (variables --pp-*) ; le jeu est dessiné dans .ar-layer. */
+
+.universe-option--ar {
+  --universe-first: #25324a;
+  --universe-second: #e5484d;
+}
+
+/* ---------- Salle ---------- */
+.multivers[data-theme='ar'] {
+  --pp-cream: #eef2f5;
+  --pp-pink: #e3eaf1;
+  --pp-ink: #25324a;
+  --pp-paper: #fbfcfd;
+  --pp-line: #d2dbe4;
+  --pp-border: #8d9db3;
+  --pp-muted: #5f6f86;
+  position: relative;
+  background:
+    url('./arena.svg') center bottom / cover no-repeat,
+    linear-gradient(#dfe8f1, #eef0ee 62%, #f3ede4);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Les archers remplacent les avatars autour de la table */
+.multivers[data-theme='ar'] .pp-seats {
+  display: none;
+}
+/* on vise en cliquant-glissant dans la salle : pas de sélection de texte */
+.multivers[data-theme='ar'] .pp-room {
+  user-select: none;
+}
+
+/* Table plus compacte (les plateformes occupent les côtés), façon cible */
+.multivers[data-theme='ar'] .pp-table-area {
+  width: min(100%, 37vw, max(240px, calc((100svh - 290px) * 0.82)));
+}
+.multivers[data-theme='ar'] .pp-table {
+  border-color: #8d9db3;
+  background: radial-gradient(
+    ellipse closest-side,
+    #fbfcfd 0 46%,
+    #ecc9c4 46% 50%,
+    #fbfcfd 50% 68%,
+    #cfdbe8 68% 72%,
+    #fbfcfd 72% 88%,
+    #e3eaf1 88%
+  );
+  box-shadow: 0 16px 34px #25324a1f;
+}
+.multivers[data-theme='ar'] .pp-table-count strong {
+  font-family: 'Bricolage Grotesque', 'DM Sans', sans-serif;
+  color: #c2453f;
+}
+.multivers[data-theme='ar'] .vote-card:not(:disabled):hover {
+  border-color: #e5484d;
+  box-shadow: 0 8px 20px rgb(229 72 77 / 20%);
+}
+
+/* ---------- Jeu ---------- */
+.ar-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30; /* sous le menu profil (40) */
+  overflow: hidden;
+  pointer-events: none;
+}
+.ar-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* étiquette sous la plateforme : nom, carquois, vote. Placée par le moteur (transform). */
+.ar-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.ar-name {
+  max-width: 140px;
+  padding: 1px 8px;
+  overflow: hidden;
+  border: 1px solid #d2dbe4;
+  border-bottom: 2px solid var(--c, #8d9db3);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  color: #25324a;
+  box-shadow: 0 2px 8px #25324a14;
+  font:
+    700 12px 'DM Sans',
+    sans-serif;
+  text-overflow: ellipsis;
+}
+.ar-me .ar-name {
+  border-color: var(--c, #25324a);
+  background: #fff;
+}
+.ar-spectator .ar-name::before {
+  content: '👁 ';
+}
+.ar-away .ar-name {
+  opacity: 0.55;
+}
+.ar-away .ar-name::after {
+  content: ' 💤';
+}
+/* points de vie de la manche */
+.ar-hp {
+  color: #e5484d;
+  font:
+    700 12px/1 'DM Sans',
+    sans-serif;
+  letter-spacing: 1px;
+}
+.ar-dead .ar-hp {
+  color: #5f6f86;
+}
+.ar-dead .ar-name,
+.ar-dead .ar-pips {
+  opacity: 0.5;
+}
+/* carquois : une barre par flèche restante */
+.ar-pips {
+  display: flex;
+  gap: 3px;
+}
+.ar-pips i {
+  width: 4px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--c, #25324a);
+  transition: opacity 200ms;
+}
+.ar-pips .ar-pip--spent {
+  opacity: 0.18;
+}
+/* parade : bouclier du joueur local, qui se recharge en 3 s après usage */
+.ar-parry {
+  display: none;
+  font-size: 13px;
+  line-height: 1;
+}
+.ar-me .ar-parry {
+  display: block;
+}
+/* bouclier grisé juste après une parade, de nouveau net quand elle est prête */
+.ar-parry--cooling {
+  animation: ar-parry-cooldown 3s linear;
+}
+@keyframes ar-parry-cooldown {
+  from,
+  95% {
+    opacity: 0.25;
+    filter: grayscale(1);
+    transform: scale(0.85);
+  }
+}
+/* vote : dos de carte .au-card (designs compris), remis dans le flux */
+.ar-label .au-card.ar-card {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex: none;
+  width: 18px;
+  height: 24px;
+  font-size: 12px;
+  transform: rotate(6deg);
+}
+.ar-label .au-card.ar-card.au-card--face {
+  width: 24px;
+  height: 30px;
+}
+.ar-label .au-card.ar-card[hidden] {
+  display: none;
+}
+
+.ar-hint {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  padding: 5px 10px;
+  border: 1px solid #d2dbe4;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 4px 14px #25324a18;
+  color: #5f6f86;
+  font:
+    500 12px 'DM Sans',
+    sans-serif;
+}
+/* un seul message à la fois, selon la situation du joueur (data-state) */
+.ar-hint > span {
+  display: none;
+}
+.ar-hint[data-state='on'] .ar-hint-on {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ar-hint[data-state='off'] .ar-hint-off,
+.ar-hint[data-state='vote'] .ar-hint-vote,
+.ar-hint[data-state='dead'] .ar-hint-dead {
+  display: block;
+}
+.ar-hint b {
+  color: #25324a;
+}
+.ar-hint i {
+  width: 8px;
+}
+.ar-hint kbd {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #e8eef4;
+  color: #25324a;
+  font:
+    700 11px/18px 'DM Sans',
+    sans-serif;
+  text-align: center;
+}
+
+/* curseurs : viseur quand on peut tirer, main fermée pendant qu'on bande l'arc */
+.ar-can-aim .multivers[data-theme='ar'] .pp-room {
+  cursor: crosshair;
+}
+.ar-aiming,
+.ar-aiming * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+@media (pointer: coarse) {
+  .ar-hint {
+    display: none;
+  }
+}
